@@ -115,6 +115,16 @@ namespace eQuantic.Core.Data.EntityFramework.Repository
             return await GetQueryable(loadProperties).SingleOrDefaultAsync(filter);
         }
 
+        public async Task<TEntity> GetSingleAsync(Expression<Func<TEntity, bool>> filter, ISorting[] sortingColumns, params string[] loadProperties)
+        {
+            return await GetQueryable(loadProperties).OrderBy(sortingColumns).SingleOrDefaultAsync(filter);
+        }
+
+        public async Task<TEntity> GetSingleAsync(Expression<Func<TEntity, bool>> filter, ISorting[] sortingColumns, params Expression<Func<TEntity, object>>[] loadProperties)
+        {
+            return await GetQueryable(loadProperties).OrderBy(sortingColumns).SingleOrDefaultAsync(filter);
+        }
+
         public async Task<TEntity> GetFirstAsync(Expression<Func<TEntity, bool>> filter)
         {
             return await GetFirstAsync(filter, new Expression<Func<TEntity, object>>[0]);
@@ -135,6 +145,10 @@ namespace eQuantic.Core.Data.EntityFramework.Repository
             return await GetQueryable(loadProperties).OrderBy(sortingColumns).FirstOrDefaultAsync(filter);
         }
 
+        public async Task<TEntity> GetFirstAsync(Expression<Func<TEntity, bool>> filter, ISorting[] sortingColumns, params Expression<Func<TEntity, object>>[] loadProperties)
+        {
+            return await GetQueryable(loadProperties).OrderBy(sortingColumns).FirstOrDefaultAsync(filter);
+        }
         public async Task<IEnumerable<TEntity>> GetAllAsync()
         {
             return await GetQueryable(new Expression<Func<TEntity, object>>[0]).ToListAsync();
