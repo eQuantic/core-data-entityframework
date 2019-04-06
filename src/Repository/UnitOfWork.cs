@@ -205,11 +205,6 @@ namespace eQuantic.Core.Data.EntityFramework.Repository
             return await _context.Database.ExecuteSqlCommandAsync(sqlCommand, default(CancellationToken), parameters);
         }
 
-        public IQueryable<TEntity> CreateSet<TEntity>() where TEntity : class
-        {
-            return _context.Set<TEntity>();
-        }
-
         public void Attach<TEntity>(TEntity item) where TEntity : class
         {
             //attach and set as unchanged
@@ -293,6 +288,11 @@ namespace eQuantic.Core.Data.EntityFramework.Repository
         public IEnumerable<string> GetPendingMigrations()
         {
             return _context.Database.GetPendingMigrations();
+        }
+
+        Data.Repository.ISet<TEntity> IQueryableUnitOfWork.CreateSet<TEntity>()
+        {
+            return new Set<TEntity>(_context);
         }
     }
 }

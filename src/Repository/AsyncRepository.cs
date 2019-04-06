@@ -125,6 +125,11 @@ namespace eQuantic.Core.Data.EntityFramework.Repository
             return await GetQueryable(loadProperties).OrderBy(sortingColumns).SingleOrDefaultAsync(filter);
         }
 
+        public async Task<TEntity> GetSingleAsync(Expression<Func<TEntity, bool>> filter, ISorting[] sortingColumns)
+        {
+            return await GetSingleAsync(filter, sortingColumns, (string)null);
+        }
+
         public async Task<TEntity> GetFirstAsync(Expression<Func<TEntity, bool>> filter)
         {
             return await GetFirstAsync(filter, new Expression<Func<TEntity, object>>[0]);
@@ -409,5 +414,7 @@ namespace eQuantic.Core.Data.EntityFramework.Repository
         {
             return await UpdateManyAsync(specification.SatisfiedBy(), updateFactory);
         }
+
+        
     }
 }
