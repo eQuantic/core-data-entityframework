@@ -1,12 +1,9 @@
-﻿using eQuantic.Core.Data.Repository;
-using eQuantic.Core.Data.Repository.Sql;
-using eQuantic.Core.Data.Repository.Write;
-using eQuantic.Core.Linq.Specification;
-using System;
-using System.Linq;
+﻿using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Z.EntityFramework.Plus;
+using eQuantic.Core.Data.Repository;
+using eQuantic.Core.Data.Repository.Write;
+using eQuantic.Core.Linq.Specification;
 
 namespace eQuantic.Core.Data.EntityFramework.Repository.Write
 {
@@ -14,28 +11,78 @@ namespace eQuantic.Core.Data.EntityFramework.Repository.Write
         where TUnitOfWork : IQueryableUnitOfWork
         where TEntity : class, IEntity, new()
     {
+        private Set<TEntity> _dbset = null;
+
         public AsyncWriteRepository(TUnitOfWork unitOfWork) : base(unitOfWork)
         {
         }
 
-        public async Task<int> DeleteManyAsync(Expression<Func<TEntity, bool>> filter)
+        public Task AddAsync(TEntity item)
         {
-            return await GetSet().Where(filter).DeleteAsync();
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
+
+            return GetSet().AddAsync(item);
         }
 
-        public async Task<int> DeleteManyAsync(ISpecification<TEntity> specification)
+        public Task<long> DeleteManyAsync(Expression<Func<TEntity, bool>> filter)
         {
-            return await DeleteManyAsync(specification.SatisfiedBy());
+            if (filter == null)
+            {
+                throw new ArgumentNullException(nameof(filter));
+            }
+
+            return GetSet().DeleteManyAsync(filter);
         }
 
-        public async Task<int> UpdateManyAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, TEntity>> updateFactory)
+        public Task<long> DeleteManyAsync(ISpecification<TEntity> specification)
         {
-            return await GetSet().Where(filter).UpdateAsync(updateFactory);
+            return DeleteManyAsync(specification.SatisfiedBy());
         }
 
-        public async Task<int> UpdateManyAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, TEntity>> updateFactory)
+        public Task MergeAsync(TEntity persisted, TEntity current)
         {
-            return await UpdateManyAsync(specification.SatisfiedBy(), updateFactory);
+            this.Merge(persisted, current);
+            return Task.CompletedTask;
+        }
+
+        public Task ModifyAsync(TEntity item)
+        {
+            this.Modify(item);
+            return Task.CompletedTask;
+        }
+
+        public Task RemoveAsync(TEntity item)
+        {
+            this.Remove(item);
+            return Task.CompletedTask;
+        }
+
+        public Task<long> UpdateManyAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, TEntity>> updateFactory)
+        {
+            if (filter == null)
+            {
+                throw new ArgumentNullException(nameof(filter));
+            }
+
+            if (updateFactory == null)
+            {
+                throw new ArgumentNullException(nameof(updateFactory));
+            }
+
+            return GetSet().UpdateManyAsync(filter, updateFactory);
+        }
+
+        public Task<long> UpdateManyAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, TEntity>> updateFactory)
+        {
+            return this.UpdateManyAsync(specification.SatisfiedBy(), updateFactory);
+        }
+
+        private Set<TEntity> GetSet()
+        {
+            return _dbset ?? (_dbset = (Set<TEntity>)UnitOfWork.CreateSet<TEntity>());
         }
     }
 }

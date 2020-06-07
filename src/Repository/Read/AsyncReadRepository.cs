@@ -1,15 +1,14 @@
-﻿using eQuantic.Core.Data.Repository;
-using eQuantic.Core.Data.Repository.Read;
-using eQuantic.Core.Data.Repository.Sql;
-using eQuantic.Core.Linq;
-using eQuantic.Core.Linq.Extensions;
-using eQuantic.Core.Linq.Specification;
-using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using eQuantic.Core.Data.Repository;
+using eQuantic.Core.Data.Repository.Read;
+using eQuantic.Core.Linq.Extensions;
+using eQuantic.Core.Linq.Sorter;
+using eQuantic.Core.Linq.Specification;
+using Microsoft.EntityFrameworkCore;
 
 namespace eQuantic.Core.Data.EntityFramework.Repository.Read
 {
@@ -17,6 +16,8 @@ namespace eQuantic.Core.Data.EntityFramework.Repository.Read
         where TUnitOfWork : IQueryableUnitOfWork
         where TEntity : class, IEntity, new()
     {
+        private Set<TEntity> _dbset = null;
+
         public AsyncReadRepository(TUnitOfWork unitOfWork) : base(unitOfWork)
         {
         }
@@ -26,99 +27,135 @@ namespace eQuantic.Core.Data.EntityFramework.Repository.Read
             return await GetSet().Where(specification.SatisfiedBy()).ToListAsync();
         }
 
-        public async Task<long> CountAsync()
+        public Task<long> CountAsync()
         {
-            return await GetSet().LongCountAsync();
+            return GetSet().LongCountAsync();
         }
 
-        public async Task<long> CountAsync(ISpecification<TEntity> specification)
+        public Task<long> CountAsync(ISpecification<TEntity> specification)
         {
-            return await GetSet().LongCountAsync(specification.SatisfiedBy());
+            return this.CountAsync(specification.SatisfiedBy());
         }
 
-        public async Task<long> CountAsync(Expression<Func<TEntity, bool>> filter)
+        public Task<long> CountAsync(Expression<Func<TEntity, bool>> filter)
         {
-            return await GetSet().LongCountAsync(filter);
+            return GetSet().LongCountAsync(filter);
         }
 
-        public async Task<IEnumerable<TEntity>> GetAllAsync()
+        public async Task<IEnumerable<TEntity>> GetAllAsync(params ISorting[] sortingColumns)
         {
+            if (sortingColumns?.Length > 0)
+            {
+                return await GetSet().OrderBy(sortingColumns).ToListAsync();
+            }
+
             return await GetSet().ToListAsync();
         }
 
-        public async Task<IEnumerable<TEntity>> GetAllAsync(ISorting[] sortingColumns)
+        public Task<TEntity> GetAsync(TKey id)
         {
-            return await GetSet().OrderBy(sortingColumns).ToListAsync();
+            if (id == null)
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
+
+            return GetSet().FindAsync(id);
         }
 
-        public async  Task<TEntity> GetAsync(TKey id)
+        public async Task<IEnumerable<TEntity>> GetFilteredAsync(Expression<Func<TEntity, bool>> filter, params ISorting[] sortColumns)
         {
-            return id != null ? await GetSet().FindAsync(id) : null;
+            IQueryable<TEntity> query = GetSet().Where(filter);
+            if (sortColumns?.Length > 0)
+            {
+                query = query.OrderBy(sortColumns);
+            }
+            return await query.ToListAsync();
         }
 
-        public async Task<IEnumerable<TEntity>> GetFilteredAsync(Expression<Func<TEntity, bool>> filter)
+        public Task<TEntity> GetFirstAsync(Expression<Func<TEntity, bool>> filter, params ISorting[] sortingColumns)
         {
-            return await GetSet().Where(filter).ToListAsync();
+            if (sortingColumns?.Length > 0)
+            {
+                return GetSet().OrderBy(sortingColumns).FirstOrDefaultAsync(filter);
+            }
+            return GetSet().FirstOrDefaultAsync(filter);
         }
 
-        public async Task<IEnumerable<TEntity>> GetFilteredAsync(Expression<Func<TEntity, bool>> filter, ISorting[] sortColumns)
+        public Task<TEntity> GetFirstAsync(ISpecification<TEntity> specification, params ISorting[] sortingColumns)
         {
-            return await GetSet().Where(filter).OrderBy(sortColumns).ToListAsync();
+            if (sortingColumns?.Length > 0)
+            {
+                return GetSet().OrderBy(sortingColumns).FirstOrDefaultAsync(specification.SatisfiedBy());
+            }
+            return GetSet().FirstOrDefaultAsync(specification.SatisfiedBy());
         }
 
-        public async Task<TEntity> GetFirstAsync(Expression<Func<TEntity, bool>> filter)
+        public Task<IEnumerable<TEntity>> GetPagedAsync(int limit, params ISorting[] sortColumns)
         {
-            return await GetSet().FirstOrDefaultAsync(filter);
+            return GetPagedAsync((Expression<Func<TEntity, bool>>)null, 1, limit, sortColumns);
         }
 
-        public async Task<IEnumerable<TEntity>> GetPagedAsync(int limit, ISorting[] sortColumns)
+        public Task<IEnumerable<TEntity>> GetPagedAsync(ISpecification<TEntity> specification, int limit, params ISorting[] sortColumns)
         {
-            return await GetPagedAsync((Expression<Func<TEntity, bool>>)null, 1, limit, sortColumns);
+            return GetPagedAsync(specification.SatisfiedBy(), 1, limit, sortColumns);
         }
 
-        public async Task<IEnumerable<TEntity>> GetPagedAsync(ISpecification<TEntity> specification, int limit, ISorting[] sortColumns)
+        public Task<IEnumerable<TEntity>> GetPagedAsync(Expression<Func<TEntity, bool>> filter, int limit, params ISorting[] sortColumns)
         {
-            return await GetPagedAsync(specification.SatisfiedBy(), 1, limit, sortColumns);
+            return GetPagedAsync(filter, 1, limit, sortColumns);
         }
 
-        public async Task<IEnumerable<TEntity>> GetPagedAsync(Expression<Func<TEntity, bool>> filter, int limit, ISorting[] sortColumns)
+        public Task<IEnumerable<TEntity>> GetPagedAsync(int pageIndex, int pageCount, params ISorting[] sortColumns)
         {
-            return await GetPagedAsync(filter, 1, limit, sortColumns);
+            return GetPagedAsync((Expression<Func<TEntity, bool>>)null, pageIndex, pageCount, sortColumns);
         }
 
-        public async Task<IEnumerable<TEntity>> GetPagedAsync(int pageIndex, int pageCount, ISorting[] sortColumns)
+        public Task<IEnumerable<TEntity>> GetPagedAsync(ISpecification<TEntity> specification, int pageIndex, int pageCount, params ISorting[] sortColumns)
         {
-            return await GetPagedAsync((Expression<Func<TEntity, bool>>) null, pageIndex, pageCount, sortColumns);
+            return GetPagedAsync(specification.SatisfiedBy(), pageIndex, pageCount, sortColumns);
         }
 
-        public async Task<IEnumerable<TEntity>> GetPagedAsync(ISpecification<TEntity> specification, int pageIndex, int pageCount, ISorting[] sortColumns)
-        {
-            return await GetPagedAsync(specification.SatisfiedBy(), pageIndex, pageCount, sortColumns);
-        }
-
-        public async Task<IEnumerable<TEntity>> GetPagedAsync(Expression<Func<TEntity, bool>> filter, int pageIndex, int pageCount, ISorting[] sortColumns)
+        public async Task<IEnumerable<TEntity>> GetPagedAsync(Expression<Func<TEntity, bool>> filter, int pageIndex, int pageCount, params ISorting[] sortColumns)
         {
             IQueryable<TEntity> query = GetSet();
-            if (filter != null) query = query.Where(filter);
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
 
-            if (sortColumns != null && sortColumns.Length > 0)
+            if (sortColumns?.Length > 0)
             {
                 query = query.OrderBy(sortColumns);
             }
             if (pageCount > 0)
+            {
                 return await query.Skip((pageIndex - 1) * pageCount).Take(pageCount).ToListAsync();
+            }
 
             return await query.ToListAsync();
         }
 
-        public Task<TEntity> GetSingleAsync(Expression<Func<TEntity, bool>> filter)
+        public Task<TEntity> GetSingleAsync(Expression<Func<TEntity, bool>> filter, params ISorting[] sortingColumns)
         {
+            if (sortingColumns?.Length > 0)
+            {
+                return GetSet().OrderBy(sortingColumns).SingleOrDefaultAsync(filter);
+            }
             return GetSet().SingleOrDefaultAsync(filter);
         }
 
-        public Task<TEntity> GetSingleAsync(Expression<Func<TEntity, bool>> filter, ISorting[] sortingColumns)
+        public Task<TEntity> GetSingleAsync(ISpecification<TEntity> specification, params ISorting[] sortingColumns)
         {
-            return GetSet().OrderBy(sortingColumns).SingleOrDefaultAsync(filter);
+            if (sortingColumns?.Length > 0)
+            {
+                return GetSet().OrderBy(sortingColumns).SingleOrDefaultAsync(specification.SatisfiedBy());
+            }
+            return GetSet().SingleOrDefaultAsync(specification.SatisfiedBy());
+        }
+
+        private Set<TEntity> GetSet()
+        {
+            return _dbset ?? (_dbset = (Set<TEntity>)UnitOfWork.CreateSet<TEntity>());
         }
     }
 }

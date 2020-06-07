@@ -4,9 +4,9 @@
   <PropertyGroup>
     <Description>Core Data library for Entity Framework</Description>
     <AssemblyTitle>eQuantic.Core.Data.EntityFramework</AssemblyTitle>
-    <Version>2.0.0</Version>
+    <Version>2.1.0</Version>
     <Authors>eQuantic Systems</Authors>
-    <TargetFrameworks>net46;net461;net462;netstandard1.6;netstandard2.0</TargetFrameworks>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>eQuantic.Core.Data.EntityFramework</AssemblyName>
     <PackageId>eQuantic.Core.Data.EntityFramework</PackageId>
     <PackageTags>eQuantic;Core;Data;Library;Repository;Pattern</PackageTags>
@@ -22,15 +22,16 @@
     <RepositoryType>Git</RepositoryType>
     <PackageLicenseUrl>https://raw.githubusercontent.com/eQuantic/core-data-entityframework/master/LICENSE</PackageLicenseUrl>
     <Copyright>Copyright ©  2016</Copyright>
-    <AssemblyVersion>2.0.0</AssemblyVersion>
-    <FileVersion>2.0.0</FileVersion>
+    <AssemblyVersion>2.1.0</AssemblyVersion>
+    <FileVersion>2.1.0</FileVersion>
     <PackageIconUrl>https://raw.githubusercontent.com/eQuantic/core-data-entityframework/master/src/Icon.png</PackageIconUrl>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="eQuantic.Core" Version="1.4.10.2" />
-    <PackageReference Include="eQuantic.Core.Data" Version="2.0.0" />
-    <PackageReference Include="MSBump" Version="2.3.2" PrivateAssets="All" />
+    <PackageReference Include="eQuantic.Core" Version="1.5.0" />
+    <PackageReference Include="eQuantic.Core.Data" Version="2.1.0" />
+    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="3.0.50" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,40 +40,5 @@
     <None Include="Icon_dialog.png" Pack="true" PackagePath="Icon_dialog.png" />
     <None Include="Icon_list.png" Pack="true" PackagePath="Icon_list.png" />
   </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="1.1.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="1.1.2" />
-    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="1.6.18" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="1.1.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="1.1.2" />
-    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="1.6.18" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="1.1.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="1.1.2" />
-    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="1.6.18" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="1.1.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="1.1.2" />
-    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="1.8.18" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.2.0" />
-    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="1.8.18" />
-  </ItemGroup>
+  
 </Project>

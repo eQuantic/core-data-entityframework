@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		LICENSE = LICENSE
 		README.md = README.md
 		Repository.md = Repository.md
+		.github\workflows\dotnetcore.yml = .github\workflows\dotnetcore.yml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "eQuantic.Core.Data.EntityFramework", "src\eQuantic.Core.Data.EntityFramework.csproj", "{CB4BD082-A5A5-4E9D-A226-1C7B8C505CC2}"
