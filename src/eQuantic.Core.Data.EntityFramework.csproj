@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Description>Core Data library for Entity Framework</Description>
     <AssemblyTitle>eQuantic.Core.Data.EntityFramework</AssemblyTitle>
-    <Version>2.1.0</Version>
+    <Version>2.1.0.1</Version>
     <Authors>eQuantic Systems</Authors>
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>eQuantic.Core.Data.EntityFramework</AssemblyName>
@@ -20,17 +20,18 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <RepositoryUrl>https://github.com/eQuantic/core-data-entityframework</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/eQuantic/core-data-entityframework/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>Copyright ©  2016</Copyright>
-    <AssemblyVersion>2.1.0</AssemblyVersion>
-    <FileVersion>2.1.0</FileVersion>
-    <PackageIconUrl>https://raw.githubusercontent.com/eQuantic/core-data-entityframework/master/src/Icon.png</PackageIconUrl>
+    <AssemblyVersion>2.1.0.1</AssemblyVersion>
+    <FileVersion>2.1.0.1</FileVersion>
+    <PackageIcon>Icon.png</PackageIcon>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="eQuantic.Core" Version="1.5.0" />
-    <PackageReference Include="eQuantic.Core.Data" Version="2.1.0" />
+    <PackageReference Include="eQuantic.Core" Version="1.5.0.1" />
+    <PackageReference Include="eQuantic.Core.Data" Version="2.1.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.4" />
     <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="3.0.50" />
   </ItemGroup>
 
@@ -39,6 +40,7 @@
     <None Include="Icon_details.png" Pack="true" PackagePath="Icon_details.png" />
     <None Include="Icon_dialog.png" Pack="true" PackagePath="Icon_dialog.png" />
     <None Include="Icon_list.png" Pack="true" PackagePath="Icon_list.png" />
+    <None Include="../LICENSE" Pack="true" PackagePath="" />
   </ItemGroup>
   
 </Project>
