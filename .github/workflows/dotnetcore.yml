@@ -5,13 +5,16 @@ on: [push]
 jobs:
   build:
     runs-on: windows-latest
-
+    strategy:
+      matrix:
+        dotnet: [ '2.2.x', '5.0.x' ]
+    name: Dotnet ${{ matrix.dotnet }}
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 2.2.108
+          dotnet-version: ${{ matrix.dotnet }}
       - name: Build eQuantic.Core.Data.EntityFramework Library
         run: dotnet build --configuration Release
       - name: Push package into Nuget.org
