@@ -2,137 +2,136 @@
 using System.Linq.Expressions;
 using eQuantic.Core.Data.Repository;
 using eQuantic.Core.Data.Repository.Write;
-using eQuantic.Core.Linq.Specification;
+using eQuantic.Linq.Specification;
 
-namespace eQuantic.Core.Data.EntityFramework.Repository.Write
+namespace eQuantic.Core.Data.EntityFramework.Repository.Write;
+
+public class WriteRepository<TUnitOfWork, TEntity, TKey> : IWriteRepository<TUnitOfWork, TEntity, TKey>
+    where TUnitOfWork : IQueryableUnitOfWork
+    where TEntity : class, IEntity, new()
 {
-    public class WriteRepository<TUnitOfWork, TEntity, TKey> : IWriteRepository<TUnitOfWork, TEntity, TKey>
-        where TUnitOfWork : IQueryableUnitOfWork
-        where TEntity : class, IEntity, new()
+    private Set<TEntity> _dbset = null;
+    private bool disposed = false;
+
+    public WriteRepository(TUnitOfWork unitOfWork)
     {
-        private Set<TEntity> _dbset = null;
-        private bool disposed = false;
-
-        public WriteRepository(TUnitOfWork unitOfWork)
+        if (unitOfWork == null)
         {
-            if (unitOfWork == null)
-            {
-                throw new ArgumentNullException(nameof(unitOfWork));
-            }
-
-            UnitOfWork = unitOfWork;
+            throw new ArgumentNullException(nameof(unitOfWork));
         }
 
-        public TUnitOfWork UnitOfWork { get; private set; }
+        UnitOfWork = unitOfWork;
+    }
 
-        public void Add(TEntity item)
+    public TUnitOfWork UnitOfWork { get; private set; }
+
+    public void Add(TEntity item)
+    {
+        if (item == null)
         {
-            if (item == null)
-            {
-                throw new ArgumentNullException(nameof(item));
-            }
-
-            GetSet().Add(item);
+            throw new ArgumentNullException(nameof(item));
         }
 
-        public long DeleteMany(Expression<Func<TEntity, bool>> filter)
-        {
-            if (filter == null)
-            {
-                throw new ArgumentNullException(nameof(filter));
-            }
+        GetSet().Add(item);
+    }
 
-            return GetSet().DeleteMany(filter);
+    public long DeleteMany(Expression<Func<TEntity, bool>> filter)
+    {
+        if (filter == null)
+        {
+            throw new ArgumentNullException(nameof(filter));
         }
 
-        public long DeleteMany(ISpecification<TEntity> specification)
+        return GetSet().DeleteMany(filter);
+    }
+
+    public long DeleteMany(ISpecification<TEntity> specification)
+    {
+        return DeleteMany(specification.SatisfiedBy());
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    public void Merge(TEntity persisted, TEntity current)
+    {
+        GetSet().ApplyCurrentValues(persisted, current);
+    }
+
+    public void Modify(TEntity item)
+    {
+        if (item == null)
         {
-            return DeleteMany(specification.SatisfiedBy());
+            throw new ArgumentNullException(nameof(item));
         }
 
-        public void Dispose()
+        GetSet().SetModified(item);
+    }
+
+    public void Remove(TEntity item)
+    {
+        if (item == null)
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            throw new ArgumentNullException(nameof(item));
         }
 
-        public void Merge(TEntity persisted, TEntity current)
+        //attach item if not exist
+        GetSet().Attach(item);
+
+        //set as "removed"
+        GetSet().Remove(item);
+    }
+
+    public void TrackItem(TEntity item)
+    {
+        if (item == null)
         {
-            GetSet().ApplyCurrentValues(persisted, current);
+            throw new ArgumentNullException(nameof(item));
         }
 
-        public void Modify(TEntity item)
-        {
-            if (item == null)
-            {
-                throw new ArgumentNullException(nameof(item));
-            }
+        GetSet().Attach(item);
+    }
 
-            GetSet().SetModified(item);
+    public long UpdateMany(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, TEntity>> updateFactory)
+    {
+        if (filter == null)
+        {
+            throw new ArgumentNullException(nameof(filter));
         }
 
-        public void Remove(TEntity item)
+        if (updateFactory == null)
         {
-            if (item == null)
-            {
-                throw new ArgumentNullException(nameof(item));
-            }
-
-            //attach item if not exist
-            GetSet().Attach(item);
-
-            //set as "removed"
-            GetSet().Remove(item);
+            throw new ArgumentNullException(nameof(updateFactory));
         }
 
-        public void TrackItem(TEntity item)
-        {
-            if (item == null)
-            {
-                throw new ArgumentNullException(nameof(item));
-            }
+        return GetSet().UpdateMany(filter, updateFactory);
+    }
 
-            GetSet().Attach(item);
+    public long UpdateMany(ISpecification<TEntity> specification, Expression<Func<TEntity, TEntity>> updateFactory)
+    {
+        return UpdateMany(specification.SatisfiedBy(), updateFactory);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposed)
+        {
+            return;
         }
 
-        public long UpdateMany(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, TEntity>> updateFactory)
+        if (disposing)
         {
-            if (filter == null)
-            {
-                throw new ArgumentNullException(nameof(filter));
-            }
-
-            if (updateFactory == null)
-            {
-                throw new ArgumentNullException(nameof(updateFactory));
-            }
-
-            return GetSet().UpdateMany(filter, updateFactory);
+            UnitOfWork?.Dispose();
         }
 
-        public long UpdateMany(ISpecification<TEntity> specification, Expression<Func<TEntity, TEntity>> updateFactory)
-        {
-            return UpdateMany(specification.SatisfiedBy(), updateFactory);
-        }
+        disposed = true;
+    }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                UnitOfWork?.Dispose();
-            }
-
-            disposed = true;
-        }
-
-        private Set<TEntity> GetSet()
-        {
-            return _dbset ?? (_dbset = (Set<TEntity>)UnitOfWork.CreateSet<TEntity>());
-        }
+    private Set<TEntity> GetSet()
+    {
+        return _dbset ?? (_dbset = (Set<TEntity>)UnitOfWork.CreateSet<TEntity>());
     }
 }
