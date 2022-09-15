@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using eQuantic.Linq.Helpers;
+using eQuantic.Linq.Extensions;
 
 namespace eQuantic.Core.Data.EntityFramework.Repository.Extensions;
 
@@ -27,7 +27,7 @@ public static class ExpressionExtensions
                 var op = ((UnaryExpression)expression.Body).Operand;
                 member = (MemberExpression)op;
             }
-            columnNames.Add(PropertiesHelper.BuildColumnNameFromMemberExpression(member));
+            columnNames.Add(member.GetColumnName());
         }
         return columnNames.ToArray();
     }
