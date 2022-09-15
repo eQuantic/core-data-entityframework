@@ -4,7 +4,7 @@
 	<PropertyGroup>
 		<Description>Core Data library for Entity Framework</Description>
 		<AssemblyTitle>eQuantic.Core.Data.EntityFramework</AssemblyTitle>
-		<Version>2.2.0.1</Version>
+		<Version>2.2.0.2</Version>
 		<Authors>eQuantic Systems</Authors>
 		<TargetFrameworks>netstandard2.1;net5.0;net6.0</TargetFrameworks>
 		<AssemblyName>eQuantic.Core.Data.EntityFramework</AssemblyName>
@@ -22,15 +22,15 @@
 		<RepositoryType>Git</RepositoryType>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<Copyright>Copyright ©  2016</Copyright>
-		<AssemblyVersion>2.2.0.1</AssemblyVersion>
-		<FileVersion>2.2.0.1</FileVersion>
+		<AssemblyVersion>2.2.0.2</AssemblyVersion>
+		<FileVersion>2.2.0.2</FileVersion>
 		<PackageIcon>Icon.png</PackageIcon>
 		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="eQuantic.Core" Version="1.6.0" />
-		<PackageReference Include="eQuantic.Core.Data" Version="2.2.0.1" />
+		<PackageReference Include="eQuantic.Core.Data" Version="2.2.0.2" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
@@ -64,18 +64,18 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.8" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.8">
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.9" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.9">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.8" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="6.0.8" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.8">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.9" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="6.0.9" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.9">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="6.14.4" />
+		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="6.15.0" />
 	</ItemGroup>
 
 	<ItemGroup>
