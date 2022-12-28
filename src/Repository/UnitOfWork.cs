@@ -96,7 +96,16 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
         return affectedRecords;
     }
 
+    public abstract IRepository<TUnitOfWork, TEntity, TKey> GetRepository<TUnitOfWork, TEntity, TKey>() where TUnitOfWork : IUnitOfWork where TEntity : class, IEntity, new();
+    public abstract IRepository<TUnitOfWork, TEntity, TKey> GetRepository<TUnitOfWork, TEntity, TKey>(string name) where TUnitOfWork : IUnitOfWork where TEntity : class, IEntity, new();
+    public abstract IAsyncRepository<TUnitOfWork, TEntity, TKey> GetAsyncRepository<TUnitOfWork, TEntity, TKey>() where TUnitOfWork : IUnitOfWork where TEntity : class, IEntity, new();
+    public abstract IAsyncRepository<TUnitOfWork, TEntity, TKey> GetAsyncRepository<TUnitOfWork, TEntity, TKey>(string name) where TUnitOfWork : IUnitOfWork where TEntity : class, IEntity, new();
+
     Data.Repository.ISet<TEntity> IQueryableUnitOfWork.CreateSet<TEntity>() => InternalCreateSet<TEntity>();
+    public abstract IQueryableRepository<TUnitOfWork, TEntity, TKey> GetQueryableRepository<TUnitOfWork, TEntity, TKey>() where TUnitOfWork : IQueryableUnitOfWork where TEntity : class, IEntity, new();
+    public abstract IQueryableRepository<TUnitOfWork, TEntity, TKey> GetQueryableRepository<TUnitOfWork, TEntity, TKey>(string name) where TUnitOfWork : IQueryableUnitOfWork where TEntity : class, IEntity, new();
+    public abstract IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey> GetAsyncQueryableRepository<TUnitOfWork, TEntity, TKey>() where TUnitOfWork : IQueryableUnitOfWork where TEntity : class, IEntity, new();
+    public abstract IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey> GetAsyncQueryableRepository<TUnitOfWork, TEntity, TKey>(string name) where TUnitOfWork : IQueryableUnitOfWork where TEntity : class, IEntity, new();
 
     public virtual Data.Repository.ISet<TEntity> CreateSet<TEntity>() where TEntity : class, IEntity, new() => InternalCreateSet<TEntity>();
 
@@ -110,10 +119,6 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
     {
         return _context.Database.GetPendingMigrations();
     }
-
-    public abstract TRepository GetRepository<TRepository>() where TRepository : IRepository;
-
-    public abstract TRepository GetRepository<TRepository>(string name) where TRepository : IRepository;
 
     public void LoadCollection<TEntity, TElement>(TEntity item, Expression<Func<TEntity, IEnumerable<TElement>>> navigationProperty, Expression<Func<TElement, bool>> filter = null) where TEntity : class where TElement : class
     {

@@ -344,4 +344,32 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
             await LoadCascadeAsync(props, nextObj, index + 1);
         }
     }
+    
+    internal Expression<Func<TEntity, bool>> GetExpression<TKey>(TKey id)
+    {
+        var primaryKey = dbContext.Model.FindEntityType(typeof(TEntity)).FindPrimaryKey().Properties.FirstOrDefault();
+        if (primaryKey == null)
+            return null;
+        
+        var keyProperty = typeof(TEntity).GetProperty(primaryKey.Name);
+
+        if (keyProperty == null)
+            return null;
+        
+        // Create entity => portion of lambda expression
+        var parameter = Expression.Parameter(typeof(TEntity), "entity");
+
+        // create entity.Id portion of lambda expression
+        var property = Expression.Property(parameter, keyProperty.Name);
+
+        // create 'id' portion of lambda expression
+        var equalsTo = Expression.Constant(id);
+
+        // create entity.Id == 'id' portion of lambda expression
+        var equality = Expression.Equal(property, equalsTo);
+
+        // finally create entire expression - entity => entity.Id == 'id'
+        var retVal = Expression.Lambda<Func<TEntity, bool>>(equality, new[] { parameter });
+        return retVal;
+    }
 }
