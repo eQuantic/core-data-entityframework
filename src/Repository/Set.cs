@@ -5,7 +5,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using eQuantic.Core.Data.EntityFramework.Repository.Extensions;
 using eQuantic.Core.Data.Repository;
+using eQuantic.Core.Data.Repository.Config;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Z.EntityFramework.Plus;
@@ -140,7 +142,7 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
     {
         return InternalDbSet.GetHashCode();
     }
-
+    
     public virtual void Insert(TEntity item)
     {
         InternalDbSet.Add(item);
@@ -371,5 +373,20 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
         // finally create entire expression - entity => entity.Id == 'id'
         var retVal = Expression.Lambda<Func<TEntity, bool>>(equality, new[] { parameter });
         return retVal;
+    }
+    
+    internal IQueryable<TEntity> GetQueryable(Action<QueryableConfiguration<TEntity>> configuration)
+    {
+        var config = new QueryableConfiguration<TEntity>();
+        configuration.Invoke(config);
+        IQueryable<TEntity> query = this;
+        
+        if (config.Properties?.Any() == true)
+            query = query.IncludeMany(config.Properties.ToArray());
+        
+        if (!string.IsNullOrEmpty(config.Tag))
+            query = query.TagWith(config.Tag);
+        
+        return config.BeforeCustomization.Invoke(query);
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using eQuantic.Core.Data.EntityFramework.Repository.Extensions;
 using eQuantic.Core.Data.Repository;
 using eQuantic.Core.Data.Repository.Config;
 using eQuantic.Core.Data.Repository.Read;
@@ -141,10 +142,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> : AsyncRea
 
     private IQueryable<TEntity> GetQueryable(Action<QueryableConfiguration<TEntity>> configuration)
     {
-        var config = new QueryableConfiguration<TEntity>();
-        configuration.Invoke(config);
-
-        return config.Customize.Invoke(GetSet());
+        return GetSet().GetQueryable(configuration);
     }
     
     private Set<TEntity> GetSet()

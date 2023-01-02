@@ -154,10 +154,7 @@ public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> : ReadRepositor
 
     private IQueryable<TEntity> GetQueryable(Action<QueryableConfiguration<TEntity>> configuration)
     {
-        var config = new QueryableConfiguration<TEntity>();
-        configuration.Invoke(config);
-
-        return config.Customize.Invoke(GetSet());
+        return GetSet().GetQueryable(configuration);
     }
     
     private Set<TEntity> GetSet()
