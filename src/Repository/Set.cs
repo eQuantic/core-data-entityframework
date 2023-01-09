@@ -375,7 +375,7 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
         return retVal;
     }
     
-    internal IQueryable<TEntity> GetQueryable(Action<QueryableConfiguration<TEntity>> configuration)
+    internal IQueryable<TEntity> GetQueryable(Action<QueryableConfiguration<TEntity>> configuration, Func<IQueryable<TEntity>, IQueryable<TEntity>> internalQueryAction)
     {
         var config = new QueryableConfiguration<TEntity>();
         configuration.Invoke(config);
@@ -387,6 +387,12 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
         if (!string.IsNullOrEmpty(config.Tag))
             query = query.TagWith(config.Tag);
         
-        return config.BeforeCustomization.Invoke(query);
+        query = config.BeforeCustomization.Invoke(query);
+        
+        query = internalQueryAction.Invoke(query);
+        
+        query = config.AfterCustomization.Invoke(query);
+
+        return query;
     }
 }
