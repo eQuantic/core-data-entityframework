@@ -20,11 +20,12 @@ public static class QueryableExtensions
     public static IQueryable<TEntity> IncludeMany<TEntity>(this IQueryable<TEntity> query, params string[] properties)
         where TEntity : class
     {
-        if (properties != null && properties.Length > 0)
+        if (properties is { Length: > 0 })
         {
             query = properties.Where(property => !string.IsNullOrEmpty(property))
                 .Aggregate(query, (current, property) => current.Include(property));
         }
+
         return query;
     }
 
@@ -35,7 +36,8 @@ public static class QueryableExtensions
     /// <param name="query">The query.</param>
     /// <param name="properties">The properties.</param>
     /// <returns></returns>
-    public static IQueryable<TEntity> IncludeMany<TEntity>(this IQueryable<TEntity> query, params Expression<Func<TEntity, object>>[] properties)
+    public static IQueryable<TEntity> IncludeMany<TEntity>(this IQueryable<TEntity> query,
+        params Expression<Func<TEntity, object>>[] properties)
         where TEntity : class
     {
         if (properties != null && properties.Length > 0)
@@ -43,6 +45,7 @@ public static class QueryableExtensions
             query = properties.Where(property => property != null)
                 .Aggregate(query, (current, property) => current.Include(property));
         }
+
         return query;
     }
 }

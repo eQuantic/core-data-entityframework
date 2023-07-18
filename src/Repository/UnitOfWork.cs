@@ -4,37 +4,74 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using eQuantic.Core.Data.EntityFramework.Repository.Sql;
 using eQuantic.Core.Data.Repository;
+using eQuantic.Core.Data.Repository.Options;
+using eQuantic.Core.Data.Repository.Sql;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace eQuantic.Core.Data.EntityFramework.Repository;
 
-public abstract class UnitOfWork : IQueryableUnitOfWork
+public abstract class UnitOfWork : SqlExecutor
 {
-    private static int IsMigrating = 0;
-    private readonly DbContext _context;
-    private IDbContextTransaction _transaction;
-    private bool disposed = false;
+    protected static int IsMigrating;
 
-    protected UnitOfWork(DbContext context)
+    protected UnitOfWork(DbContext context) : base(context)
+    {
+    }
+}
+
+public abstract class UnitOfWork<TUnitOfWork, TDbContext> : UnitOfWork<TDbContext>, ISqlUnitOfWork<TUnitOfWork>
+    where TDbContext : DbContext 
+    where TUnitOfWork : ISqlUnitOfWork
+{
+    private readonly IServiceProvider _serviceProvider;
+    
+    protected UnitOfWork(IServiceProvider serviceProvider, TDbContext context) : base(context)
+    {
+        _serviceProvider = serviceProvider;
+    }
+    
+    public virtual IRepository<TUnitOfWork, TEntity, TKey> GetRepository<TEntity, TKey>()
+        where TEntity : class, IEntity, new()
+    {
+        return _serviceProvider.GetRequiredService<Repository<TUnitOfWork, TEntity, TKey>>();
+    }
+
+    public IAsyncRepository<TUnitOfWork, TEntity, TKey> GetAsyncRepository<TEntity, TKey>()
+        where TEntity : class, IEntity, new()
+    {
+        return _serviceProvider.GetRequiredService<AsyncRepository<TUnitOfWork, TEntity, TKey>>();
+    }
+
+    public IQueryableRepository<TUnitOfWork, TEntity, TKey> GetQueryableRepository<TEntity, TKey>()
+        where TEntity : class, IEntity, new()
+    {
+        return _serviceProvider.GetRequiredService<QueryableRepository<TUnitOfWork, TEntity, TKey>>();
+    }
+
+    public IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey> GetAsyncQueryableRepository<TEntity, TKey>()
+        where TEntity : class, IEntity, new()
+    {
+        return _serviceProvider.GetRequiredService<AsyncQueryableRepository<TUnitOfWork, TEntity, TKey>>();
+    }
+}
+
+public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork 
+    where TDbContext : DbContext
+{
+    private readonly TDbContext _context;
+    
+
+    protected UnitOfWork(TDbContext context) : base(context)
     {
         _context = context;
     }
 
-    public void BeginTransaction()
-    {
-        _transaction?.Dispose();
-        _transaction = _context.Database.BeginTransaction();
-    }
-
     public int Commit()
     {
-        var affectedRecords = _context.SaveChanges();
-
-        _transaction?.Commit();
-
-        return affectedRecords;
+        return _context.SaveChanges();
     }
 
     public int CommitAndRefreshChanges()
@@ -64,8 +101,8 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
 
     public async Task<int> CommitAndRefreshChangesAsync()
     {
-        int changes = 0;
-        bool saveFailed = false;
+        var changes = 0;
+        var saveFailed = false;
 
         do
         {
@@ -89,30 +126,39 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
 
     public async Task<int> CommitAsync()
     {
-        var affectedRecords = await _context.SaveChangesAsync();
-
-        _transaction?.Commit();
-
-        return affectedRecords;
+        return await _context.SaveChangesAsync();
     }
 
-    public abstract IRepository<TUnitOfWork, TEntity, TKey> GetRepository<TUnitOfWork, TEntity, TKey>() where TUnitOfWork : IUnitOfWork where TEntity : class, IEntity, new();
-    public abstract IRepository<TUnitOfWork, TEntity, TKey> GetRepository<TUnitOfWork, TEntity, TKey>(string name) where TUnitOfWork : IUnitOfWork where TEntity : class, IEntity, new();
-    public abstract IAsyncRepository<TUnitOfWork, TEntity, TKey> GetAsyncRepository<TUnitOfWork, TEntity, TKey>() where TUnitOfWork : IUnitOfWork where TEntity : class, IEntity, new();
-    public abstract IAsyncRepository<TUnitOfWork, TEntity, TKey> GetAsyncRepository<TUnitOfWork, TEntity, TKey>(string name) where TUnitOfWork : IUnitOfWork where TEntity : class, IEntity, new();
+    public int Commit(Action<SaveOptions> options)
+    {
+        return Commit();
+    }
+
+    public int CommitAndRefreshChanges(Action<SaveOptions> options)
+    {
+        return CommitAndRefreshChanges();
+    }
+
+    public Task<int> CommitAndRefreshChangesAsync(Action<SaveOptions> options)
+    {
+        return CommitAndRefreshChangesAsync();
+    }
+
+    public Task<int> CommitAsync(Action<SaveOptions> options)
+    {
+        return CommitAsync();
+    }
 
     Data.Repository.ISet<TEntity> IQueryableUnitOfWork.CreateSet<TEntity>() => InternalCreateSet<TEntity>();
-    public abstract IQueryableRepository<TUnitOfWork, TEntity, TKey> GetQueryableRepository<TUnitOfWork, TEntity, TKey>() where TUnitOfWork : IQueryableUnitOfWork where TEntity : class, IEntity, new();
-    public abstract IQueryableRepository<TUnitOfWork, TEntity, TKey> GetQueryableRepository<TUnitOfWork, TEntity, TKey>(string name) where TUnitOfWork : IQueryableUnitOfWork where TEntity : class, IEntity, new();
-    public abstract IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey> GetAsyncQueryableRepository<TUnitOfWork, TEntity, TKey>() where TUnitOfWork : IQueryableUnitOfWork where TEntity : class, IEntity, new();
-    public abstract IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey> GetAsyncQueryableRepository<TUnitOfWork, TEntity, TKey>(string name) where TUnitOfWork : IQueryableUnitOfWork where TEntity : class, IEntity, new();
 
-    public virtual Data.Repository.ISet<TEntity> CreateSet<TEntity>() where TEntity : class, IEntity, new() => InternalCreateSet<TEntity>();
-
-    public void Dispose()
+    public void ApplyCurrentValues<TEntity>(TEntity original, TEntity current) where TEntity : class, IEntity, new()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        ((Set<TEntity>)InternalCreateSet<TEntity>()).ApplyCurrentValues(original, current);
+    }
+
+    public void Attach<TEntity>(TEntity item) where TEntity : class, IEntity, new()
+    {
+        ((Set<TEntity>)InternalCreateSet<TEntity>()).Attach(item);
     }
 
     public IEnumerable<string> GetPendingMigrations()
@@ -120,7 +166,35 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
         return _context.Database.GetPendingMigrations();
     }
 
-    public void LoadCollection<TEntity, TElement>(TEntity item, Expression<Func<TEntity, IEnumerable<TElement>>> navigationProperty, Expression<Func<TElement, bool>> filter = null) where TEntity : class where TElement : class
+    public void LoadProperty<TEntity, TComplexProperty>(TEntity item, Expression<Func<TEntity, TComplexProperty>> selector) 
+        where TEntity : class, IEntity, new()
+        where TComplexProperty : class
+    {
+        ((Set<TEntity>)InternalCreateSet<TEntity>()).LoadProperty(item, selector);
+    }
+
+    public void LoadProperty<TEntity>(TEntity item, string propertyName) 
+        where TEntity : class, IEntity, new()
+    {
+        ((Set<TEntity>)InternalCreateSet<TEntity>()).LoadProperty(item, propertyName);
+    }
+
+    public Task LoadPropertyAsync<TEntity, TComplexProperty>(TEntity item, Expression<Func<TEntity, TComplexProperty>> selector, CancellationToken cancellationToken = default)
+        where TEntity : class, IEntity, new() 
+        where TComplexProperty : class
+    {
+        return ((Set<TEntity>)InternalCreateSet<TEntity>()).LoadPropertyAsync(item, selector, cancellationToken);
+    }
+
+    public Task LoadPropertyAsync<TEntity>(TEntity item, string propertyName, CancellationToken cancellationToken = default) 
+        where TEntity : class, IEntity, new() 
+    {
+        return ((Set<TEntity>)InternalCreateSet<TEntity>()).LoadPropertyAsync(item, propertyName, cancellationToken);
+    }
+
+    public void LoadCollection<TEntity, TElement>(TEntity item,
+        Expression<Func<TEntity, IEnumerable<TElement>>> navigationProperty,
+        Expression<Func<TElement, bool>> filter = null) where TEntity : class where TElement : class
     {
         if (filter != null)
         {
@@ -132,7 +206,9 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
         }
     }
 
-    public async Task LoadCollectionAsync<TEntity, TElement>(TEntity item, Expression<Func<TEntity, IEnumerable<TElement>>> navigationProperty, Expression<Func<TElement, bool>> filter = null) where TEntity : class where TElement : class
+    public async Task LoadCollectionAsync<TEntity, TElement>(TEntity item,
+        Expression<Func<TEntity, IEnumerable<TElement>>> navigationProperty,
+        Expression<Func<TElement, bool>> filter = null) where TEntity : class where TElement : class
     {
         if (filter != null)
         {
@@ -158,8 +234,6 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
         _context?.ChangeTracker.Entries()
             .ToList()
             .ForEach(entry => entry.State = EntityState.Unchanged);
-
-        _transaction?.Rollback();
     }
 
     public void SetModified<TEntity>(TEntity item) where TEntity : class
@@ -170,34 +244,29 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
 
     public void UpdateDatabase()
     {
-        if (0 == Interlocked.Exchange(ref IsMigrating, 1))
-        {
-            try
-            {
-                _context.Database.Migrate();
-            }
-            finally
-            {
-                Interlocked.Exchange(ref IsMigrating, 0);
-            }
-        }
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (disposed)
+        if (0 != Interlocked.Exchange(ref IsMigrating, 1))
         {
             return;
         }
 
-        if (disposing)
+        try
         {
-            _transaction?.Dispose();
-            _context?.Dispose();
+            _context.Database.Migrate();
         }
-
-        disposed = true;
+        finally
+        {
+            Interlocked.Exchange(ref IsMigrating, 0);
+        }
     }
 
-    private Data.Repository.ISet<TEntity> InternalCreateSet<TEntity>() where TEntity : class, IEntity, new() => new Set<TEntity>(_context);
+    public virtual Data.Repository.ISet<TEntity> CreateSet<TEntity>() where TEntity : class, IEntity, new() =>
+        InternalCreateSet<TEntity>();
+
+    public virtual SaveOptions GetSaveOptions()
+    {
+        return new SaveOptions();
+    }
+
+    private Data.Repository.ISet<TEntity> InternalCreateSet<TEntity>() where TEntity : class, IEntity, new() =>
+        new Set<TEntity>(_context);
 }

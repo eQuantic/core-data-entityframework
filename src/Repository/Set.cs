@@ -8,20 +8,20 @@ using System.Threading.Tasks;
 using eQuantic.Core.Data.EntityFramework.Repository.Extensions;
 using eQuantic.Core.Data.Repository;
 using eQuantic.Core.Data.Repository.Config;
+using eQuantic.Linq.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Z.EntityFramework.Plus;
 
 namespace eQuantic.Core.Data.EntityFramework.Repository;
 
-public class Set<TEntity> : Data.Repository.ISet<TEntity>
-    where TEntity : class, IEntity, new()
+public class Set<TEntity> : Data.Repository.ISet<TEntity> where TEntity : class, IEntity, new()
 {
-    private readonly DbContext dbContext;
+    private readonly DbContext _dbContext;
 
     public Set(DbContext context)
     {
-        this.dbContext = context;
+        this._dbContext = context ?? throw new ArgumentNullException(nameof(context));
         InternalDbSet = context.Set<TEntity>();
     }
 
@@ -36,7 +36,8 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
         return InternalDbSet.Add(entity);
     }
 
-    public virtual async Task<EntityEntry<TEntity>> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
+    public virtual async Task<EntityEntry<TEntity>> AddAsync(TEntity entity,
+        CancellationToken cancellationToken = default)
     {
         return await InternalDbSet.AddAsync(entity, cancellationToken);
     }
@@ -64,7 +65,7 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
     public virtual void ApplyCurrentValues(TEntity original, TEntity current)
     {
         //if it is not attached, attach original and set current values
-        dbContext.Entry<TEntity>(original).CurrentValues.SetValues(current);
+        _dbContext.Entry<TEntity>(original).CurrentValues.SetValues(current);
     }
 
     public virtual EntityEntry<TEntity> Attach(TEntity entity)
@@ -93,9 +94,10 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
         return InternalDbSet.Where(filter).Delete();
     }
 
-    public virtual async Task<long> DeleteManyAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
+    public virtual async Task<long> DeleteManyAsync(Expression<Func<TEntity, bool>> filter,
+        CancellationToken cancellationToken = default)
     {
-        return await InternalDbSet.Where(filter).DeleteAsync();
+        return await InternalDbSet.Where(filter).DeleteAsync(cancellationToken);
     }
 
     public override bool Equals(object obj)
@@ -142,7 +144,7 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
     {
         return InternalDbSet.GetHashCode();
     }
-    
+
     public virtual void Insert(TEntity item)
     {
         InternalDbSet.Add(item);
@@ -153,113 +155,124 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
         await InternalDbSet.AddAsync(item, cancellationToken);
     }
 
-    public void LoadCollection<TChildEntity, TComplexProperty>(TChildEntity item, Expression<Func<TChildEntity, IEnumerable<TComplexProperty>>> selector)
+    public void LoadCollection<TChildEntity, TComplexProperty>(TChildEntity item,
+        Expression<Func<TChildEntity, IEnumerable<TComplexProperty>>> selector)
         where TChildEntity : class
         where TComplexProperty : class
     {
-        dbContext.Entry(item).Collection(selector).Load();
+        _dbContext.Entry(item).Collection(selector).Load();
     }
 
     public void LoadCollection<TChildEntity>(TChildEntity item, string propertyName)
         where TChildEntity : class
     {
-        dbContext.Entry(item).Collection(propertyName).Load();
+        _dbContext.Entry(item).Collection(propertyName).Load();
     }
 
-    public async Task LoadCollectionAsync<TChildEntity, TComplexProperty>(TChildEntity item, Expression<Func<TChildEntity, IEnumerable<TComplexProperty>>> selector)
+    public async Task LoadCollectionAsync<TChildEntity, TComplexProperty>(TChildEntity item,
+        Expression<Func<TChildEntity, IEnumerable<TComplexProperty>>> selector)
         where TChildEntity : class where TComplexProperty : class
     {
-        await dbContext.Entry(item).Collection(selector).LoadAsync();
+        await _dbContext.Entry(item).Collection(selector).LoadAsync();
     }
 
     public async Task LoadCollectionAsync<TChildEntity>(TChildEntity item, string propertyName)
         where TChildEntity : class
     {
-        await dbContext.Entry(item).Collection(propertyName).LoadAsync();
+        await _dbContext.Entry(item).Collection(propertyName).LoadAsync();
     }
 
     public void LoadProperties(TEntity entity, params string[] properties)
     {
-        if (properties != null && properties.Length > 0)
+        if (properties is not { Length: > 0 })
         {
-            foreach (var property in properties)
-            {
-                if (!string.IsNullOrEmpty(property))
-                {
-                    var props = property.Split('.');
+            return;
+        }
 
-                    if (props.Length == 1)
-                    {
-                        LoadProperty(entity, property);
-                    }
-                    else
-                    {
-                        LoadCascade(props, entity);
-                    }
-                }
+        foreach (var property in properties)
+        {
+            if (string.IsNullOrEmpty(property))
+            {
+                continue;
+            }
+
+            var props = property.Split('.');
+
+            if (props.Length == 1)
+            {
+                LoadProperty(entity, property);
+            }
+            else
+            {
+                LoadCascade(props, entity);
             }
         }
     }
 
     public async Task LoadPropertiesAsync(TEntity entity, params string[] properties)
     {
-        if (properties != null && properties.Length > 0)
+        if (properties is { Length: > 0 })
         {
             foreach (var property in properties)
             {
-                if (!string.IsNullOrEmpty(property))
+                if (string.IsNullOrEmpty(property))
                 {
-                    var props = property.Split('.');
+                    continue;
+                }
 
-                    if (props.Length == 1)
-                    {
-                        await LoadPropertyAsync(entity, property);
-                    }
-                    else
-                    {
-                        await LoadCascadeAsync(props, entity);
-                    }
+                var props = property.Split('.');
+
+                if (props.Length == 1)
+                {
+                    await LoadPropertyAsync(entity, property);
+                }
+                else
+                {
+                    await LoadCascadeAsync(props, entity);
                 }
             }
         }
     }
 
-    public void LoadProperty<TChildEntity, TComplexProperty>(TChildEntity item, Expression<Func<TChildEntity, TComplexProperty>> selector)
+    public void LoadProperty<TChildEntity, TComplexProperty>(TChildEntity item,
+        Expression<Func<TChildEntity, TComplexProperty>> selector)
         where TChildEntity : class
         where TComplexProperty : class
     {
-        dbContext.Entry(item).Reference(selector).Load();
+        _dbContext.Entry(item).Reference(selector).Load();
     }
 
     public void LoadProperty<TChildEntity>(TChildEntity item, string propertyName)
         where TChildEntity : class
     {
-        if (typeof(IEnumerable).IsAssignableFrom(typeof(TChildEntity).GetProperty(propertyName).PropertyType))
+        if (typeof(IEnumerable).IsAssignableFrom(typeof(TChildEntity).GetProperty(propertyName)!.PropertyType))
         {
-            dbContext.Entry(item).Collection(propertyName).Load();
+            _dbContext.Entry(item).Collection(propertyName).Load();
         }
         else
         {
-            dbContext.Entry(item).Reference(propertyName).Load();
+            _dbContext.Entry(item).Reference(propertyName).Load();
         }
     }
 
-    public async Task LoadPropertyAsync<TChildEntity, TComplexProperty>(TChildEntity item, Expression<Func<TChildEntity, TComplexProperty>> selector)
+    public async Task LoadPropertyAsync<TChildEntity, TComplexProperty>(TChildEntity item,
+        Expression<Func<TChildEntity, TComplexProperty>> selector, CancellationToken cancellationToken = default)
         where TChildEntity : class where TComplexProperty : class
     {
-        await dbContext.Entry(item).Reference(selector).LoadAsync();
+        await _dbContext.Entry(item).Reference(selector).LoadAsync(cancellationToken);
     }
 
-    public async Task LoadPropertyAsync<TChildEntity>(TChildEntity item, string propertyName)
+    public async Task LoadPropertyAsync<TChildEntity>(TChildEntity item, string propertyName,
+        CancellationToken cancellationToken = default)
         where TChildEntity : class
     {
-        if (typeof(IEnumerable).IsAssignableFrom(typeof(TChildEntity).GetProperty(propertyName).PropertyType))
+        if (typeof(IEnumerable).IsAssignableFrom(typeof(TChildEntity).GetProperty(propertyName)!.PropertyType))
         {
-            await dbContext.Entry(item).Collection(propertyName).LoadAsync();
+            await _dbContext.Entry(item).Collection(propertyName).LoadAsync(cancellationToken);
         }
         else
         {
-            await dbContext.Entry(item).Reference(propertyName).LoadAsync();
+            await _dbContext.Entry(item).Reference(propertyName).LoadAsync(cancellationToken);
         }
     }
 
@@ -281,7 +294,7 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
     public virtual void SetModified(TEntity item)
     {
         //this operation also attach item in object state manager
-        this.dbContext.Entry<TEntity>(item).State = EntityState.Modified;
+        this._dbContext.Entry<TEntity>(item).State = EntityState.Modified;
     }
 
     public override string ToString()
@@ -294,14 +307,16 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
         return InternalDbSet.Update(entity);
     }
 
-    public virtual long UpdateMany(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, TEntity>> updateExpression)
+    public virtual long UpdateMany(Expression<Func<TEntity, bool>> filter,
+        Expression<Func<TEntity, TEntity>> updateExpression)
     {
         return InternalDbSet.Where(filter).Update(updateExpression);
     }
 
-    public virtual async Task<long> UpdateManyAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, TEntity>> updateExpression, CancellationToken cancellationToken = default)
+    public virtual async Task<long> UpdateManyAsync(Expression<Func<TEntity, bool>> filter,
+        Expression<Func<TEntity, TEntity>> updateExpression, CancellationToken cancellationToken = default)
     {
-        return await InternalDbSet.Where(filter).UpdateAsync(updateExpression);
+        return await InternalDbSet.Where(filter).UpdateAsync(updateExpression, cancellationToken);
     }
 
     public virtual void UpdateRange(IEnumerable<TEntity> entities)
@@ -316,7 +331,10 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
 
     private void LoadCascade(string[] props, object obj, int index = 0)
     {
-        if (obj == null) return;
+        if (obj == null)
+        {
+            return;
+        }
 
         var prop = obj.GetType().GetProperty(props[index]);
         var nextObj = prop?.GetValue(obj);
@@ -326,12 +344,18 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
             nextObj = prop?.GetValue(obj);
         }
 
-        if (props.Length > index + 1) LoadCascade(props, nextObj, index + 1);
+        if (props.Length > index + 1)
+        {
+            LoadCascade(props, nextObj, index + 1);
+        }
     }
 
     private async Task LoadCascadeAsync(string[] props, object obj, int index = 0)
     {
-        if (obj == null) return;
+        if (obj == null)
+        {
+            return;
+        }
 
         var prop = obj.GetType().GetProperty(props[index]);
         var nextObj = prop?.GetValue(obj);
@@ -346,18 +370,23 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
             await LoadCascadeAsync(props, nextObj, index + 1);
         }
     }
-    
+
     internal Expression<Func<TEntity, bool>> GetExpression<TKey>(TKey id)
     {
-        var primaryKey = dbContext.Model.FindEntityType(typeof(TEntity)).FindPrimaryKey().Properties.FirstOrDefault();
+        var primaryKey = _dbContext.Model.FindEntityType(typeof(TEntity))!.FindPrimaryKey()!.Properties
+            .FirstOrDefault();
         if (primaryKey == null)
+        {
             return null;
-        
+        }
+
         var keyProperty = typeof(TEntity).GetProperty(primaryKey.Name);
 
         if (keyProperty == null)
+        {
             return null;
-        
+        }
+
         // Create entity => portion of lambda expression
         var parameter = Expression.Parameter(typeof(TEntity), "entity");
 
@@ -374,24 +403,75 @@ public class Set<TEntity> : Data.Repository.ISet<TEntity>
         var retVal = Expression.Lambda<Func<TEntity, bool>>(equality, new[] { parameter });
         return retVal;
     }
-    
-    internal IQueryable<TEntity> GetQueryable(Action<QueryableConfiguration<TEntity>> configuration, Func<IQueryable<TEntity>, IQueryable<TEntity>> internalQueryAction)
+
+    private static TConfig GetConfig<TConfig>(Action<TConfig> configuration)
+        where TConfig : Configuration<TEntity>
     {
-        var config = new QueryableConfiguration<TEntity>();
-        configuration.Invoke(config);
-        IQueryable<TEntity> query = this;
+        Configuration<TEntity> config;
+        if (configuration is Action<QueryableConfiguration<TEntity>>)
+        {
+            config = new QueryableConfiguration<TEntity>();
+        }
+        else
+        {
+            config = new DefaultConfiguration<TEntity>();
+        }
+
+        configuration.Invoke((TConfig)config);
+
+        return (TConfig)config;
+    }
+
+    internal IQueryable<TEntity> GetQueryable<TConfig>(Action<TConfig> configuration,
+        Func<IQueryable<TEntity>, IQueryable<TEntity>> internalQueryAction)
+        where TConfig : Configuration<TEntity>
+    {
+        if (configuration == null)
+        {
+            return internalQueryAction.Invoke(this);
+        }
+
+        var config = GetConfig(configuration);
+        var queryableConfig = config as QueryableConfiguration<TEntity>;
         
+        var query = string.IsNullOrEmpty(queryableConfig?.SqlRaw) ? this : InternalDbSet.FromSqlRaw(queryableConfig.SqlRaw);
+
+        if (config.HasNoTracking)
+        {
+            query = query.AsNoTracking();
+        }
+
         if (config.Properties?.Any() == true)
+        {
             query = query.IncludeMany(config.Properties.ToArray());
+        }
+
+        if (queryableConfig?.IgnoreQueryFilters == true)
+        {
+            query = query.IgnoreQueryFilters();
+        }
         
         if (!string.IsNullOrEmpty(config.Tag))
+        {
             query = query.TagWith(config.Tag);
-        
-        query = config.BeforeCustomization.Invoke(query);
-        
+        }
+
+        if (queryableConfig != null)
+        {
+            query = queryableConfig.BeforeCustomization.Invoke(query);
+        }
+
         query = internalQueryAction.Invoke(query);
-        
-        query = config.AfterCustomization.Invoke(query);
+
+        if (config.SortingColumns.Any())
+        {
+            query = query.OrderBy(config.SortingColumns.ToArray());
+        }
+
+        if (queryableConfig != null)
+        {
+            query = queryableConfig.AfterCustomization.Invoke(query);
+        }
 
         return query;
     }

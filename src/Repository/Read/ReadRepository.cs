@@ -3,32 +3,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using eQuantic.Core.Data.Repository;
+using eQuantic.Core.Data.Repository.Config;
 using eQuantic.Core.Data.Repository.Read;
-using eQuantic.Linq.Extensions;
-using eQuantic.Linq.Sorter;
 using eQuantic.Linq.Specification;
 
 namespace eQuantic.Core.Data.EntityFramework.Repository.Read;
 
-public class ReadRepository<TUnitOfWork, TEntity, TKey> : IReadRepository<TUnitOfWork, TEntity, TKey>
+public class ReadRepository<TUnitOfWork, TConfig, TEntity, TKey> : IReadRepository<TUnitOfWork, TConfig, TEntity, TKey>
     where TUnitOfWork : IQueryableUnitOfWork
     where TEntity : class, IEntity, new()
+    where TConfig : Configuration<TEntity>
 {
-    private Set<TEntity> _dbset = null;
-    private bool disposed = false;
-
+    private Set<TEntity> _dbSet;
+    private bool _disposed;
+    private const string SpecificationCannotBeNull = "Specification cannot be null";
+    private const string FilterExpressionCannotBeNull = "Filter expression cannot be null";
     /// <summary>
     /// Creates a new instance of the read repository
     /// </summary>
     /// <param name="unitOfWork">Associated Unit Of Work</param>
     public ReadRepository(TUnitOfWork unitOfWork)
     {
-        if (unitOfWork == null)
-        {
-            throw new ArgumentNullException(nameof(unitOfWork));
-        }
-
-        UnitOfWork = unitOfWork;
+        UnitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 
     /// <summary>
@@ -36,14 +32,15 @@ public class ReadRepository<TUnitOfWork, TEntity, TKey> : IReadRepository<TUnitO
     /// </summary>
     public TUnitOfWork UnitOfWork { get; private set; }
 
-    public IEnumerable<TEntity> AllMatching(ISpecification<TEntity> specification, params ISorting[] sortingColumns)
+    public IEnumerable<TEntity> AllMatching(ISpecification<TEntity> specification,
+        Action<TConfig> configuration = default)
     {
         if (specification == null)
         {
-            throw new ArgumentNullException(nameof(specification));
+            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
         }
 
-        return GetSet().Where(specification.SatisfiedBy()).OrderBy(sortingColumns);
+        return GetQueryable(configuration, query => query.Where(specification.SatisfiedBy()));
     }
 
     public long Count()
@@ -55,7 +52,7 @@ public class ReadRepository<TUnitOfWork, TEntity, TKey> : IReadRepository<TUnitO
     {
         if (specification == null)
         {
-            throw new ArgumentNullException(nameof(specification));
+            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
         }
 
         return this.Count(specification.SatisfiedBy());
@@ -65,9 +62,55 @@ public class ReadRepository<TUnitOfWork, TEntity, TKey> : IReadRepository<TUnitO
     {
         if (filter == null)
         {
-            throw new ArgumentNullException(nameof(filter));
+            throw new ArgumentNullException(nameof(filter), FilterExpressionCannotBeNull);
         }
+
         return GetSet().LongCount(filter);
+    }
+
+    public bool All(ISpecification<TEntity> specification, Action<TConfig> configuration = default)
+    {
+        if (specification == null)
+        {
+            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
+        }
+
+        return this.All(specification.SatisfiedBy());
+    }
+
+    public bool All(Expression<Func<TEntity, bool>> filter, Action<TConfig> configuration = default)
+    {
+        if (filter == null)
+        {
+            throw new ArgumentNullException(nameof(filter), FilterExpressionCannotBeNull);
+        }
+
+        return GetQueryable(configuration, _ => _).All(filter);
+    }
+
+    public bool Any(Action<TConfig> configuration = default)
+    {
+        return GetQueryable(configuration, _ => _).Any();
+    }
+
+    public bool Any(ISpecification<TEntity> specification, Action<TConfig> configuration = default)
+    {
+        if (specification == null)
+        {
+            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
+        }
+
+        return this.Any(specification.SatisfiedBy());
+    }
+
+    public bool Any(Expression<Func<TEntity, bool>> filter, Action<TConfig> configuration = default)
+    {
+        if (filter == null)
+        {
+            throw new ArgumentNullException(nameof(filter), FilterExpressionCannotBeNull);
+        }
+
+        return GetQueryable(configuration, query => query.Where(filter)).Any();
     }
 
     public void Dispose()
@@ -76,134 +119,179 @@ public class ReadRepository<TUnitOfWork, TEntity, TKey> : IReadRepository<TUnitO
         GC.SuppressFinalize(this);
     }
 
-    public TEntity Get(TKey id)
+    public TEntity Get(TKey id, Action<TConfig> configuration = default)
     {
         if (id == null)
         {
             throw new ArgumentNullException(nameof(id));
         }
 
-        return GetSet().Find(id);
-    }
-
-    public IEnumerable<TEntity> GetAll(params ISorting[] sortingColumns)
-    {
-        if (sortingColumns?.Length > 0)
+        if (configuration == null)
         {
-            return GetSet().OrderBy(sortingColumns);
+            return GetSet().Find(id);
         }
 
-        return GetSet().AsQueryable();
+        var idExpression = GetSet().GetExpression(id);
+        return GetQueryable(configuration, query => query.Where(idExpression))
+            .SingleOrDefault();
     }
 
-    public IEnumerable<TEntity> GetFiltered(Expression<Func<TEntity, bool>> filter)
+    public IEnumerable<TEntity> GetAll(Action<TConfig> configuration = default)
     {
-        return GetFiltered(filter, null);
+        return GetQueryable(configuration, query => query);
     }
 
-    public IEnumerable<TEntity> GetFiltered(Expression<Func<TEntity, bool>> filter, params ISorting[] sortColumns)
+    public IEnumerable<TResult> GetMapped<TResult>(Expression<Func<TEntity, bool>> filter,
+        Expression<Func<TEntity, TResult>> map, Action<TConfig> configuration = default)
     {
-        if (filter == null)
-        {
-            throw new ArgumentNullException(nameof(filter), "Filter expression cannot be null");
-        }
-
-        var query = GetSet().Where(filter);
-        if (sortColumns?.Length > 0)
-        {
-            query = query.OrderBy(sortColumns);
-        }
-        return query;
+        return GetQueryable(configuration, query => query.Where(filter)).Select(map);
     }
 
-    public TEntity GetFirst(Expression<Func<TEntity, bool>> filter, params ISorting[] sortColumns)
-    {
-        if (filter == null)
-        {
-            throw new ArgumentNullException(nameof(filter), "Filter expression cannot be null");
-        }
-
-        return GetSet().OrderBy(sortColumns).FirstOrDefault(filter);
-    }
-
-    public TEntity GetFirst(ISpecification<TEntity> specification, params ISorting[] sortColumns)
+    public IEnumerable<TResult> GetMapped<TResult>(ISpecification<TEntity> specification,
+        Expression<Func<TEntity, TResult>> map, Action<TConfig> configuration = default)
     {
         if (specification == null)
         {
-            throw new ArgumentNullException(nameof(specification), "Specification cannot be null");
+            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
         }
 
-        return GetSet().OrderBy(sortColumns).FirstOrDefault(specification.SatisfiedBy());
+        return this.GetMapped(specification.SatisfiedBy(), map, configuration);
     }
 
-    public IEnumerable<TEntity> GetPaged(int limit, params ISorting[] sortColumns)
-    {
-        return GetPaged((Expression<Func<TEntity, bool>>)null, 1, limit, sortColumns);
-    }
-
-    public IEnumerable<TEntity> GetPaged(ISpecification<TEntity> specification, int limit, params ISorting[] sortColumns)
-    {
-        return GetPaged(specification.SatisfiedBy(), 1, limit, sortColumns);
-    }
-
-    public IEnumerable<TEntity> GetPaged(Expression<Func<TEntity, bool>> filter, int limit, params ISorting[] sortColumns)
-    {
-        return GetPaged(filter, 1, limit, sortColumns);
-    }
-
-    public IEnumerable<TEntity> GetPaged(int pageIndex, int pageCount, params ISorting[] sortColumns)
-    {
-        return GetPaged((Expression<Func<TEntity, bool>>)null, pageIndex, pageCount, sortColumns);
-    }
-
-    public IEnumerable<TEntity> GetPaged(ISpecification<TEntity> specification, int pageIndex, int pageCount, params ISorting[] sortColumns)
-    {
-        return GetPaged(specification.SatisfiedBy(), pageIndex, pageCount, sortColumns);
-    }
-
-    public IEnumerable<TEntity> GetPaged(Expression<Func<TEntity, bool>> filter, int pageIndex, int pageCount, params ISorting[] sortColumns)
-    {
-        IQueryable<TEntity> query = GetSet();
-        if (filter != null)
-        {
-            query = query.Where(filter);
-        }
-
-        if (sortColumns?.Length > 0)
-        {
-            query = query.OrderBy(sortColumns);
-        }
-        if (pageCount > 0)
-        {
-            return query.Skip((pageIndex - 1) * pageCount).Take(pageCount);
-        }
-
-        return query;
-    }
-
-    public TEntity GetSingle(Expression<Func<TEntity, bool>> filter, params ISorting[] sortColumns)
+    public IEnumerable<TEntity> GetFiltered(Expression<Func<TEntity, bool>> filter,
+        Action<TConfig> configuration = default)
     {
         if (filter == null)
         {
-            throw new ArgumentNullException(nameof(filter), "Filter expression cannot be null");
+            throw new ArgumentNullException(nameof(filter), FilterExpressionCannotBeNull);
         }
 
-        return GetSet().SingleOrDefault(filter);
+        return GetQueryable(configuration, query => query.Where(filter));
     }
 
-    public TEntity GetSingle(ISpecification<TEntity> specification, params ISorting[] sortColumns)
+    public TEntity GetFirst(Expression<Func<TEntity, bool>> filter, Action<TConfig> configuration = default)
+    {
+        if (filter == null)
+        {
+            throw new ArgumentNullException(nameof(filter), FilterExpressionCannotBeNull);
+        }
+
+        return GetQueryable(configuration, query => query.Where(filter)).FirstOrDefault();
+    }
+
+    public TEntity GetFirst(ISpecification<TEntity> specification, Action<TConfig> configuration = default)
     {
         if (specification == null)
         {
-            throw new ArgumentNullException(nameof(specification), "Specification cannot be null");
+            throw new ArgumentNullException(nameof(specification),SpecificationCannotBeNull);
         }
 
-        return GetSet().SingleOrDefault(specification.SatisfiedBy());
+        return GetQueryable(configuration, query => query.Where(specification.SatisfiedBy())).FirstOrDefault();
+    }
+
+    public TResult GetFirstMapped<TResult>(Expression<Func<TEntity, bool>> filter,
+        Expression<Func<TEntity, TResult>> map, Action<TConfig> configuration = default)
+    {
+        if (filter == null)
+        {
+            throw new ArgumentNullException(nameof(filter), FilterExpressionCannotBeNull);
+        }
+        return GetQueryable(configuration, query => query.Where(filter))
+            .Select(map)
+            .FirstOrDefault();
+    }
+
+    public TResult GetFirstMapped<TResult>(ISpecification<TEntity> specification,
+        Expression<Func<TEntity, TResult>> map, Action<TConfig> configuration = default)
+    {
+        if (specification == null)
+        {
+            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
+        }
+
+        return this.GetFirstMapped(specification.SatisfiedBy(), map, configuration);
+    }
+
+    public IEnumerable<TEntity> GetPaged(int limit, Action<TConfig> configuration = default)
+    {
+        return GetPaged((Expression<Func<TEntity, bool>>)null, 1, limit, configuration);
+    }
+
+    public IEnumerable<TEntity> GetPaged(ISpecification<TEntity> specification, int limit,
+        Action<TConfig> configuration = default)
+    {
+        if (specification == null)
+        {
+            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
+        }
+
+        return GetPaged(specification.SatisfiedBy(), 1, limit, configuration);
+    }
+
+    public IEnumerable<TEntity> GetPaged(Expression<Func<TEntity, bool>> filter, int limit,
+        Action<TConfig> configuration = default)
+    {
+        return GetPaged(filter, 1, limit, configuration);
+    }
+
+    public IEnumerable<TEntity> GetPaged(int pageIndex, int pageSize, Action<TConfig> configuration = default)
+    {
+        return GetPaged((Expression<Func<TEntity, bool>>)null, pageIndex, pageSize, configuration);
+    }
+
+    public IEnumerable<TEntity> GetPaged(ISpecification<TEntity> specification, int pageIndex, int pageSize,
+        Action<TConfig> configuration = default)
+    {
+        if (specification == null)
+        {
+            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
+        }
+
+        return GetPaged(specification.SatisfiedBy(), pageIndex, pageSize, configuration);
+    }
+
+    public IEnumerable<TEntity> GetPaged(Expression<Func<TEntity, bool>> filter, int pageIndex, int pageSize,
+        Action<TConfig> configuration = default)
+    {
+        var query = GetQueryable(configuration, internalQuery =>
+        {
+            if (filter != null)
+            {
+                internalQuery = internalQuery.Where(filter);
+            }
+
+            return internalQuery;
+        });
+        return pageSize > 0 ? query.Skip((pageIndex - 1) * pageSize).Take(pageSize) : query;
+    }
+
+    public TEntity GetSingle(Expression<Func<TEntity, bool>> filter, Action<TConfig> configuration = default)
+    {
+        if (filter == null)
+        {
+            throw new ArgumentNullException(nameof(filter), FilterExpressionCannotBeNull);
+        }
+
+        return GetQueryable(configuration, query => query.Where(filter))
+            .SingleOrDefault();
+    }
+
+    public TEntity GetSingle(ISpecification<TEntity> specification, Action<TConfig> configuration = default)
+    {
+        if (specification == null)
+        {
+            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
+        }
+
+        return GetQueryable(configuration, query =>
+                query
+                    .Where(specification.SatisfiedBy()))
+            .SingleOrDefault();
     }
 
     protected virtual void Dispose(bool disposing)
     {
-        if (disposed)
+        if (_disposed)
         {
             return;
         }
@@ -213,11 +301,17 @@ public class ReadRepository<TUnitOfWork, TEntity, TKey> : IReadRepository<TUnitO
             UnitOfWork?.Dispose();
         }
 
-        disposed = true;
+        _disposed = true;
+    }
+
+    private IQueryable<TEntity> GetQueryable(Action<TConfig> configuration,
+        Func<IQueryable<TEntity>, IQueryable<TEntity>> internalQueryAction)
+    {
+        return GetSet().GetQueryable(configuration, internalQueryAction);
     }
 
     private Set<TEntity> GetSet()
     {
-        return _dbset ?? (_dbset = (Set<TEntity>)UnitOfWork.CreateSet<TEntity>());
+        return _dbSet ??= (Set<TEntity>)UnitOfWork.CreateSet<TEntity>();
     }
 }

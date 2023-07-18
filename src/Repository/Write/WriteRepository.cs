@@ -6,21 +6,16 @@ using eQuantic.Linq.Specification;
 
 namespace eQuantic.Core.Data.EntityFramework.Repository.Write;
 
-public class WriteRepository<TUnitOfWork, TEntity, TKey> : IWriteRepository<TUnitOfWork, TEntity, TKey>
+public class WriteRepository<TUnitOfWork, TEntity> : IWriteRepository<TUnitOfWork, TEntity>
     where TUnitOfWork : IQueryableUnitOfWork
     where TEntity : class, IEntity, new()
 {
-    private Set<TEntity> _dbset = null;
-    private bool disposed = false;
+    private Set<TEntity> _dbSet;
+    private bool _disposed;
 
     public WriteRepository(TUnitOfWork unitOfWork)
     {
-        if (unitOfWork == null)
-        {
-            throw new ArgumentNullException(nameof(unitOfWork));
-        }
-
-        UnitOfWork = unitOfWork;
+        UnitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 
     public TUnitOfWork UnitOfWork { get; private set; }
@@ -47,6 +42,11 @@ public class WriteRepository<TUnitOfWork, TEntity, TKey> : IWriteRepository<TUni
 
     public long DeleteMany(ISpecification<TEntity> specification)
     {
+        if (specification == null)
+        {
+            throw new ArgumentNullException(nameof(specification));
+        }
+
         return DeleteMany(specification.SatisfiedBy());
     }
 
@@ -112,12 +112,17 @@ public class WriteRepository<TUnitOfWork, TEntity, TKey> : IWriteRepository<TUni
 
     public long UpdateMany(ISpecification<TEntity> specification, Expression<Func<TEntity, TEntity>> updateFactory)
     {
+        if (specification == null)
+        {
+            throw new ArgumentNullException(nameof(specification));
+        }
+
         return UpdateMany(specification.SatisfiedBy(), updateFactory);
     }
 
     protected virtual void Dispose(bool disposing)
     {
-        if (disposed)
+        if (_disposed)
         {
             return;
         }
@@ -127,11 +132,11 @@ public class WriteRepository<TUnitOfWork, TEntity, TKey> : IWriteRepository<TUni
             UnitOfWork?.Dispose();
         }
 
-        disposed = true;
+        _disposed = true;
     }
 
     private Set<TEntity> GetSet()
     {
-        return _dbset ?? (_dbset = (Set<TEntity>)UnitOfWork.CreateSet<TEntity>());
+        return _dbSet ?? (_dbSet = (Set<TEntity>)UnitOfWork.CreateSet<TEntity>());
     }
 }
