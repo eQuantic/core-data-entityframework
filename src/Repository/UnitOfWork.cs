@@ -76,8 +76,8 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
 
     public int CommitAndRefreshChanges()
     {
-        int changes = 0;
-        bool saveFailed = false;
+        var changes = 0;
+        var saveFailed = false;
 
         do
         {
@@ -99,7 +99,7 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
         return changes;
     }
 
-    public async Task<int> CommitAndRefreshChangesAsync()
+    public async Task<int> CommitAndRefreshChangesAsync(CancellationToken cancellationToken = default)
     {
         var changes = 0;
         var saveFailed = false;
@@ -108,7 +108,7 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
         {
             try
             {
-                changes = await _context.SaveChangesAsync();
+                changes = await _context.SaveChangesAsync(cancellationToken);
 
                 saveFailed = false;
             }
@@ -124,9 +124,9 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
         return changes;
     }
 
-    public async Task<int> CommitAsync()
+    public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.SaveChangesAsync();
+        return await _context.SaveChangesAsync(cancellationToken);
     }
 
     public int Commit(Action<SaveOptions> options)
@@ -139,14 +139,14 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
         return CommitAndRefreshChanges();
     }
 
-    public Task<int> CommitAndRefreshChangesAsync(Action<SaveOptions> options)
+    public Task<int> CommitAndRefreshChangesAsync(Action<SaveOptions> options, CancellationToken cancellationToken = default)
     {
-        return CommitAndRefreshChangesAsync();
+        return CommitAndRefreshChangesAsync(cancellationToken);
     }
 
-    public Task<int> CommitAsync(Action<SaveOptions> options)
+    public Task<int> CommitAsync(Action<SaveOptions> options, CancellationToken cancellationToken = default)
     {
-        return CommitAsync();
+        return CommitAsync(cancellationToken);
     }
 
     Data.Repository.ISet<TEntity> IQueryableUnitOfWork.CreateSet<TEntity>() => InternalCreateSet<TEntity>();
