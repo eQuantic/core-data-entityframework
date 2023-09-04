@@ -20,6 +20,8 @@ public abstract class UnitOfWork : SqlExecutor
     protected UnitOfWork(DbContext context) : base(context)
     {
     }
+    
+    internal DbContext GetDbContext() => Context;
 }
 
 public abstract class UnitOfWork<TUnitOfWork, TDbContext> : UnitOfWork<TDbContext>, ISqlUnitOfWork<TUnitOfWork>
