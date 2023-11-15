@@ -4,7 +4,7 @@
 	<PropertyGroup>
 		<Description>Core Data library for Entity Framework</Description>
 		<AssemblyTitle>eQuantic.Core.Data.EntityFramework</AssemblyTitle>
-		<Version>4.1.0.0</Version>
+		<Version>4.1.1.0</Version>
 		<Authors>eQuantic Systems</Authors>
 		<TargetFrameworks>netstandard2.1;net6.0;net7.0;net8.0</TargetFrameworks>
 		<AssemblyName>eQuantic.Core.Data.EntityFramework</AssemblyName>
@@ -23,8 +23,8 @@
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<Copyright>Copyright ©  2016</Copyright>
-		<AssemblyVersion>4.1.0.0</AssemblyVersion>
-		<FileVersion>4.1.0.0</FileVersion>
+		<AssemblyVersion>4.1.1.0</AssemblyVersion>
+		<FileVersion>4.1.1.0</FileVersion>
 		<PackageIcon>Icon.png</PackageIcon>
 		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
@@ -46,7 +46,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="3.22.4" />
+		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="3.100.0.5" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
@@ -61,7 +61,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="6.22.4" />
+		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="6.100.0.5" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' ">
@@ -76,22 +76,22 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="7.22.4" />
+		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="7.100.0.5" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0-rc.2.23480.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0-rc.2.23480.1">
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0-rc.2.23480.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="8.0.0-rc.2.23480.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0-rc.2.23480.1">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="8.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="8.0.0-rc.2.23480.1-01" />
+		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="8.0.0-rc.2.23480.1-02" />
 	</ItemGroup>
 	
 	<ItemGroup>
