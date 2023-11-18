@@ -31,7 +31,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="eQuantic.Core" Version="1.7.0" />
-		<PackageReference Include="eQuantic.Core.Data" Version="4.1.0" />
+		<PackageReference Include="eQuantic.Core.Data" Version="4.1.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
@@ -46,7 +46,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="3.100.0.5" />
+		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="3.101.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
@@ -61,7 +61,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="6.100.0.5" />
+		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="6.101.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' ">
@@ -76,7 +76,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="7.100.0.5" />
+		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="7.101.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
@@ -91,7 +91,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="8.0.0-rc.2.23480.1-02" />
+		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="8.101.0" />
 	</ItemGroup>
 	
 	<ItemGroup>
@@ -100,7 +100,7 @@
 		<None Include="Icon_dialog.png" Pack="true" PackagePath="Icon_dialog.png" />
 		<None Include="Icon_list.png" Pack="true" PackagePath="Icon_list.png" />
 		<None Include="../LICENSE" Pack="true" PackagePath="" />
-		<None Include="../README.md" Pack="true" PackagePath=""/>
+		<None Include="../README.md" Pack="true" PackagePath="" />
 	</ItemGroup>
 
 	<ItemGroup>
