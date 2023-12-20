@@ -24,50 +24,15 @@ public abstract class UnitOfWork : SqlExecutor
     internal DbContext GetDbContext() => Context;
 }
 
-public abstract class UnitOfWork<TUnitOfWork, TDbContext> : UnitOfWork<TDbContext>, ISqlUnitOfWork<TUnitOfWork>
-    where TDbContext : DbContext 
-    where TUnitOfWork : ISqlUnitOfWork
-{
-    private readonly IServiceProvider _serviceProvider;
-    
-    protected UnitOfWork(IServiceProvider serviceProvider, TDbContext context) : base(context)
-    {
-        _serviceProvider = serviceProvider;
-    }
-    
-    public virtual IRepository<TUnitOfWork, TEntity, TKey> GetRepository<TEntity, TKey>()
-        where TEntity : class, IEntity, new()
-    {
-        return _serviceProvider.GetRequiredService<Repository<TUnitOfWork, TEntity, TKey>>();
-    }
-
-    public IAsyncRepository<TUnitOfWork, TEntity, TKey> GetAsyncRepository<TEntity, TKey>()
-        where TEntity : class, IEntity, new()
-    {
-        return _serviceProvider.GetRequiredService<AsyncRepository<TUnitOfWork, TEntity, TKey>>();
-    }
-
-    public IQueryableRepository<TUnitOfWork, TEntity, TKey> GetQueryableRepository<TEntity, TKey>()
-        where TEntity : class, IEntity, new()
-    {
-        return _serviceProvider.GetRequiredService<QueryableRepository<TUnitOfWork, TEntity, TKey>>();
-    }
-
-    public IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey> GetAsyncQueryableRepository<TEntity, TKey>()
-        where TEntity : class, IEntity, new()
-    {
-        return _serviceProvider.GetRequiredService<AsyncQueryableRepository<TUnitOfWork, TEntity, TKey>>();
-    }
-}
-
 public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork 
     where TDbContext : DbContext
 {
     private readonly TDbContext _context;
-    
+    private readonly IServiceProvider _serviceProvider;
 
-    protected UnitOfWork(TDbContext context) : base(context)
+    protected UnitOfWork(IServiceProvider serviceProvider, TDbContext context) : base(context)
     {
+        _serviceProvider = serviceProvider;
         _context = context;
     }
 
@@ -269,6 +234,34 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
         return new SaveOptions();
     }
 
+    public virtual IRepository<TUnitOfWork, TEntity, TKey> GetRepository<TUnitOfWork, TEntity, TKey>()
+        where TEntity : class, IEntity, new() where TUnitOfWork : IUnitOfWork
+    {
+        var repo = _serviceProvider.GetRequiredService<IRepository<TUnitOfWork, TEntity, TKey>>();
+        return repo;
+    }
+
+    public IAsyncRepository<TUnitOfWork, TEntity, TKey> GetAsyncRepository<TUnitOfWork, TEntity, TKey>()
+        where TEntity : class, IEntity, new() 
+        where TUnitOfWork : IUnitOfWork
+    {
+        return _serviceProvider.GetRequiredService<IAsyncRepository<TUnitOfWork, TEntity, TKey>>();
+    }
+
+    public IQueryableRepository<TUnitOfWork, TEntity, TKey> GetQueryableRepository<TUnitOfWork, TEntity, TKey>()
+        where TEntity : class, IEntity, new() 
+        where TUnitOfWork : IQueryableUnitOfWork
+    {
+        return _serviceProvider.GetRequiredService<IQueryableRepository<TUnitOfWork, TEntity, TKey>>();
+    }
+
+    public IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey> GetAsyncQueryableRepository<TUnitOfWork, TEntity, TKey>()
+        where TEntity : class, IEntity, new() 
+        where TUnitOfWork : IQueryableUnitOfWork
+    {
+        return _serviceProvider.GetRequiredService<IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey>>();
+    }
+    
     private Data.Repository.ISet<TEntity> InternalCreateSet<TEntity>() where TEntity : class, IEntity, new() =>
         new Set<TEntity>(_context);
 }

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace eQuantic.Core.Data.EntityFramework.Repository;
 
-public class DefaultUnitOfWork : UnitOfWork<ISqlUnitOfWork, DbContext>, IDefaultUnitOfWork
+public class DefaultUnitOfWork : UnitOfWork<DbContext>
 {
     public DefaultUnitOfWork(IServiceProvider serviceProvider, DbContext context) : base(serviceProvider, context)
     {

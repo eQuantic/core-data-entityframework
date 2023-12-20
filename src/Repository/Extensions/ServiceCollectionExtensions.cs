@@ -11,23 +11,23 @@ namespace eQuantic.Core.Data.EntityFramework.Repository.Extensions;
 public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddQueryableRepositories<TQueryableUnitOfWork>(this IServiceCollection services)
-        where TQueryableUnitOfWork : class, IDefaultUnitOfWork
+        where TQueryableUnitOfWork : class, IQueryableUnitOfWork
     {
         return AddQueryableRepositories<TQueryableUnitOfWork>(services, _ => { });
     }
 
     public static IServiceCollection AddQueryableRepositories<TUnitOfWorkInterface, TUnitOfWorkImpl>(
         this IServiceCollection services)
-        where TUnitOfWorkInterface : ISqlUnitOfWork<TUnitOfWorkInterface>
-        where TUnitOfWorkImpl : class, ISqlUnitOfWork<TUnitOfWorkInterface>
+        where TUnitOfWorkInterface : IQueryableUnitOfWork
+        where TUnitOfWorkImpl : class, TUnitOfWorkInterface
     {
         return AddQueryableRepositories<TUnitOfWorkInterface, TUnitOfWorkImpl>(services, _ => {});
     }
 
     public static IServiceCollection AddQueryableRepositories<TUnitOfWorkInterface, TUnitOfWorkImpl>(this IServiceCollection services,
         Action<RepositoryOptions> options)
-        where TUnitOfWorkInterface : ISqlUnitOfWork<TUnitOfWorkInterface>
-        where TUnitOfWorkImpl : class, ISqlUnitOfWork<TUnitOfWorkInterface>
+        where TUnitOfWorkInterface : IQueryableUnitOfWork
+        where TUnitOfWorkImpl : class, TUnitOfWorkInterface
     {
         var repoOptions = GetOptions(options);
         var lifetime = repoOptions.GetLifetime();
@@ -40,12 +40,12 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddQueryableRepositories<TQueryableUnitOfWork>(this IServiceCollection services,
         Action<RepositoryOptions> options)
-        where TQueryableUnitOfWork : class, IDefaultUnitOfWork
+        where TQueryableUnitOfWork : class, IQueryableUnitOfWork
     {
         var repoOptions = GetOptions(options);
         var lifetime = repoOptions.GetLifetime();
         
-        AddUnitOfWork<IDefaultUnitOfWork, TQueryableUnitOfWork>(services, lifetime);
+        AddUnitOfWork<IQueryableUnitOfWork, TQueryableUnitOfWork>(services, lifetime);
         AddGenericRepositories(services, lifetime);
 
         return services;
@@ -53,38 +53,36 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddCustomRepositories<TQueryableUnitOfWork>(this IServiceCollection services,
         Action<RepositoryOptions> options)
-        where TQueryableUnitOfWork : class, IDefaultUnitOfWork
+        where TQueryableUnitOfWork : class, IQueryableUnitOfWork
     {
         var repoOptions = GetOptions(options);
         var lifetime = repoOptions.GetLifetime();
         
-        AddUnitOfWork<IDefaultUnitOfWork, TQueryableUnitOfWork>(services, lifetime);
+        AddUnitOfWork<IQueryableUnitOfWork, TQueryableUnitOfWork>(services, lifetime);
         AddRepositories(services, repoOptions);
 
         return services;
     }
 
     private static void AddUnitOfWork<TUnitOfWorkInterface, TUnitOfWorkImpl>(IServiceCollection services, ServiceLifetime lifetime)
-        where TUnitOfWorkInterface : ISqlUnitOfWork
-        where TUnitOfWorkImpl : class, ISqlUnitOfWork
+        where TUnitOfWorkInterface : IQueryableUnitOfWork
+        where TUnitOfWorkImpl : class, IQueryableUnitOfWork
     {
         services.TryAdd(new ServiceDescriptor(typeof(TUnitOfWorkInterface), typeof(TUnitOfWorkImpl), lifetime));
-        services.TryAdd(new ServiceDescriptor(typeof(ISqlUnitOfWork<TUnitOfWorkInterface>), sp => sp.GetRequiredService<TUnitOfWorkInterface>(), lifetime));
-        services.TryAdd(new ServiceDescriptor(typeof(IQueryableUnitOfWork<TUnitOfWorkInterface>), sp => sp.GetRequiredService<TUnitOfWorkInterface>(), lifetime));
-        
+        services.TryAdd(new ServiceDescriptor(typeof(IQueryableUnitOfWork), sp => sp.GetRequiredService<TUnitOfWorkInterface>(), lifetime));
+
         services.TryAdd(new ServiceDescriptor(typeof(ISqlUnitOfWork), sp => sp.GetRequiredService<TUnitOfWorkInterface>(), lifetime));
         services.TryAdd(new ServiceDescriptor(typeof(IQueryableUnitOfWork), sp => sp.GetRequiredService<TUnitOfWorkInterface>(), lifetime));
     }
 
     private static void AddGenericRepositories(IServiceCollection services, ServiceLifetime lifetime)
     {
-        services.TryAdd(new ServiceDescriptor(typeof(Repository<,,>), typeof(Repository<,,>), lifetime));
-        services.TryAdd(new ServiceDescriptor(typeof(AsyncRepository<,,>), typeof(AsyncRepository<,,>), lifetime));
         services.TryAdd(new ServiceDescriptor(typeof(QueryableRepository<,,>), typeof(QueryableRepository<,,>),
             lifetime));
         services.TryAdd(new ServiceDescriptor(typeof(AsyncQueryableRepository<,,>),
             typeof(AsyncQueryableRepository<,,>), lifetime));
     }
+    
     private static void AddRepositories(IServiceCollection services, RepositoryOptions repoOptions)
     {
         var types = repoOptions.GetAssemblies()
