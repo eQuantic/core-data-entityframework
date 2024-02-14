@@ -77,10 +77,10 @@ public static class ServiceCollectionExtensions
 
     private static void AddGenericRepositories(IServiceCollection services, ServiceLifetime lifetime)
     {
-        services.TryAdd(new ServiceDescriptor(typeof(QueryableRepository<,,>), typeof(QueryableRepository<,,>),
-            lifetime));
-        services.TryAdd(new ServiceDescriptor(typeof(AsyncQueryableRepository<,,>),
-            typeof(AsyncQueryableRepository<,,>), lifetime));
+        services.TryAdd(new ServiceDescriptor(typeof(IRepository<,,>), typeof(QueryableRepository<,,>), lifetime));
+        services.TryAdd(new ServiceDescriptor(typeof(IAsyncRepository<,,>), typeof(AsyncQueryableRepository<,,>), lifetime));
+        services.TryAdd(new ServiceDescriptor(typeof(IQueryableRepository<,,>), typeof(QueryableRepository<,,>), lifetime));
+        services.TryAdd(new ServiceDescriptor(typeof(IAsyncQueryableRepository<,,>), typeof(AsyncQueryableRepository<,,>), lifetime));
     }
     
     private static void AddRepositories(IServiceCollection services, RepositoryOptions repoOptions)
