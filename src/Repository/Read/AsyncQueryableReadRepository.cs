@@ -49,7 +49,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         ISpecification<TEntity> specification,
         CancellationToken cancellationToken)
     {
-        return AllMatchingAsync(specification, _ => { }, cancellationToken);
+        return AllMatchingAsync(specification, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     public Task<long> CountAsync(CancellationToken cancellationToken = default)
@@ -100,7 +100,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         ISpecification<TEntity> specification,
         CancellationToken cancellationToken)
     {
-        return AllAsync(specification, _ => { }, cancellationToken);
+        return AllAsync(specification, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
     
     public Task<bool> AllAsync(
@@ -115,14 +115,14 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         Action<QueryableConfiguration<TEntity>> configuration,
         CancellationToken cancellationToken)
     {
-        return GetQueryable(configuration, _ => _).AllAsync(filter, cancellationToken);
+        return GetQueryable(configuration, e => e).AllAsync(filter, cancellationToken);
     }
     
     public Task<bool> AllAsync(
         Expression<Func<TEntity, bool>> filter,
         CancellationToken cancellationToken)
     {
-        return AllAsync(filter, _ => { }, cancellationToken);
+        return AllAsync(filter, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     public Task<bool> AnyAsync(
@@ -135,13 +135,13 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         Action<QueryableConfiguration<TEntity>> configuration, 
         CancellationToken cancellationToken)
     {
-        return GetQueryable(configuration, _ => _).AnyAsync(cancellationToken);
+        return GetQueryable(configuration, e => e).AnyAsync(cancellationToken);
     }
     
     public Task<bool> AnyAsync(
         CancellationToken cancellationToken)
     {
-        return AnyAsync(_ => { }, cancellationToken);
+        return AnyAsync((Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     public Task<bool> AnyAsync(
@@ -168,7 +168,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         ISpecification<TEntity> specification,
         CancellationToken cancellationToken)
     {
-        return AnyAsync(specification, _ => {}, cancellationToken);
+        return AnyAsync(specification, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     public Task<bool> AnyAsync(
@@ -190,7 +190,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         Expression<Func<TEntity, bool>> filter,
         CancellationToken cancellationToken = default)
     {
-        return AnyAsync(filter, _ => {}, cancellationToken);
+        return AnyAsync(filter, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     public Task<IEnumerable<TEntity>> GetAllAsync(
@@ -210,7 +210,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
     public Task<IEnumerable<TEntity>> GetAllAsync(
         CancellationToken cancellationToken = default)
     {
-        return GetAllAsync(_ => { }, cancellationToken);
+        return GetAllAsync((Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     public Task<TEntity> GetAsync(
@@ -237,7 +237,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         TKey id,
         CancellationToken cancellationToken)
     {
-        return GetAsync(id, _ => {}, cancellationToken);
+        return GetAsync(id, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
     
     public Task<IEnumerable<TResult>> GetMappedAsync<TResult>(
@@ -264,7 +264,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         Expression<Func<TEntity, TResult>> map,
         CancellationToken cancellationToken)
     {
-        return GetMappedAsync(filter, map, _ => { }, cancellationToken);
+        return GetMappedAsync(filter, map, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     public Task<IEnumerable<TResult>> GetMappedAsync<TResult>(
@@ -294,7 +294,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         Expression<Func<TEntity, TResult>> map,
         CancellationToken cancellationToken = default)
     {
-        return GetMappedAsync(specification, map, _ => {}, cancellationToken);
+        return GetMappedAsync(specification, map, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
     
     public Task<IEnumerable<TEntity>> GetFilteredAsync(
@@ -317,7 +317,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         Expression<Func<TEntity, bool>> filter,
         CancellationToken cancellationToken)
     {
-        return GetFilteredAsync(filter, _ => { }, cancellationToken);
+        return GetFilteredAsync(filter, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     public Task<TEntity> GetFirstAsync(
@@ -340,7 +340,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         Expression<Func<TEntity, bool>> filter,
         CancellationToken cancellationToken)
     {
-        return GetFirstAsync(filter, _ => { }, cancellationToken);
+        return GetFirstAsync(filter, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     public Task<TEntity> GetFirstAsync(
@@ -367,7 +367,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         ISpecification<TEntity> specification,
         CancellationToken cancellationToken)
     {
-        return GetFirstAsync(specification, _ => {}, cancellationToken);
+        return GetFirstAsync(specification, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
     
     public Task<TResult> GetFirstMappedAsync<TResult>(
@@ -399,7 +399,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         Expression<Func<TEntity, TResult>> map,
         CancellationToken cancellationToken)
     {
-        return GetFirstMappedAsync(filter, map, _ => { }, cancellationToken);
+        return GetFirstMappedAsync(filter, map, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     public Task<TResult> GetFirstMappedAsync<TResult>(
@@ -429,7 +429,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         Expression<Func<TEntity, TResult>> map,
         CancellationToken cancellationToken = default)
     {
-        return GetFirstMappedAsync(specification, map, _ => {}, cancellationToken);
+        return GetFirstMappedAsync(specification, map, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     public Task<IEnumerable<TEntity>> GetPagedAsync(
@@ -451,7 +451,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         int limit,
         CancellationToken cancellationToken = default)
     {
-        return GetPagedAsync(limit, _ => {}, cancellationToken);
+        return GetPagedAsync(limit, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     public Task<IEnumerable<TEntity>> GetPagedAsync(
@@ -481,7 +481,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         int limit,
         CancellationToken cancellationToken)
     {
-        return GetPagedAsync(specification, limit, _ => {}, cancellationToken);
+        return GetPagedAsync(specification, limit, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     public Task<IEnumerable<TEntity>> GetPagedAsync(
@@ -506,7 +506,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         int limit,
         CancellationToken cancellationToken)
     {
-        return GetPagedAsync(filter, limit, _ => {}, cancellationToken);
+        return GetPagedAsync(filter, limit, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     public Task<IEnumerable<TEntity>> GetPagedAsync(
@@ -533,7 +533,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         int pageSize,
         CancellationToken cancellationToken)
     {
-        return GetPagedAsync(pageIndex, pageSize, _ => {},
+        return GetPagedAsync(pageIndex, pageSize, (Action<QueryableConfiguration<TEntity>>)null,
             cancellationToken);
     }
 
@@ -567,7 +567,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         int pageSize,
         CancellationToken cancellationToken)
     {
-        return GetPagedAsync(specification, pageIndex, pageSize, _ => {}, cancellationToken);
+        return GetPagedAsync(specification, pageIndex, pageSize, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
     
     public Task<IEnumerable<TEntity>> GetPagedAsync(
@@ -611,7 +611,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         int pageSize,
         CancellationToken cancellationToken)
     {
-        return GetPagedAsync(filter, pageIndex, pageSize, _ => {}, cancellationToken);
+        return GetPagedAsync(filter, pageIndex, pageSize, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
     
     public Task<TEntity> GetSingleAsync(
@@ -634,7 +634,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         Expression<Func<TEntity, bool>> filter,
         CancellationToken cancellationToken)
     {
-        return GetSingleAsync(filter, _ => { }, cancellationToken);
+        return GetSingleAsync(filter, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     public Task<TEntity> GetSingleAsync(
@@ -661,7 +661,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         ISpecification<TEntity> specification,
         CancellationToken cancellationToken)
     {
-        return GetSingleAsync(specification, _ => {}, cancellationToken);
+        return GetSingleAsync(specification, (Action<QueryableConfiguration<TEntity>>)null, cancellationToken);
     }
 
     private async Task<TEntity> GetInternalAsync(TKey id, Action<QueryableConfiguration<TEntity>> configuration = default,
