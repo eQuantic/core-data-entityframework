@@ -17,7 +17,7 @@ public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> :
     where TUnitOfWork : IQueryableUnitOfWork
     where TEntity : class, IEntity, new()
 {
-    private Set<TEntity> _dbSet;
+    private SetBase<TEntity> _dbSet;
     private bool _disposed;
     private const string SpecificationCannotBeNull = "Specification cannot be null";
     private const string FilterExpressionCannotBeNull = "Filter expression cannot be null";
@@ -313,8 +313,8 @@ public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         return GetSet().GetQueryable(configuration, internalQueryAction);
     }
 
-    private Set<TEntity> GetSet()
+    private SetBase<TEntity> GetSet()
     {
-        return _dbSet ??= (Set<TEntity>)UnitOfWork.CreateSet<TEntity>();
+        return _dbSet ??= (SetBase<TEntity>)UnitOfWork.CreateSet<TEntity>();
     }
 }

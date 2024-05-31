@@ -1,44 +1,43 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using eQuantic.Core.Data.EntityFramework.Repository.Sql;
 using eQuantic.Core.Data.Repository;
 using eQuantic.Core.Data.Repository.Options;
-using eQuantic.Core.Data.Repository.Sql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace eQuantic.Core.Data.EntityFramework.Repository;
+namespace eQuantic.Core.Data.EntityFramework.MongoDb.Repository;
 
-public abstract class UnitOfWork : SqlExecutor
+public abstract class UnitOfWork : IQueryableUnitOfWork
 {
-    protected static int IsMigrating;
+    protected readonly IServiceProvider ServiceProvider;
+    /// <summary>
+    ///     The context
+    /// </summary>
+    protected readonly DbContext Context;
+    
+    /// <summary>
+    ///     The disposed
+    /// </summary>
+    protected bool Disposed;
 
-    protected UnitOfWork(DbContext context) : base(context)
+    /// <summary>
+    ///     Initializes a new instance of the class
+    /// </summary>
+    /// <param name="serviceProvider"></param>
+    /// <param name="context">The context</param>
+    protected UnitOfWork(IServiceProvider serviceProvider, DbContext context)
     {
+        ServiceProvider = serviceProvider;
+        Context = context;
     }
     
-    internal DbContext GetDbContext() => Context;
-}
-
-public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork 
-    where TDbContext : DbContext
-{
-    private readonly TDbContext _context;
-    private readonly IServiceProvider _serviceProvider;
-
-    protected UnitOfWork(IServiceProvider serviceProvider, TDbContext context) : base(context)
-    {
-        _serviceProvider = serviceProvider;
-        _context = context;
-    }
-
     public int Commit()
     {
-        return _context.SaveChanges();
+        return Context.SaveChanges();
     }
 
     public int CommitAndRefreshChanges()
@@ -50,7 +49,7 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
         {
             try
             {
-                changes = _context.SaveChanges();
+                changes = Context.SaveChanges();
 
                 saveFailed = false;
             }
@@ -75,7 +74,7 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
         {
             try
             {
-                changes = await _context.SaveChangesAsync(cancellationToken);
+                changes = await Context.SaveChangesAsync(cancellationToken);
 
                 saveFailed = false;
             }
@@ -93,7 +92,7 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
 
     public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.SaveChangesAsync(cancellationToken);
+        return await Context.SaveChangesAsync(cancellationToken);
     }
 
     public int Commit(Action<SaveOptions> options)
@@ -116,8 +115,6 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
         return CommitAsync(cancellationToken);
     }
 
-    Data.Repository.ISet<TEntity> IQueryableUnitOfWork.CreateSet<TEntity>() => InternalCreateSet<TEntity>();
-
     public void ApplyCurrentValues<TEntity>(TEntity original, TEntity current) where TEntity : class, IEntity, new()
     {
         ((Set<TEntity>)InternalCreateSet<TEntity>()).ApplyCurrentValues(original, current);
@@ -127,49 +124,18 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
     {
         ((Set<TEntity>)InternalCreateSet<TEntity>()).Attach(item);
     }
-
-    public IEnumerable<string> GetPendingMigrations()
-    {
-        return _context.Database.GetPendingMigrations();
-    }
-
-    public void LoadProperty<TEntity, TComplexProperty>(TEntity item, Expression<Func<TEntity, TComplexProperty>> selector) 
-        where TEntity : class, IEntity, new()
-        where TComplexProperty : class
-    {
-        ((Set<TEntity>)InternalCreateSet<TEntity>()).LoadProperty(item, selector);
-    }
-
-    public void LoadProperty<TEntity>(TEntity item, string propertyName) 
-        where TEntity : class, IEntity, new()
-    {
-        ((Set<TEntity>)InternalCreateSet<TEntity>()).LoadProperty(item, propertyName);
-    }
-
-    public Task LoadPropertyAsync<TEntity, TComplexProperty>(TEntity item, Expression<Func<TEntity, TComplexProperty>> selector, CancellationToken cancellationToken = default)
-        where TEntity : class, IEntity, new() 
-        where TComplexProperty : class
-    {
-        return ((Set<TEntity>)InternalCreateSet<TEntity>()).LoadPropertyAsync(item, selector, cancellationToken);
-    }
-
-    public Task LoadPropertyAsync<TEntity>(TEntity item, string propertyName, CancellationToken cancellationToken = default) 
-        where TEntity : class, IEntity, new() 
-    {
-        return ((Set<TEntity>)InternalCreateSet<TEntity>()).LoadPropertyAsync(item, propertyName, cancellationToken);
-    }
-
+    
     public void LoadCollection<TEntity, TElement>(TEntity item,
         Expression<Func<TEntity, IEnumerable<TElement>>> navigationProperty,
         Expression<Func<TElement, bool>> filter = null) where TEntity : class where TElement : class
     {
         if (filter != null)
         {
-            _context.Entry<TEntity>(item).Collection(navigationProperty).Query().Where(filter).Load();
+            Context.Entry<TEntity>(item).Collection(navigationProperty).Query().Where(filter).Load();
         }
         else
         {
-            _context.Entry<TEntity>(item).Collection(navigationProperty).Load();
+            Context.Entry<TEntity>(item).Collection(navigationProperty).Load();
         }
     }
 
@@ -179,17 +145,17 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
     {
         if (filter != null)
         {
-            await _context.Entry<TEntity>(item).Collection(navigationProperty).Query().Where(filter).LoadAsync();
+            await Context.Entry<TEntity>(item).Collection(navigationProperty).Query().Where(filter).LoadAsync();
         }
         else
         {
-            await _context.Entry<TEntity>(item).Collection(navigationProperty).LoadAsync();
+            await Context.Entry<TEntity>(item).Collection(navigationProperty).LoadAsync();
         }
     }
 
     public void Reload<TEntity>(TEntity item) where TEntity : class
     {
-        var entry = _context.Entry(item);
+        var entry = Context.Entry(item);
         entry.CurrentValues.SetValues(entry.OriginalValues);
         entry.Reload();
     }
@@ -198,7 +164,7 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
     {
         // set all entities in change tracker
         // as 'unchanged state'
-        _context?.ChangeTracker.Entries()
+        Context?.ChangeTracker.Entries()
             .ToList()
             .ForEach(entry => entry.State = EntityState.Unchanged);
     }
@@ -206,38 +172,18 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
     public void SetModified<TEntity>(TEntity item) where TEntity : class
     {
         //this operation also attach item in object state manager
-        _context.Entry<TEntity>(item).State = EntityState.Modified;
+        Context.Entry<TEntity>(item).State = EntityState.Modified;
     }
-
-    public void UpdateDatabase()
-    {
-        if (0 != Interlocked.Exchange(ref IsMigrating, 1))
-        {
-            return;
-        }
-
-        try
-        {
-            _context.Database.Migrate();
-        }
-        finally
-        {
-            Interlocked.Exchange(ref IsMigrating, 0);
-        }
-    }
-
-    public virtual Data.Repository.ISet<TEntity> CreateSet<TEntity>() where TEntity : class, IEntity, new() =>
-        InternalCreateSet<TEntity>();
 
     public virtual SaveOptions GetSaveOptions()
     {
         return new SaveOptions();
     }
-
+    
     public virtual IRepository<TUnitOfWork, TEntity, TKey> GetRepository<TUnitOfWork, TEntity, TKey>()
         where TEntity : class, IEntity, new() where TUnitOfWork : IUnitOfWork
     {
-        var repo = _serviceProvider.GetRequiredService<IRepository<TUnitOfWork, TEntity, TKey>>();
+        var repo = ServiceProvider.GetRequiredService<IRepository<TUnitOfWork, TEntity, TKey>>();
         return repo;
     }
 
@@ -245,23 +191,59 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
         where TEntity : class, IEntity, new() 
         where TUnitOfWork : IUnitOfWork
     {
-        return _serviceProvider.GetRequiredService<IAsyncRepository<TUnitOfWork, TEntity, TKey>>();
+        return ServiceProvider.GetRequiredService<IAsyncRepository<TUnitOfWork, TEntity, TKey>>();
     }
+
+    public Data.Repository.ISet<TEntity> CreateSet<TEntity>() where TEntity : class, IEntity, new() => InternalCreateSet<TEntity>();
 
     public IQueryableRepository<TUnitOfWork, TEntity, TKey> GetQueryableRepository<TUnitOfWork, TEntity, TKey>()
         where TEntity : class, IEntity, new() 
         where TUnitOfWork : IQueryableUnitOfWork
     {
-        return _serviceProvider.GetRequiredService<IQueryableRepository<TUnitOfWork, TEntity, TKey>>();
+        return ServiceProvider.GetRequiredService<IQueryableRepository<TUnitOfWork, TEntity, TKey>>();
     }
 
     public IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey> GetAsyncQueryableRepository<TUnitOfWork, TEntity, TKey>()
         where TEntity : class, IEntity, new() 
         where TUnitOfWork : IQueryableUnitOfWork
     {
-        return _serviceProvider.GetRequiredService<IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey>>();
+        return ServiceProvider.GetRequiredService<IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey>>();
     }
     
-    private Data.Repository.ISet<TEntity> InternalCreateSet<TEntity>() where TEntity : class, IEntity, new() =>
-        new Set<TEntity>(_context);
+    internal DbContext GetDbContext() => Context;
+    
+    internal Data.Repository.ISet<TEntity> InternalCreateSet<TEntity>() where TEntity : class, IEntity, new() =>
+        new Set<TEntity>(Context);
+    
+    /// <summary>
+    ///     Disposes this instance
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+    
+    /// <summary>
+    ///     Disposes the disposing
+    /// </summary>
+    /// <param name="disposing">The disposing</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (Disposed)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            Context?.Dispose();
+        }
+
+        Disposed = true;
+    }
 }
+
+public abstract class UnitOfWork<TDbContext>(IServiceProvider serviceProvider, TDbContext context)
+    : UnitOfWork(serviceProvider, context)
+    where TDbContext : DbContext;

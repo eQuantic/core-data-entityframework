@@ -13,7 +13,7 @@ public class AsyncWriteRepository<TUnitOfWork, TEntity> : WriteRepository<TUnitO
     where TUnitOfWork : IQueryableUnitOfWork
     where TEntity : class, IEntity, new()
 {
-    private Set<TEntity> _dbSet;
+    private ISet<TEntity> _dbSet;
 
     public AsyncWriteRepository(TUnitOfWork unitOfWork) : base(unitOfWork)
     {
@@ -26,7 +26,7 @@ public class AsyncWriteRepository<TUnitOfWork, TEntity> : WriteRepository<TUnitO
             throw new ArgumentNullException(nameof(item));
         }
 
-        return GetSet().AddAsync(item);
+        return GetSet().InsertAsync(item);
     }
 
     public Task<long> DeleteManyAsync(Expression<Func<TEntity, bool>> filter,
@@ -96,8 +96,8 @@ public class AsyncWriteRepository<TUnitOfWork, TEntity> : WriteRepository<TUnitO
         return this.UpdateManyAsync(specification.SatisfiedBy(), updateFactory, cancellationToken);
     }
 
-    private Set<TEntity> GetSet()
+    private ISet<TEntity> GetSet()
     {
-        return _dbSet ??= (Set<TEntity>)UnitOfWork.CreateSet<TEntity>();
+        return _dbSet ??= UnitOfWork.CreateSet<TEntity>();
     }
 }

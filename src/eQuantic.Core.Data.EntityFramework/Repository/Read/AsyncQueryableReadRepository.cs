@@ -21,7 +21,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
     where TUnitOfWork : class, IQueryableUnitOfWork
     where TEntity : class, IEntity, new()
 {
-    private Set<TEntity> _dbSet;
+    private SetBase<TEntity> _dbSet;
 
     public AsyncQueryableReadRepository(TUnitOfWork unitOfWork) : base(unitOfWork)
     {
@@ -683,8 +683,8 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         return GetSet().GetQueryable(configuration, internalQueryAction);
     }
     
-    private Set<TEntity> GetSet()
+    private SetBase<TEntity> GetSet()
     {
-        return _dbSet ??= (Set<TEntity>)UnitOfWork.CreateSet<TEntity>();
+        return _dbSet ??= (SetBase<TEntity>)UnitOfWork.CreateSet<TEntity>();
     }
 }

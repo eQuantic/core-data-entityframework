@@ -12,14 +12,26 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
-          dotnet-quality: 'preview'
       - name: Build eQuantic.Core.Data.EntityFramework Library
-        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework.csproj --configuration Release
-      - name: Build eQuantic.Core.Data.EntityFramework Library
-        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework.Net6.csproj --configuration Release
-      - name: Build eQuantic.Core.Data.EntityFramework Library
-        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework.Net7.csproj --configuration Release
-      - name: Build eQuantic.Core.Data.EntityFramework Library
-        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework.Net8.csproj --configuration Release
+        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.csproj --configuration Release
+      - name: Build eQuantic.Core.Data.EntityFramework .net 6 Library
+        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net6.csproj --configuration Release
+      - name: Build eQuantic.Core.Data.EntityFramework .net 7 Library
+        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net7.csproj --configuration Release
+      - name: Build eQuantic.Core.Data.EntityFramework .net 8 Library
+        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net8.csproj --configuration Release
+      
+      - name: Build eQuantic.Core.Data.EntityFramework.SqlServer Library
+        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.csproj --configuration Release
+      - name: Build eQuantic.Core.Data.EntityFramework.SqlServer .net 6 Library
+        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net6.csproj --configuration Release
+      - name: Build eQuantic.Core.Data.EntityFramework.SqlServer .net 7 Library
+        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net7.csproj --configuration Release
+      - name: Build eQuantic.Core.Data.EntityFramework.SqlServer .net 8 Library
+        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net8.csproj --configuration Release
+
+      - name: Build eQuantic.Core.Data.EntityFramework.MongoDb Library
+        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework.MongoDb/eQuantic.Core.Data.EntityFramework.MongoDb.csproj --configuration Release
+      
       - name: Push package into Nuget.org
         run: dotnet nuget push **/*.nupkg --skip-duplicate -k ${{secrets.nuget_key}} -s https://api.nuget.org/v3/index.json

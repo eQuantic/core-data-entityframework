@@ -1,11 +1,11 @@
 using System;
 using System.Linq.Expressions;
-using eQuantic.Core.Data.EntityFramework.Repository;
 using eQuantic.Core.Data.EntityFramework.Repository.Extensions;
+using eQuantic.Core.Data.EntityFramework.SqlServer.Repository;
 using eQuantic.Core.Data.Repository;
 using eQuantic.Linq.Specification;
 
-namespace eQuantic.Core.Data.EntityFramework.Specifications;
+namespace eQuantic.Core.Data.EntityFramework.SqlServer.Specifications;
 
 public class GetEntityByIdSpecification<TEntity, TKey> : Specification<TEntity>
     where TEntity : class, IEntity<TKey>, new()

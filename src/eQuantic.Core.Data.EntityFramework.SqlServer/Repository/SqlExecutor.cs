@@ -7,13 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using eQuantic.Core.Data.EntityFramework.Repository.Extensions;
+using eQuantic.Core.Data.EntityFramework.SqlServer.Repository.Extensions;
 using eQuantic.Core.Data.Repository.Config;
 using eQuantic.Core.Data.Repository.Sql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace eQuantic.Core.Data.EntityFramework.Repository.Sql;
+namespace eQuantic.Core.Data.EntityFramework.SqlServer.Repository;
 
 /// <summary>
 ///     The sql executor class

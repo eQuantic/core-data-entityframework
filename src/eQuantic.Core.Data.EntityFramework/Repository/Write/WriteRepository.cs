@@ -10,7 +10,7 @@ public class WriteRepository<TUnitOfWork, TEntity> : IWriteRepository<TUnitOfWor
     where TUnitOfWork : IQueryableUnitOfWork
     where TEntity : class, IEntity, new()
 {
-    private Set<TEntity> _dbSet;
+    private SetBase<TEntity> _dbSet;
     private bool _disposed;
 
     public WriteRepository(TUnitOfWork unitOfWork)
@@ -27,7 +27,7 @@ public class WriteRepository<TUnitOfWork, TEntity> : IWriteRepository<TUnitOfWor
             throw new ArgumentNullException(nameof(item));
         }
 
-        GetSet().Add(item);
+        GetSet().Insert(item);
     }
 
     public long DeleteMany(Expression<Func<TEntity, bool>> filter)
@@ -135,8 +135,8 @@ public class WriteRepository<TUnitOfWork, TEntity> : IWriteRepository<TUnitOfWor
         _disposed = true;
     }
 
-    private Set<TEntity> GetSet()
+    private SetBase<TEntity> GetSet()
     {
-        return _dbSet ?? (_dbSet = (Set<TEntity>)UnitOfWork.CreateSet<TEntity>());
+        return _dbSet ??= (SetBase<TEntity>)UnitOfWork.CreateSet<TEntity>();
     }
 }

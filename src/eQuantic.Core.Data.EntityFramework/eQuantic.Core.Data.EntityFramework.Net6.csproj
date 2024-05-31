@@ -4,16 +4,16 @@
 	<PropertyGroup>
 		<Description>Core Data library for Entity Framework</Description>
 		<AssemblyTitle>eQuantic.Core.Data.EntityFramework</AssemblyTitle>
-		<Version>8.0.1.0</Version>
+		<Version>6.0.2.0</Version>
 		<Authors>eQuantic Systems</Authors>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net6.0</TargetFramework>
 		<AssemblyName>eQuantic.Core.Data.EntityFramework</AssemblyName>
 		<PackageId>eQuantic.Core.Data.EntityFramework</PackageId>
 		<PackageTags>eQuantic;Core;Data;Library;Repository;Pattern</PackageTags>
 		<PackageReleaseNotes>Entity ignorant persistance with Repository Pattern for Entity Framework</PackageReleaseNotes>
 
 		<PackageProjectUrl>https://github.com/eQuantic/core-data-entityframework</PackageProjectUrl>
-		<PackageOutputPath>../artifacts/</PackageOutputPath>
+		<PackageOutputPath>../../artifacts/</PackageOutputPath>
 		<GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
 		<GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
 		<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
@@ -23,8 +23,8 @@
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<Copyright>Copyright ©  2016</Copyright>
-		<AssemblyVersion>8.0.1.0</AssemblyVersion>
-		<FileVersion>8.0.1.0</FileVersion>
+		<AssemblyVersion>6.0.2.0</AssemblyVersion>
+		<FileVersion>6.0.2.0</FileVersion>
 		<PackageIcon>Icon.png</PackageIcon>
 		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
@@ -32,18 +32,15 @@
 	<ItemGroup>
 		<PackageReference Include="eQuantic.Core" Version="1.7.0" />
 		<PackageReference Include="eQuantic.Core.Data" Version="4.2.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.5" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.5">
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.30" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.30">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.5" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="8.0.5" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.5">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.30">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="8.102.2.4" />
 	</ItemGroup>
 	
 	<ItemGroup>
@@ -51,8 +48,8 @@
 		<None Include="Icon_details.png" Pack="true" PackagePath="Icon_details.png" />
 		<None Include="Icon_dialog.png" Pack="true" PackagePath="Icon_dialog.png" />
 		<None Include="Icon_list.png" Pack="true" PackagePath="Icon_list.png" />
-		<None Include="../LICENSE" Pack="true" PackagePath="" />
-		<None Include="../README.md" Pack="true" PackagePath="" />
+		<None Include="../../LICENSE" Pack="true" PackagePath="" />
+		<None Include="../../README.md" Pack="true" PackagePath="" />
 	</ItemGroup>
 
 	<ItemGroup>

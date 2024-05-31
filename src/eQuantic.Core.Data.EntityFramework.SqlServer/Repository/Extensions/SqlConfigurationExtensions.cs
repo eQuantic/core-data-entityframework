@@ -1,7 +1,7 @@
 ﻿using eQuantic.Core.Data.Repository.Config;
 using Microsoft.EntityFrameworkCore;
 
-namespace eQuantic.Core.Data.EntityFramework.Repository.Extensions;
+namespace eQuantic.Core.Data.EntityFramework.SqlServer.Repository.Extensions;
 
 public static class SqlConfigurationExtensions
 {
