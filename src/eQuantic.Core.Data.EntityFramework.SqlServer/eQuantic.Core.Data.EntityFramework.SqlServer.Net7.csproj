@@ -4,7 +4,7 @@
     <PropertyGroup>
         <Description>Core Data library for Entity Framework and SQL Server</Description>
         <AssemblyTitle>eQuantic.Core.Data.EntityFramework.SqlServer</AssemblyTitle>
-        <Version>7.0.1.0</Version>
+        <Version>7.0.2.0</Version>
         <Authors>eQuantic Systems</Authors>
         <TargetFramework>net7.0</TargetFramework>
         <AssemblyName>eQuantic.Core.Data.EntityFramework.SqlServer</AssemblyName>
@@ -23,8 +23,8 @@
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <Copyright>Copyright ©  2016</Copyright>
-        <AssemblyVersion>7.0.1.0</AssemblyVersion>
-        <FileVersion>7.0.1.0</FileVersion>
+        <AssemblyVersion>7.0.2.0</AssemblyVersion>
+        <FileVersion>7.0.2.0</FileVersion>
         <PackageIcon>Icon.png</PackageIcon>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
@@ -43,7 +43,7 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="7.103.0" />
+        <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="7.103.2" />
     </ItemGroup>
 
     <ItemGroup>
