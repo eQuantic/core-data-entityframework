@@ -4,7 +4,7 @@
     <PropertyGroup>
         <Description>Core Data library for Entity Framework and Mongo DB</Description>
         <AssemblyTitle>eQuantic.Core.Data.EntityFramework.MongoDb</AssemblyTitle>
-        <Version>8.0.6.0</Version>
+        <Version>8.0.7.0</Version>
         <Authors>eQuantic Systems</Authors>
         <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>eQuantic.Core.Data.EntityFramework.MongoDb</AssemblyName>
@@ -23,8 +23,8 @@
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <Copyright>Copyright ©  2016</Copyright>
-        <AssemblyVersion>8.0.6.0</AssemblyVersion>
-        <FileVersion>8.0.6.0</FileVersion>
+        <AssemblyVersion>8.0.7.0</AssemblyVersion>
+        <FileVersion>8.0.7.0</FileVersion>
         <PackageIcon>Icon.png</PackageIcon>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
@@ -41,7 +41,7 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="MongoDB.EntityFrameworkCore" Version="8.1.1" />
+        <PackageReference Include="MongoDB.EntityFrameworkCore" Version="8.2.0" />
     </ItemGroup>
 
     <ItemGroup>
