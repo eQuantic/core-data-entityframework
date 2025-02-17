@@ -225,7 +225,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         Action<QueryableConfiguration<TEntity>> configuration,
         CancellationToken cancellationToken)
     {
-        if (id == null)
+        if (Equals(id, default(TKey)))
         {
             throw new ArgumentNullException(nameof(id));
         }
