@@ -58,7 +58,7 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
                 saveFailed = true;
 
                 ex.Entries.ToList()
-                    .ForEach(entry => entry.OriginalValues.SetValues(entry.GetDatabaseValues()));
+                    .ForEach(entry => entry.OriginalValues.SetValues(entry.GetDatabaseValues()!));
             }
         } while (saveFailed);
 
@@ -83,7 +83,7 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
                 saveFailed = true;
 
                 ex.Entries.ToList()
-                    .ForEach(entry => entry.OriginalValues.SetValues(entry.GetDatabaseValues()));
+                    .ForEach(entry => entry.OriginalValues.SetValues(entry.GetDatabaseValues()!));
             }
         } while (saveFailed);
 
@@ -127,7 +127,7 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
     
     public void LoadCollection<TEntity, TElement>(TEntity item,
         Expression<Func<TEntity, IEnumerable<TElement>>> navigationProperty,
-        Expression<Func<TElement, bool>> filter = null) where TEntity : class where TElement : class
+        Expression<Func<TElement, bool>>? filter = null) where TEntity : class where TElement : class
     {
         if (filter != null)
         {
@@ -141,7 +141,7 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
 
     public async Task LoadCollectionAsync<TEntity, TElement>(TEntity item,
         Expression<Func<TEntity, IEnumerable<TElement>>> navigationProperty,
-        Expression<Func<TElement, bool>> filter = null) where TEntity : class where TElement : class
+        Expression<Func<TElement, bool>>? filter = null) where TEntity : class where TElement : class
     {
         if (filter != null)
         {
@@ -213,7 +213,7 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
     internal DbContext GetDbContext() => Context;
     
     internal Data.Repository.ISet<TEntity> InternalCreateSet<TEntity>() where TEntity : class, IEntity, new() =>
-        new Set<TEntity>(Context);
+        new Set<TEntity>(ServiceProvider, Context);
     
     /// <summary>
     ///     Disposes this instance

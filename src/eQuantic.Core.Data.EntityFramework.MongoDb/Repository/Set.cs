@@ -1,41 +1,77 @@
-using System;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 using eQuantic.Core.Data.EntityFramework.Repository;
 using eQuantic.Core.Data.EntityFramework.Repository.Extensions;
 using eQuantic.Core.Data.Repository;
 using eQuantic.Core.Data.Repository.Config;
 using eQuantic.Linq.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Driver;
+using MongoDB.EntityFrameworkCore.Extensions;
 
 namespace eQuantic.Core.Data.EntityFramework.MongoDb.Repository;
 
 public class Set<TEntity> : SetBase<TEntity> where TEntity : class, IEntity, new()
 {
-    public Set(DbContext context) : base(context)
+    private readonly IServiceProvider _serviceProvider;
+    private readonly string? _collectionName;
+    private IMongoDatabase? _mongoDatabase;
+    
+    public Set(IServiceProvider serviceProvider, DbContext context) : base(context)
     {
+        _serviceProvider = serviceProvider;
+        var entityType = context.Model.FindEntityType(typeof(TEntity));
+        _collectionName = entityType?.GetCollectionName();
     }
-
+    
     public override long DeleteMany(Expression<Func<TEntity, bool>> filter)
     {
-        throw new NotImplementedException();
+        var collection = GetCollection();
+        if (collection == null) return 0;
+
+        var result = collection.DeleteMany(filter);
+        return result.DeletedCount;
     }
 
-    public override Task<long> DeleteManyAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
+    public override async Task<long> DeleteManyAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var collection = GetCollection();
+        if (collection == null) return 0;
+        
+        var mongoFilter = Builders<TEntity>.Filter.Where(filter);
+        var result = await collection.DeleteManyAsync(mongoFilter, cancellationToken);
+        
+        return result.DeletedCount;
     }
 
     public override long UpdateMany(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, TEntity>> updateExpression)
     {
-        throw new NotImplementedException();
+        var collection = GetCollection();
+        if (collection == null) return 0;
+
+        var mongoFilter = Builders<TEntity>.Filter.Where(filter);
+        var updateDefinition = UpdateDefinitionBuilder.BuildUpdateDefinition(updateExpression);
+
+        if (updateDefinition == null)
+            return 0;
+        
+        var result = collection.UpdateMany(mongoFilter, updateDefinition);
+        return result.ModifiedCount;
     }
 
-    public override Task<long> UpdateManyAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, TEntity>> updateExpression, CancellationToken cancellationToken = default)
+    public override async Task<long> UpdateManyAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, TEntity>> updateExpression, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var collection = GetCollection();
+        if (collection == null) return 0;
+
+        var mongoFilter = Builders<TEntity>.Filter.Where(filter);
+        var updateDefinition = UpdateDefinitionBuilder.BuildUpdateDefinition(updateExpression);
+
+        if (updateDefinition == null)
+            return 0;
+        
+        var result = await collection.UpdateManyAsync(mongoFilter, updateDefinition, null, cancellationToken);
+        return result.ModifiedCount;
     }
 
     public override IQueryable<TEntity> GetQueryable<TConfig>(Action<TConfig> configuration, Func<IQueryable<TEntity>, IQueryable<TEntity>> internalQueryAction)
@@ -88,5 +124,11 @@ public class Set<TEntity> : SetBase<TEntity> where TEntity : class, IEntity, new
         }
 
         return query;
+    }
+    
+    private IMongoCollection<TEntity>? GetCollection()
+    {
+        _mongoDatabase ??= _serviceProvider.GetService<IMongoClient>()?.GetDatabase(_collectionName);
+        return _mongoDatabase?.GetCollection<TEntity>(_collectionName);
     }
 }
