@@ -36,6 +36,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.SqlServer.Net8", "src\eQuantic.Core.Data.EntityFramework.SqlServer\eQuantic.Core.Data.EntityFramework.SqlServer.Net8.csproj", "{A5610597-89E9-4BE1-8B87-31B7B7E11473}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.MongoDb.Net9", "src\eQuantic.Core.Data.EntityFramework.MongoDb\eQuantic.Core.Data.EntityFramework.MongoDb.Net9.csproj", "{730DEB2B-3B8C-49A4-BD2D-12A274C8790A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.SqlServer.Net9", "src\eQuantic.Core.Data.EntityFramework.SqlServer\eQuantic.Core.Data.EntityFramework.SqlServer.Net9.csproj", "{8FB6D5FF-A9A0-4A38-AA24-9746E3ADD344}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.Net9", "src\eQuantic.Core.Data.EntityFramework\eQuantic.Core.Data.EntityFramework.Net9.csproj", "{99E041B1-FD74-4D9E-97E0-00CA10E2E8A5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -78,6 +84,18 @@ Global
 		{A5610597-89E9-4BE1-8B87-31B7B7E11473}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5610597-89E9-4BE1-8B87-31B7B7E11473}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5610597-89E9-4BE1-8B87-31B7B7E11473}.Release|Any CPU.Build.0 = Release|Any CPU
+		{730DEB2B-3B8C-49A4-BD2D-12A274C8790A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{730DEB2B-3B8C-49A4-BD2D-12A274C8790A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{730DEB2B-3B8C-49A4-BD2D-12A274C8790A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{730DEB2B-3B8C-49A4-BD2D-12A274C8790A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FB6D5FF-A9A0-4A38-AA24-9746E3ADD344}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FB6D5FF-A9A0-4A38-AA24-9746E3ADD344}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FB6D5FF-A9A0-4A38-AA24-9746E3ADD344}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FB6D5FF-A9A0-4A38-AA24-9746E3ADD344}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99E041B1-FD74-4D9E-97E0-00CA10E2E8A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99E041B1-FD74-4D9E-97E0-00CA10E2E8A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99E041B1-FD74-4D9E-97E0-00CA10E2E8A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99E041B1-FD74-4D9E-97E0-00CA10E2E8A5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -94,6 +112,9 @@ Global
 		{CD7B2B69-FCC3-49FB-9EE9-0078EC30507B} = {5B80C186-5E75-413B-B825-0B5B2FE9A3E4}
 		{068DEA0E-ED2C-43FE-9552-7D33F88B8C8F} = {5B80C186-5E75-413B-B825-0B5B2FE9A3E4}
 		{A5610597-89E9-4BE1-8B87-31B7B7E11473} = {5B80C186-5E75-413B-B825-0B5B2FE9A3E4}
+		{730DEB2B-3B8C-49A4-BD2D-12A274C8790A} = {F613B6F2-C420-4E72-981A-47A20A538BC6}
+		{8FB6D5FF-A9A0-4A38-AA24-9746E3ADD344} = {5B80C186-5E75-413B-B825-0B5B2FE9A3E4}
+		{99E041B1-FD74-4D9E-97E0-00CA10E2E8A5} = {0CA2F610-6D57-4D1F-92E3-EDCCEDAD8297}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {83FECDD1-8A97-40B1-8529-3D5216E674C3}
