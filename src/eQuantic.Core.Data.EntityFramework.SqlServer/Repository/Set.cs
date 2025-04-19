@@ -11,8 +11,9 @@ using eQuantic.Core.Data.Repository;
 using eQuantic.Core.Data.Repository.Config;
 using eQuantic.Linq.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
+#if NET6_0 || NETSTANDARD2_1
 using Z.EntityFramework.Plus;
+#endif
 
 namespace eQuantic.Core.Data.EntityFramework.SqlServer.Repository;
 
@@ -24,13 +25,21 @@ public class Set<TEntity> : SetBase<TEntity> where TEntity : class, IEntity, new
 
     public override long DeleteMany(Expression<Func<TEntity, bool>> filter)
     {
+#if NET6_0 || NETSTANDARD2_1
         return InternalDbSet.Where(filter).Delete();
+#else
+        return InternalDbSet.Where(filter).ExecuteDelete();
+#endif
     }
 
     public override async Task<long> DeleteManyAsync(Expression<Func<TEntity, bool>> filter,
         CancellationToken cancellationToken = default)
     {
+#if NET6_0 || NETSTANDARD2_1
         return await InternalDbSet.Where(filter).DeleteAsync(cancellationToken);
+#else
+        return await InternalDbSet.Where(filter).ExecuteDeleteAsync(cancellationToken);
+#endif
     }
 
     public void LoadCollection<TChildEntity, TComplexProperty>(TChildEntity item,
@@ -157,13 +166,23 @@ public class Set<TEntity> : SetBase<TEntity> where TEntity : class, IEntity, new
     public override long UpdateMany(Expression<Func<TEntity, bool>> filter,
         Expression<Func<TEntity, TEntity>> updateExpression)
     {
+#if NET6_0 || NETSTANDARD2_1
         return InternalDbSet.Where(filter).Update(updateExpression);
+#else
+        var convertedExpression = ExpressionConverter<TEntity>.ConvertExpression(updateExpression);
+        return InternalDbSet.Where(filter).ExecuteUpdate(convertedExpression);
+#endif
     }
 
     public override async Task<long> UpdateManyAsync(Expression<Func<TEntity, bool>> filter,
         Expression<Func<TEntity, TEntity>> updateExpression, CancellationToken cancellationToken = default)
     {
+#if NET6_0 || NETSTANDARD2_1
         return await InternalDbSet.Where(filter).UpdateAsync(updateExpression, cancellationToken);
+#else
+        var convertedExpression = ExpressionConverter<TEntity>.ConvertExpression(updateExpression);
+        return await InternalDbSet.Where(filter).ExecuteUpdateAsync(convertedExpression, cancellationToken);
+#endif
     }
 
     private void LoadCascade(string[] props, object obj, int index = 0)

@@ -124,7 +124,7 @@ public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> :
 
     public TEntity Get(TKey id, Action<QueryableConfiguration<TEntity>> configuration = default)
     {
-        if (id == null)
+        if (Equals(id, default(TKey)))
         {
             throw new ArgumentNullException(nameof(id));
         }

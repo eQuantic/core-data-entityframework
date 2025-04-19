@@ -153,6 +153,7 @@ public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEn
     public virtual void SetModified(TEntity item)
     {
         var entry = this.DbContext.Entry<TEntity>(item);
+
         if (DbContext.ChangeTracker.AutoDetectChangesEnabled && entry.State != EntityState.Detached)
         {
             return;
