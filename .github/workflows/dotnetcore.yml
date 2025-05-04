@@ -34,6 +34,13 @@ jobs:
       - name: Build eQuantic.Core.Data.EntityFramework.SqlServer .net 9 Library
         run: dotnet build ./src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net9.csproj --configuration Release
 
+      - name: Build eQuantic.Core.Data.EntityFramework.MySql Library
+        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework.MySql/eQuantic.Core.Data.EntityFramework.MySql.csproj --configuration Release
+      - name: Build eQuantic.Core.Data.EntityFramework.MySql .net 8 Library
+        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework.MySql/eQuantic.Core.Data.EntityFramework.MySql.Net8.csproj --configuration Release
+      - name: Build eQuantic.Core.Data.EntityFramework.MySql .net 9 Library
+        run: dotnet build ./src/eQuantic.Core.Data.EntityFramework.MySql/eQuantic.Core.Data.EntityFramework.MySql.Net9.csproj --configuration Release
+        
       - name: Build eQuantic.Core.Data.EntityFramework.MongoDb Library
         run: dotnet build ./src/eQuantic.Core.Data.EntityFramework.MongoDb/eQuantic.Core.Data.EntityFramework.MongoDb.csproj --configuration Release
       - name: Build eQuantic.Core.Data.EntityFramework.MongoDb .net 9 Library

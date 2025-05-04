@@ -16,22 +16,19 @@ internal static class UpdateDefinitionBuilder
 
         foreach (var binding in memberInit.Bindings)
         {
-            if (binding is MemberAssignment memberAssignment)
-            {
-                var memberName = memberAssignment.Member.Name;
-                var value = GetValueFromExpression(memberAssignment.Expression, updateExpression.Parameters);
+            if (binding is not MemberAssignment memberAssignment) 
+                continue;
+            
+            var memberName = memberAssignment.Member.Name;
+            var value = GetValueFromExpression(memberAssignment.Expression, updateExpression.Parameters);
                 
-                if (value != null && !IsSimpleType(value.GetType()))
-                {
-                    foreach (var subUpdate in BuildNestedUpdate<TEntity>(memberName, value))
-                    {
-                        updates.Add(subUpdate);
-                    }
-                }
-                else
-                {
-                    updates.Add(updateDefinitionBuilder.Set(memberName, value));
-                }
+            if (value != null && !IsSimpleType(value.GetType()))
+            {
+                updates.AddRange(BuildNestedUpdate<TEntity>(memberName, value));
+            }
+            else
+            {
+                updates.Add(updateDefinitionBuilder.Set(memberName, value));
             }
         }
 
