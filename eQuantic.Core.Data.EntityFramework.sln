@@ -50,6 +50,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.MySql.Net9", "src\eQuantic.Core.Data.EntityFramework.MySql\eQuantic.Core.Data.EntityFramework.MySql.Net9.csproj", "{CD4AFD53-E76D-4181-85BA-B14E37DEFAFD}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PostgreSql", "PostgreSql", "{A6FAA830-E2CB-48CD-91C6-E0D75BFD8291}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.PostgreSql", "src\eQuantic.Core.Data.EntityFramework.PostgreSql\eQuantic.Core.Data.EntityFramework.PostgreSql.csproj", "{B67128D8-373F-4215-9DCE-85594BEAC0E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.PostgreSql.Net8", "src\eQuantic.Core.Data.EntityFramework.PostgreSql\eQuantic.Core.Data.EntityFramework.PostgreSql.Net8.csproj", "{46781B67-3B50-4DC9-BA64-6713528F605A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.PostgreSql.Net9", "src\eQuantic.Core.Data.EntityFramework.PostgreSql\eQuantic.Core.Data.EntityFramework.PostgreSql.Net9.csproj", "{715C2497-F3FF-468D-ACF6-A3BB5C18D2D6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -116,6 +124,18 @@ Global
 		{CD4AFD53-E76D-4181-85BA-B14E37DEFAFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD4AFD53-E76D-4181-85BA-B14E37DEFAFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CD4AFD53-E76D-4181-85BA-B14E37DEFAFD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B67128D8-373F-4215-9DCE-85594BEAC0E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B67128D8-373F-4215-9DCE-85594BEAC0E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B67128D8-373F-4215-9DCE-85594BEAC0E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B67128D8-373F-4215-9DCE-85594BEAC0E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46781B67-3B50-4DC9-BA64-6713528F605A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46781B67-3B50-4DC9-BA64-6713528F605A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46781B67-3B50-4DC9-BA64-6713528F605A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46781B67-3B50-4DC9-BA64-6713528F605A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{715C2497-F3FF-468D-ACF6-A3BB5C18D2D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{715C2497-F3FF-468D-ACF6-A3BB5C18D2D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{715C2497-F3FF-468D-ACF6-A3BB5C18D2D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{715C2497-F3FF-468D-ACF6-A3BB5C18D2D6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -139,6 +159,10 @@ Global
 		{7921DCBF-FAFF-4080-8AA0-A00C0548FDD8} = {9D499CE2-6681-4F5D-8F47-F634EFF79132}
 		{C7367715-9273-460F-BE2C-1BB06095E45C} = {9D499CE2-6681-4F5D-8F47-F634EFF79132}
 		{CD4AFD53-E76D-4181-85BA-B14E37DEFAFD} = {9D499CE2-6681-4F5D-8F47-F634EFF79132}
+		{A6FAA830-E2CB-48CD-91C6-E0D75BFD8291} = {0CA2F610-6D57-4D1F-92E3-EDCCEDAD8297}
+		{B67128D8-373F-4215-9DCE-85594BEAC0E2} = {A6FAA830-E2CB-48CD-91C6-E0D75BFD8291}
+		{46781B67-3B50-4DC9-BA64-6713528F605A} = {A6FAA830-E2CB-48CD-91C6-E0D75BFD8291}
+		{715C2497-F3FF-468D-ACF6-A3BB5C18D2D6} = {A6FAA830-E2CB-48CD-91C6-E0D75BFD8291}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {83FECDD1-8A97-40B1-8529-3D5216E674C3}
