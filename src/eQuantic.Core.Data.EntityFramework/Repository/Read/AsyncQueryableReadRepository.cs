@@ -21,7 +21,6 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
     where TUnitOfWork : class, IQueryableUnitOfWork
     where TEntity : class, IEntity, new()
 {
-    private SetBase<TEntity> _dbSet;
 
     public AsyncQueryableReadRepository(TUnitOfWork unitOfWork) : base(unitOfWork)
     {
@@ -597,6 +596,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         });
 
 
+        if (pageIndex < 1) pageIndex = 1;
         if (pageSize > 0)
         {
             return await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
@@ -683,8 +683,4 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         return GetSet().GetQueryable(configuration, internalQueryAction);
     }
     
-    private SetBase<TEntity> GetSet()
-    {
-        return _dbSet ??= (SetBase<TEntity>)UnitOfWork.CreateSet<TEntity>();
-    }
 }

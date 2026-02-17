@@ -13,8 +13,6 @@ public class AsyncWriteRepository<TUnitOfWork, TEntity> : WriteRepository<TUnitO
     where TUnitOfWork : IQueryableUnitOfWork
     where TEntity : class, IEntity, new()
 {
-    private ISet<TEntity> _dbSet;
-
     public AsyncWriteRepository(TUnitOfWork unitOfWork) : base(unitOfWork)
     {
     }
@@ -96,8 +94,4 @@ public class AsyncWriteRepository<TUnitOfWork, TEntity> : WriteRepository<TUnitO
         return this.UpdateManyAsync(specification.SatisfiedBy(), updateFactory, cancellationToken);
     }
 
-    private ISet<TEntity> GetSet()
-    {
-        return _dbSet ??= UnitOfWork.CreateSet<TEntity>();
-    }
 }

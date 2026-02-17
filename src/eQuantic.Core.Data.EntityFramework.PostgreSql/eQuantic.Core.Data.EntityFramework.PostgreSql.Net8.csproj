@@ -4,13 +4,14 @@
     <PropertyGroup>
         <Description>Core Data library for Entity Framework and PostgreSQL</Description>
         <AssemblyTitle>eQuantic.Core.Data.EntityFramework.PostgreSql</AssemblyTitle>
-        <Version>8.0.0.0</Version>
+        <Version>8.1.0.0</Version>
         <Authors>eQuantic Systems</Authors>
         <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>eQuantic.Core.Data.EntityFramework.PostgreSql</AssemblyName>
         <PackageId>eQuantic.Core.Data.EntityFramework.PostgreSql</PackageId>
         <PackageTags>eQuantic;Core;Data;Library;Repository;Pattern;SQL</PackageTags>
-        <PackageReleaseNotes>Entity ignorant persistance with Repository Pattern for Entity Framework</PackageReleaseNotes>
+        <PackageReleaseNotes>Entity ignorant persistance with Repository Pattern for Entity
+            Framework</PackageReleaseNotes>
 
         <PackageProjectUrl>https://github.com/eQuantic/core-data-entityframework</PackageProjectUrl>
         <PackageOutputPath>../../artifacts/</PackageOutputPath>
@@ -22,24 +23,25 @@
         <RepositoryType>Git</RepositoryType>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <Copyright>Copyright ©  2016</Copyright>
-        <AssemblyVersion>8.0.0.0</AssemblyVersion>
-        <FileVersion>8.0.0.0</FileVersion>
+        <Copyright>Copyright © 2016</Copyright>
+        <AssemblyVersion>8.1.0.0</AssemblyVersion>
+        <FileVersion>8.1.0.0</FileVersion>
         <PackageIcon>Icon.png</PackageIcon>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="eQuantic.Core" Version="1.8.0" />
-        <PackageReference Include="eQuantic.Core.Data" Version="4.2.3" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.17" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.17">
+        <PackageReference Include="eQuantic.Core" Version="1.8.4" />
+        <PackageReference Include="eQuantic.Core.Data" Version="4.3.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.24" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.24">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="8.0.11" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.17">
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite"
+            Version="8.0.11" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.24">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -61,6 +63,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\eQuantic.Core.Data.EntityFramework\eQuantic.Core.Data.EntityFramework.csproj" />
+        <ProjectReference
+            Include="..\eQuantic.Core.Data.EntityFramework\eQuantic.Core.Data.EntityFramework.csproj" />
     </ItemGroup>
 </Project>

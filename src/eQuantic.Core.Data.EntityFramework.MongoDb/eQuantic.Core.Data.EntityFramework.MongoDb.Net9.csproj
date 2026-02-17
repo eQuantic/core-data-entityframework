@@ -4,13 +4,14 @@
     <PropertyGroup>
         <Description>Core Data library for Entity Framework and Mongo DB</Description>
         <AssemblyTitle>eQuantic.Core.Data.EntityFramework.MongoDb</AssemblyTitle>
-        <Version>9.0.1.0</Version>
+        <Version>9.1.0.0</Version>
         <Authors>eQuantic Systems</Authors>
         <TargetFramework>net9.0</TargetFramework>
         <AssemblyName>eQuantic.Core.Data.EntityFramework.MongoDb</AssemblyName>
         <PackageId>eQuantic.Core.Data.EntityFramework.MongoDb</PackageId>
         <PackageTags>eQuantic;Core;Data;Library;Repository;Pattern;MongoDB</PackageTags>
-        <PackageReleaseNotes>Entity ignorant persistance with Repository Pattern for Entity Framework</PackageReleaseNotes>
+        <PackageReleaseNotes>Entity ignorant persistance with Repository Pattern for Entity
+            Framework</PackageReleaseNotes>
 
         <PackageProjectUrl>https://github.com/eQuantic/core-data-entityframework</PackageProjectUrl>
         <PackageOutputPath>../../artifacts/</PackageOutputPath>
@@ -22,9 +23,9 @@
         <RepositoryType>Git</RepositoryType>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <Copyright>Copyright ©  2016</Copyright>
-        <AssemblyVersion>9.0.1.0</AssemblyVersion>
-        <FileVersion>9.0.1.0</FileVersion>
+        <Copyright>Copyright © 2016</Copyright>
+        <AssemblyVersion>9.1.0.0</AssemblyVersion>
+        <FileVersion>9.1.0.0</FileVersion>
         <PackageIcon>Icon.png</PackageIcon>
         <LangVersion>latest</LangVersion>
 
@@ -33,18 +34,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="eQuantic.Core" Version="1.8.0" />
-        <PackageReference Include="eQuantic.Core.Data" Version="4.2.3" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6">
+        <PackageReference Include="eQuantic.Core" Version="1.8.4" />
+        <PackageReference Include="eQuantic.Core.Data" Version="4.3.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.13" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.13">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.6">
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.13">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="MongoDB.EntityFrameworkCore" Version="9.0.0" />
+        <PackageReference Include="MongoDB.EntityFrameworkCore" Version="9.1.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -63,6 +64,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\eQuantic.Core.Data.EntityFramework\eQuantic.Core.Data.EntityFramework.csproj" />
+        <ProjectReference
+            Include="..\eQuantic.Core.Data.EntityFramework\eQuantic.Core.Data.EntityFramework.csproj" />
     </ItemGroup>
 </Project>

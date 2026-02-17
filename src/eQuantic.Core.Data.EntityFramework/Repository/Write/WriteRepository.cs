@@ -10,8 +10,9 @@ public class WriteRepository<TUnitOfWork, TEntity> : IWriteRepository<TUnitOfWor
     where TUnitOfWork : IQueryableUnitOfWork
     where TEntity : class, IEntity, new()
 {
-    private SetBase<TEntity> _dbSet;
+    internal SetBase<TEntity> _dbSet;
     private bool _disposed;
+    internal bool OwnUnitOfWork { get; set; } = true;
 
     public WriteRepository(TUnitOfWork unitOfWork)
     {
@@ -127,7 +128,7 @@ public class WriteRepository<TUnitOfWork, TEntity> : IWriteRepository<TUnitOfWor
             return;
         }
 
-        if (disposing)
+        if (disposing && OwnUnitOfWork)
         {
             UnitOfWork?.Dispose();
         }
@@ -135,7 +136,7 @@ public class WriteRepository<TUnitOfWork, TEntity> : IWriteRepository<TUnitOfWor
         _disposed = true;
     }
 
-    private SetBase<TEntity> GetSet()
+    internal virtual SetBase<TEntity> GetSet()
     {
         return _dbSet ??= (SetBase<TEntity>)UnitOfWork.CreateSet<TEntity>();
     }

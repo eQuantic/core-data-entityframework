@@ -62,6 +62,7 @@ namespace eQuantic.Core.Web.Examples.Infrastructure.Data
 ```
 
 ## Repository example:
+
 ### Contract
 
 ```csharp
@@ -78,6 +79,7 @@ namespace eQuantic.Core.Web.Examples.Infrastructure.Repositories.Contracts
 ```
 
 ### Implementation
+
 ```csharp
 using System;
 using eQuantic.Core.Data.EntityFramework.Repository;
@@ -175,6 +177,7 @@ namespace eQuantic.Core.Web.Examples.Domain.Services.Contracts
 ```
 
 ### Implementation
+
 ```csharp
 using System;
 using System.Collections.Generic;
@@ -248,3 +251,13 @@ namespace eQuantic.Core.Web.Examples.Domain.Services
     }
 }
 ```
+
+## Advanced Features (v4.4.0)
+
+### .NET 10 ExecuteUpdate Support
+
+Starting with version 4.4.0, the repository fully supports .NET 10's `ExecuteUpdate` with the new `UpdateSettersBuilder` syntax. The `ExpressionConverter` automatically handles the transformation of anonymous object or member init expressions into the optimized EF Core format.
+
+### Resource Management
+
+The `UnitOfWork` implementation now includes internal resource tracking to ensure that database connections and related resources are properly disposed of, even when multiple repositories are shared within the same scope.

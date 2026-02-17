@@ -17,8 +17,9 @@ public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> :
     where TUnitOfWork : IQueryableUnitOfWork
     where TEntity : class, IEntity, new()
 {
-    private SetBase<TEntity> _dbSet;
+    internal SetBase<TEntity> _dbSet;
     private bool _disposed;
+    internal bool OwnUnitOfWork { get; set; } = true;
     private const string SpecificationCannotBeNull = "Specification cannot be null";
     private const string FilterExpressionCannotBeNull = "Filter expression cannot be null";
     /// <summary>
@@ -265,6 +266,7 @@ public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> :
 
             return internalQuery;
         });
+        if (pageIndex < 1) pageIndex = 1;
         return pageSize > 0 ? query.Skip((pageIndex - 1) * pageSize).Take(pageSize) : query;
     }
 
@@ -299,7 +301,7 @@ public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> :
             return;
         }
 
-        if (disposing)
+        if (disposing && OwnUnitOfWork)
         {
             UnitOfWork?.Dispose();
         }
@@ -313,7 +315,7 @@ public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         return GetSet().GetQueryable(configuration, internalQueryAction);
     }
 
-    private SetBase<TEntity> GetSet()
+    internal virtual SetBase<TEntity> GetSet()
     {
         return _dbSet ??= (SetBase<TEntity>)UnitOfWork.CreateSet<TEntity>();
     }

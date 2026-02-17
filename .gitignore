@@ -362,3 +362,5 @@ healthchecksdb
 !artifacts/readme.txt
 !build/*.targets
 !build/*.props
+
+.DS_Store

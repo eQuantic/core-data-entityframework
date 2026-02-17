@@ -58,6 +58,22 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.PostgreSql.Net9", "src\eQuantic.Core.Data.EntityFramework.PostgreSql\eQuantic.Core.Data.EntityFramework.PostgreSql.Net9.csproj", "{715C2497-F3FF-468D-ACF6-A3BB5C18D2D6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.Net10", "src\eQuantic.Core.Data.EntityFramework\eQuantic.Core.Data.EntityFramework.Net10.csproj", "{7D85EC36-84C6-4429-BE02-291F046BACA4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.SqlServer.Net10", "src\eQuantic.Core.Data.EntityFramework.SqlServer\eQuantic.Core.Data.EntityFramework.SqlServer.Net10.csproj", "{D40D237B-5C44-4271-9DCC-53E07DE4342F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.PostgreSql.Net10", "src\eQuantic.Core.Data.EntityFramework.PostgreSql\eQuantic.Core.Data.EntityFramework.PostgreSql.Net10.csproj", "{9BB6467D-1212-4762-96C8-0C1B6E10109F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.MySql.Net10", "src\eQuantic.Core.Data.EntityFramework.MySql\eQuantic.Core.Data.EntityFramework.MySql.Net10.csproj", "{A3EED73E-6A4B-4C7C-9705-BE6FDEA9B748}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.MongoDb.Net10", "src\eQuantic.Core.Data.EntityFramework.MongoDb\eQuantic.Core.Data.EntityFramework.MongoDb.Net10.csproj", "{B5E862DD-A02A-4E26-AA83-687C608C4203}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{EE71F02F-413D-4BC0-832F-726B6D8C0AD7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.Tests", "tests\eQuantic.Core.Data.EntityFramework.Tests\eQuantic.Core.Data.EntityFramework.Tests.csproj", "{D0A7C1F3-94B3-4353-9C14-827ABBAD649D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.SqlServer.Tests", "tests\eQuantic.Core.Data.EntityFramework.SqlServer.Tests\eQuantic.Core.Data.EntityFramework.SqlServer.Tests.csproj", "{A730FE2E-2972-41F6-AAF7-3AEE017A7418}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -136,6 +152,34 @@ Global
 		{715C2497-F3FF-468D-ACF6-A3BB5C18D2D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{715C2497-F3FF-468D-ACF6-A3BB5C18D2D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{715C2497-F3FF-468D-ACF6-A3BB5C18D2D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D85EC36-84C6-4429-BE02-291F046BACA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D85EC36-84C6-4429-BE02-291F046BACA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D85EC36-84C6-4429-BE02-291F046BACA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D85EC36-84C6-4429-BE02-291F046BACA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D40D237B-5C44-4271-9DCC-53E07DE4342F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D40D237B-5C44-4271-9DCC-53E07DE4342F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D40D237B-5C44-4271-9DCC-53E07DE4342F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D40D237B-5C44-4271-9DCC-53E07DE4342F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BB6467D-1212-4762-96C8-0C1B6E10109F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BB6467D-1212-4762-96C8-0C1B6E10109F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BB6467D-1212-4762-96C8-0C1B6E10109F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BB6467D-1212-4762-96C8-0C1B6E10109F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3EED73E-6A4B-4C7C-9705-BE6FDEA9B748}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3EED73E-6A4B-4C7C-9705-BE6FDEA9B748}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3EED73E-6A4B-4C7C-9705-BE6FDEA9B748}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3EED73E-6A4B-4C7C-9705-BE6FDEA9B748}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5E862DD-A02A-4E26-AA83-687C608C4203}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5E862DD-A02A-4E26-AA83-687C608C4203}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5E862DD-A02A-4E26-AA83-687C608C4203}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5E862DD-A02A-4E26-AA83-687C608C4203}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0A7C1F3-94B3-4353-9C14-827ABBAD649D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0A7C1F3-94B3-4353-9C14-827ABBAD649D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0A7C1F3-94B3-4353-9C14-827ABBAD649D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0A7C1F3-94B3-4353-9C14-827ABBAD649D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A730FE2E-2972-41F6-AAF7-3AEE017A7418}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A730FE2E-2972-41F6-AAF7-3AEE017A7418}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A730FE2E-2972-41F6-AAF7-3AEE017A7418}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A730FE2E-2972-41F6-AAF7-3AEE017A7418}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -163,6 +207,13 @@ Global
 		{B67128D8-373F-4215-9DCE-85594BEAC0E2} = {A6FAA830-E2CB-48CD-91C6-E0D75BFD8291}
 		{46781B67-3B50-4DC9-BA64-6713528F605A} = {A6FAA830-E2CB-48CD-91C6-E0D75BFD8291}
 		{715C2497-F3FF-468D-ACF6-A3BB5C18D2D6} = {A6FAA830-E2CB-48CD-91C6-E0D75BFD8291}
+		{7D85EC36-84C6-4429-BE02-291F046BACA4} = {0CA2F610-6D57-4D1F-92E3-EDCCEDAD8297}
+		{D40D237B-5C44-4271-9DCC-53E07DE4342F} = {5B80C186-5E75-413B-B825-0B5B2FE9A3E4}
+		{9BB6467D-1212-4762-96C8-0C1B6E10109F} = {A6FAA830-E2CB-48CD-91C6-E0D75BFD8291}
+		{A3EED73E-6A4B-4C7C-9705-BE6FDEA9B748} = {9D499CE2-6681-4F5D-8F47-F634EFF79132}
+		{B5E862DD-A02A-4E26-AA83-687C608C4203} = {F613B6F2-C420-4E72-981A-47A20A538BC6}
+		{D0A7C1F3-94B3-4353-9C14-827ABBAD649D} = {EE71F02F-413D-4BC0-832F-726B6D8C0AD7}
+		{A730FE2E-2972-41F6-AAF7-3AEE017A7418} = {EE71F02F-413D-4BC0-832F-726B6D8C0AD7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {83FECDD1-8A97-40B1-8529-3D5216E674C3}

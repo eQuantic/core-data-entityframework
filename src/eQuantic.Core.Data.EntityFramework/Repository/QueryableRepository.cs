@@ -30,8 +30,13 @@ public class QueryableRepository<TUnitOfWork, TEntity, TKey> :
     public QueryableRepository(TUnitOfWork unitOfWork)
     {
         this.UnitOfWork = unitOfWork;
-        this._readRepository = new QueryableReadRepository<TUnitOfWork, TEntity, TKey>(unitOfWork);
-        this._writeRepository = new WriteRepository<TUnitOfWork, TEntity>(unitOfWork);
+        var readRepository = new QueryableReadRepository<TUnitOfWork, TEntity, TKey>(unitOfWork);
+        readRepository.OwnUnitOfWork = false;
+        this._readRepository = readRepository;
+        
+        var writeRepository = new WriteRepository<TUnitOfWork, TEntity>(unitOfWork);
+        writeRepository.OwnUnitOfWork = false;
+        this._writeRepository = writeRepository;
     }
 
     public TUnitOfWork UnitOfWork { get; private set; }

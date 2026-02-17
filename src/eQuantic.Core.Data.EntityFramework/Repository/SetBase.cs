@@ -15,7 +15,7 @@ namespace eQuantic.Core.Data.EntityFramework.Repository;
 
 public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEntity : class, IEntity, new()
 {
-    protected readonly DbContext DbContext;
+    internal readonly DbContext DbContext;
 
     protected SetBase(DbContext context)
     {
@@ -27,7 +27,7 @@ public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEn
     public Expression Expression => ((IQueryable<TEntity>)InternalDbSet).Expression;
     public LocalView<TEntity> Local => InternalDbSet.Local;
     public IQueryProvider Provider => ((IQueryable<TEntity>)InternalDbSet).Provider;
-    protected DbSet<TEntity> InternalDbSet { get; private set; }
+    internal DbSet<TEntity> InternalDbSet { get; private set; }
 
     public virtual void AddRange(IEnumerable<TEntity> entities)
     {
@@ -194,24 +194,14 @@ public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEn
     }
     
     protected static TConfig GetConfig<TConfig>(Action<TConfig> configuration)
-        where TConfig : Configuration<TEntity>
+        where TConfig : Configuration<TEntity>, new()
     {
-        Configuration<TEntity> config;
-        if (configuration is Action<QueryableConfiguration<TEntity>>)
-        {
-            config = new QueryableConfiguration<TEntity>();
-        }
-        else
-        {
-            config = new DefaultConfiguration<TEntity>();
-        }
-
-        configuration.Invoke((TConfig)config);
-
-        return (TConfig)config;
+        var config = new TConfig();
+        configuration?.Invoke(config);
+        return config;
     }
 
     public abstract IQueryable<TEntity> GetQueryable<TConfig>(Action<TConfig> configuration,
         Func<IQueryable<TEntity>, IQueryable<TEntity>> internalQueryAction)
-        where TConfig : Configuration<TEntity>;
+        where TConfig : Configuration<TEntity>, new();
 }

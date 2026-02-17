@@ -28,8 +28,13 @@ public class AsyncQueryableRepository<TUnitOfWork, TEntity, TKey> :
 
     public AsyncQueryableRepository(TUnitOfWork unitOfWork) : base(unitOfWork)
     {
-        this._asyncReadRepository = new AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey>(unitOfWork);
-        this._asyncWriteRepository = new AsyncWriteRepository<TUnitOfWork, TEntity>(unitOfWork);
+        var asyncReadRepository = new AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey>(unitOfWork);
+        asyncReadRepository.OwnUnitOfWork = false;
+        this._asyncReadRepository = asyncReadRepository;
+        
+        var asyncWriteRepository = new AsyncWriteRepository<TUnitOfWork, TEntity>(unitOfWork);
+        asyncWriteRepository.OwnUnitOfWork = false;
+        this._asyncWriteRepository = asyncWriteRepository;
     }
 
     public Task AddAsync(TEntity item)
