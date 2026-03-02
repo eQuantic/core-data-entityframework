@@ -82,6 +82,56 @@ public class AsyncQueryableRepository<TUnitOfWork, TEntity, TKey> :
         return this._asyncReadRepository.CountAsync(filter, cancellationToken);
     }
 
+    public Task<int> SumAsync(Expression<Func<TEntity, int>> source)
+    {
+        return _asyncReadRepository.SumAsync(source);
+    }
+    
+    public Task<int?> SumAsync(Expression<Func<TEntity, int?>> source)
+    {
+        return _asyncReadRepository.SumAsync(source);
+    }
+    
+    public Task<long> SumAsync(Expression<Func<TEntity, long>> source)
+    {
+        return _asyncReadRepository.SumAsync(source);
+    }
+    
+    public Task<long?> SumAsync(Expression<Func<TEntity, long?>> source)
+    {
+        return _asyncReadRepository.SumAsync(source);
+    }
+    
+    public Task<double> SumAsync(Expression<Func<TEntity, double>> source)
+    {
+        return _asyncReadRepository.SumAsync(source);
+    }
+    
+    public Task<double?> SumAsync(Expression<Func<TEntity, double?>> source)
+    {
+        return _asyncReadRepository.SumAsync(source);
+    }
+    
+    public Task<float> SumAsync(Expression<Func<TEntity, float>> source)
+    {
+        return _asyncReadRepository.SumAsync(source);
+    }
+    
+    public Task<float?> SumAsync(Expression<Func<TEntity, float?>> source)
+    {
+        return _asyncReadRepository.SumAsync(source);
+    }
+    
+    public Task<decimal> SumAsync(Expression<Func<TEntity, decimal>> source)
+    {
+        return _asyncReadRepository.SumAsync(source);
+    }
+    
+    public Task<decimal?> SumAsync(Expression<Func<TEntity, decimal?>> source)
+    {
+        return _asyncReadRepository.SumAsync(source);
+    }
+    
     public Task<bool> AllAsync(
         ISpecification<TEntity> specification, 
         Action<QueryableConfiguration<TEntity>> configuration = default)

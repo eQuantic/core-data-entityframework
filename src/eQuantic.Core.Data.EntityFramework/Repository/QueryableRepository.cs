@@ -66,6 +66,56 @@ public class QueryableRepository<TUnitOfWork, TEntity, TKey> :
     {
         return this._readRepository.Count(filter);
     }
+    
+    public int Sum(Expression<Func<TEntity, int>> source)
+    {
+        return _readRepository.Sum(source);
+    }
+    
+    public int? Sum(Expression<Func<TEntity, int?>> source)
+    {
+        return _readRepository.Sum(source);
+    }
+    
+    public long Sum(Expression<Func<TEntity, long>> source)
+    {
+        return _readRepository.Sum(source);
+    }
+    
+    public long? Sum(Expression<Func<TEntity, long?>> source)
+    {
+        return _readRepository.Sum(source);
+    }
+    
+    public double Sum(Expression<Func<TEntity, double>> source)
+    {
+        return _readRepository.Sum(source);
+    }
+    
+    public double? Sum(Expression<Func<TEntity, double?>> source)
+    {
+        return _readRepository.Sum(source);
+    }
+    
+    public float Sum(Expression<Func<TEntity, float>> source)
+    {
+        return _readRepository.Sum(source);
+    }
+    
+    public float? Sum(Expression<Func<TEntity, float?>> source)
+    {
+        return _readRepository.Sum(source);
+    }
+    
+    public decimal Sum(Expression<Func<TEntity, decimal>> source)
+    {
+        return _readRepository.Sum(source);
+    }
+    
+    public decimal? Sum(Expression<Func<TEntity, decimal?>> source)
+    {
+        return _readRepository.Sum(source);
+    }
 
     public bool All(ISpecification<TEntity> specification, Action<QueryableConfiguration<TEntity>> configuration = default)
     {
