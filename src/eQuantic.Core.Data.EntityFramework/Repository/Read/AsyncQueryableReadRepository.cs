@@ -79,50 +79,130 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
     {
         return GetSet().SumAsync(source);
     }
-    
+    public Task<int> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, int>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).SumAsync(source);
+    }
+    public Task<int> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, int>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).SumAsync(source);
+    }
+
     public Task<int?> SumAsync(Expression<Func<TEntity, int?>> source)
     {
         return GetSet().SumAsync(source);
     }
-    
+    public Task<int?> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, int?>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).SumAsync(source);
+    }
+    public Task<int?> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, int?>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).SumAsync(source);
+    }
+
     public Task<long> SumAsync(Expression<Func<TEntity, long>> source)
     {
         return GetSet().SumAsync(source);
     }
-    
+    public Task<long> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, long>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).SumAsync(source);
+    }
+    public Task<long> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, long>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).SumAsync(source);
+    }
+
     public Task<long?> SumAsync(Expression<Func<TEntity, long?>> source)
     {
         return GetSet().SumAsync(source);
     }
-    
+    public Task<long?> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, long?>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).SumAsync(source);
+    }
+    public Task<long?> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, long?>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).SumAsync(source);
+    }
+
     public Task<double> SumAsync(Expression<Func<TEntity, double>> source)
     {
         return GetSet().SumAsync(source);
     }
-    
+    public Task<double> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, double>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).SumAsync(source);
+    }
+    public Task<double> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, double>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).SumAsync(source);
+    }
+
     public Task<double?> SumAsync(Expression<Func<TEntity, double?>> source)
     {
         return GetSet().SumAsync(source);
     }
-    
+    public Task<double?> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, double?>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).SumAsync(source);
+    }
+    public Task<double?> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, double?>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).SumAsync(source);
+    }
+
     public Task<float> SumAsync(Expression<Func<TEntity, float>> source)
     {
         return GetSet().SumAsync(source);
     }
-    
+    public Task<float> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, float>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).SumAsync(source);
+    }
+    public Task<float> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, float>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).SumAsync(source);
+    }
+
     public Task<float?> SumAsync(Expression<Func<TEntity, float?>> source)
     {
         return GetSet().SumAsync(source);
     }
-    
+    public Task<float?> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, float?>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).SumAsync(source);
+    }
+    public Task<float?> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, float?>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).SumAsync(source);
+    }
+
     public Task<decimal> SumAsync(Expression<Func<TEntity, decimal>> source)
     {
         return GetSet().SumAsync(source);
     }
-    
+    public Task<decimal> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, decimal>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).SumAsync(source);
+    }
+    public Task<decimal> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, decimal>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).SumAsync(source);
+    }
+
     public Task<decimal?> SumAsync(Expression<Func<TEntity, decimal?>> source)
     {
         return GetSet().SumAsync(source);
+    }
+    public Task<decimal?> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, decimal?>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).SumAsync(source);
+    }
+    public Task<decimal?> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, decimal?>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).SumAsync(source);
     }
 
     public Task<bool> AllAsync(

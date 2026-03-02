@@ -71,50 +71,130 @@ public class QueryableRepository<TUnitOfWork, TEntity, TKey> :
     {
         return _readRepository.Sum(source);
     }
-    
+    public int Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, int>> source)
+    {
+        return _readRepository.Sum(specification, source);
+    }
+    public int Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, int>> source)
+    {
+        return _readRepository.Sum(filter, source);
+    }
+
     public int? Sum(Expression<Func<TEntity, int?>> source)
     {
         return _readRepository.Sum(source);
     }
-    
+    public int? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, int?>> source)
+    {
+        return _readRepository.Sum(specification, source);
+    }
+    public int? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, int?>> source)
+    {
+        return _readRepository.Sum(filter, source);
+    }
+
     public long Sum(Expression<Func<TEntity, long>> source)
     {
         return _readRepository.Sum(source);
     }
-    
+    public long Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, long>> source)
+    {
+        return _readRepository.Sum(specification, source);
+    }
+    public long Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, long>> source)
+    {
+        return _readRepository.Sum(filter, source);
+    }
+
     public long? Sum(Expression<Func<TEntity, long?>> source)
     {
         return _readRepository.Sum(source);
     }
-    
+    public long? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, long?>> source)
+    {
+        return _readRepository.Sum(specification, source);
+    }
+    public long? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, long?>> source)
+    {
+        return _readRepository.Sum(filter, source);
+    }
+
     public double Sum(Expression<Func<TEntity, double>> source)
     {
         return _readRepository.Sum(source);
     }
-    
+    public double Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, double>> source)
+    {
+        return _readRepository.Sum(specification, source);
+    }
+    public double Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, double>> source)
+    {
+        return _readRepository.Sum(filter, source);
+    }
+
     public double? Sum(Expression<Func<TEntity, double?>> source)
     {
         return _readRepository.Sum(source);
     }
-    
+    public double? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, double?>> source)
+    {
+        return _readRepository.Sum(specification, source);
+    }
+    public double? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, double?>> source)
+    {
+        return _readRepository.Sum(filter, source);
+    }
+
     public float Sum(Expression<Func<TEntity, float>> source)
     {
         return _readRepository.Sum(source);
     }
-    
+    public float Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, float>> source)
+    {
+        return _readRepository.Sum(specification, source);
+    }
+    public float Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, float>> source)
+    {
+        return _readRepository.Sum(filter, source);
+    }
+
     public float? Sum(Expression<Func<TEntity, float?>> source)
     {
         return _readRepository.Sum(source);
     }
-    
+    public float? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, float?>> source)
+    {
+        return _readRepository.Sum(specification, source);
+    }
+    public float? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, float?>> source)
+    {
+        return _readRepository.Sum(filter, source);
+    }
+
     public decimal Sum(Expression<Func<TEntity, decimal>> source)
     {
         return _readRepository.Sum(source);
     }
-    
+    public decimal Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, decimal>> source)
+    {
+        return _readRepository.Sum(specification, source);
+    }
+    public decimal Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, decimal>> source)
+    {
+        return _readRepository.Sum(filter, source);
+    }
+
     public decimal? Sum(Expression<Func<TEntity, decimal?>> source)
     {
         return _readRepository.Sum(source);
+    }
+    public decimal? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, decimal?>> source)
+    {
+        return _readRepository.Sum(specification, source);
+    }
+    public decimal? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, decimal?>> source)
+    {
+        return _readRepository.Sum(filter, source);
     }
 
     public bool All(ISpecification<TEntity> specification, Action<QueryableConfiguration<TEntity>> configuration = default)

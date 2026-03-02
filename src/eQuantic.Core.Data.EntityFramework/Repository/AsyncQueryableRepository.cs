@@ -86,50 +86,130 @@ public class AsyncQueryableRepository<TUnitOfWork, TEntity, TKey> :
     {
         return _asyncReadRepository.SumAsync(source);
     }
-    
+    public Task<int> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, int>> source)
+    {
+        return _asyncReadRepository.SumAsync(specification, source);
+    }
+    public Task<int> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, int>> source)
+    {
+        return _asyncReadRepository.SumAsync(filter, source);
+    }
+
     public Task<int?> SumAsync(Expression<Func<TEntity, int?>> source)
     {
         return _asyncReadRepository.SumAsync(source);
     }
-    
+    public Task<int?> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, int?>> source)
+    {
+        return _asyncReadRepository.SumAsync(specification, source);
+    }
+    public Task<int?> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, int?>> source)
+    {
+        return _asyncReadRepository.SumAsync(filter, source);
+    }
+
     public Task<long> SumAsync(Expression<Func<TEntity, long>> source)
     {
         return _asyncReadRepository.SumAsync(source);
     }
-    
+    public Task<long> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, long>> source)
+    {
+        return _asyncReadRepository.SumAsync(specification, source);
+    }
+    public Task<long> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, long>> source)
+    {
+        return _asyncReadRepository.SumAsync(filter, source);
+    }
+
     public Task<long?> SumAsync(Expression<Func<TEntity, long?>> source)
     {
         return _asyncReadRepository.SumAsync(source);
     }
-    
+    public Task<long?> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, long?>> source)
+    {
+        return _asyncReadRepository.SumAsync(specification, source);
+    }
+    public Task<long?> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, long?>> source)
+    {
+        return _asyncReadRepository.SumAsync(filter, source);
+    }
+
     public Task<double> SumAsync(Expression<Func<TEntity, double>> source)
     {
         return _asyncReadRepository.SumAsync(source);
     }
-    
+    public Task<double> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, double>> source)
+    {
+        return _asyncReadRepository.SumAsync(specification, source);
+    }
+    public Task<double> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, double>> source)
+    {
+        return _asyncReadRepository.SumAsync(filter, source);
+    }
+
     public Task<double?> SumAsync(Expression<Func<TEntity, double?>> source)
     {
         return _asyncReadRepository.SumAsync(source);
     }
-    
+    public Task<double?> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, double?>> source)
+    {
+        return _asyncReadRepository.SumAsync(specification, source);
+    }
+    public Task<double?> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, double?>> source)
+    {
+        return _asyncReadRepository.SumAsync(filter, source);
+    }
+
     public Task<float> SumAsync(Expression<Func<TEntity, float>> source)
     {
         return _asyncReadRepository.SumAsync(source);
     }
-    
+    public Task<float> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, float>> source)
+    {
+        return _asyncReadRepository.SumAsync(specification, source);
+    }
+    public Task<float> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, float>> source)
+    {
+        return _asyncReadRepository.SumAsync(filter, source);
+    }
+
     public Task<float?> SumAsync(Expression<Func<TEntity, float?>> source)
     {
         return _asyncReadRepository.SumAsync(source);
     }
-    
+    public Task<float?> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, float?>> source)
+    {
+        return _asyncReadRepository.SumAsync(specification, source);
+    }
+    public Task<float?> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, float?>> source)
+    {
+        return _asyncReadRepository.SumAsync(filter, source);
+    }
+
     public Task<decimal> SumAsync(Expression<Func<TEntity, decimal>> source)
     {
         return _asyncReadRepository.SumAsync(source);
     }
-    
+    public Task<decimal> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, decimal>> source)
+    {
+        return _asyncReadRepository.SumAsync(specification, source);
+    }
+    public Task<decimal> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, decimal>> source)
+    {
+        return _asyncReadRepository.SumAsync(filter, source);
+    }
+
     public Task<decimal?> SumAsync(Expression<Func<TEntity, decimal?>> source)
     {
         return _asyncReadRepository.SumAsync(source);
+    }
+    public Task<decimal?> SumAsync(ISpecification<TEntity> specification, Expression<Func<TEntity, decimal?>> source)
+    {
+        return _asyncReadRepository.SumAsync(specification, source);
+    }
+    public Task<decimal?> SumAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, decimal?>> source)
+    {
+        return _asyncReadRepository.SumAsync(filter, source);
     }
     
     public Task<bool> AllAsync(

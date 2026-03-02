@@ -72,50 +72,130 @@ public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> :
     {
         return GetSet().Sum(source);
     }
+    public int Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, int>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
+    }
+    public int Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, int>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).Sum(source);
+    }
     
     public int? Sum(Expression<Func<TEntity, int?>> source)
     {
         return GetSet().Sum(source);
     }
-    
+    public int? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, int?>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
+    }
+    public int? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, int?>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).Sum(source);
+    }
+
     public long Sum(Expression<Func<TEntity, long>> source)
     {
         return GetSet().Sum(source);
     }
-    
+    public long Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, long>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
+    }
+    public long Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, long>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).Sum(source);
+    }
+
     public long? Sum(Expression<Func<TEntity, long?>> source)
     {
         return GetSet().Sum(source);
     }
-    
+    public long? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, long?>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
+    }
+    public long? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, long?>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).Sum(source);
+    }
+
     public double Sum(Expression<Func<TEntity, double>> source)
     {
         return GetSet().Sum(source);
     }
-    
+    public double Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, double>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
+    }
+    public double Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, double>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).Sum(source);
+    }
+
     public double? Sum(Expression<Func<TEntity, double?>> source)
     {
         return GetSet().Sum(source);
     }
-    
+    public double? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, double?>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
+    }
+    public double? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, double?>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).Sum(source);
+    }
+
     public float Sum(Expression<Func<TEntity, float>> source)
     {
         return GetSet().Sum(source);
     }
-    
+    public float Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, float>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
+    }
+    public float Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, float>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).Sum(source);
+    }
+
     public float? Sum(Expression<Func<TEntity, float?>> source)
     {
         return GetSet().Sum(source);
     }
-    
+    public float? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, float?>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
+    }
+    public float? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, float?>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).Sum(source);
+    }
+
     public decimal Sum(Expression<Func<TEntity, decimal>> source)
     {
         return GetSet().Sum(source);
     }
-    
+    public decimal Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, decimal>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
+    }
+    public decimal Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, decimal>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).Sum(source);
+    }
+
     public decimal? Sum(Expression<Func<TEntity, decimal?>> source)
     {
         return GetSet().Sum(source);
+    }
+    public decimal? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, decimal?>> source)
+    {
+        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
+    }
+    public decimal? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, decimal?>> source)
+    {
+        return GetQueryable(null, query => query.Where(filter)).Sum(source);
     }
     
     public bool All(ISpecification<TEntity> specification, Action<QueryableConfiguration<TEntity>> configuration = default)

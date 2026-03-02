@@ -4,7 +4,7 @@
 	<PropertyGroup>
 		<Description>Core Data library for Entity Framework</Description>
 		<AssemblyTitle>eQuantic.Core.Data.EntityFramework</AssemblyTitle>
-		<Version>4.4.1.0</Version>
+		<Version>4.4.2.0</Version>
 		<Authors>eQuantic Systems</Authors>
 		<TargetFrameworks>net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
 		<AssemblyName>eQuantic.Core.Data.EntityFramework</AssemblyName>
@@ -24,15 +24,15 @@
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<Copyright>Copyright © 2016</Copyright>
-		<AssemblyVersion>4.4.1.0</AssemblyVersion>
-		<FileVersion>4.4.1.0</FileVersion>
+		<AssemblyVersion>4.4.2.0</AssemblyVersion>
+		<FileVersion>4.4.2.0</FileVersion>
 		<PackageIcon>Icon.png</PackageIcon>
 		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="eQuantic.Core" Version="1.8.4" />
-		<PackageReference Include="eQuantic.Core.Data" Version="4.3.1" />
+		<PackageReference Include="eQuantic.Core.Data" Version="4.3.2" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
