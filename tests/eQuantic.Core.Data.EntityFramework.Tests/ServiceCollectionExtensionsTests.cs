@@ -48,4 +48,19 @@ public class ServiceCollectionExtensionsTests
                               && d.ImplementationType == typeof(FakeQueryableUnitOfWork)),
             Is.True);
     }
+
+    [Test]
+    public void AddCustomRepositories_HonoursConfiguredLifetime()
+    {
+        var services = new ServiceCollection();
+
+        services.AddCustomRepositories<FakeQueryableUnitOfWork>(o => o
+            .AddLifetime(ServiceLifetime.Scoped)
+            .FromAssembly(typeof(FakeRepository).Assembly));
+
+        var descriptor = services.FirstOrDefault(d => d.ImplementationType == typeof(FakeRepository));
+        Assert.That(descriptor, Is.Not.Null, "The scanned repository should have been registered.");
+        Assert.That(descriptor!.Lifetime, Is.EqualTo(ServiceLifetime.Scoped),
+            "AddRepository must honour the configured lifetime instead of forcing Transient.");
+    }
 }

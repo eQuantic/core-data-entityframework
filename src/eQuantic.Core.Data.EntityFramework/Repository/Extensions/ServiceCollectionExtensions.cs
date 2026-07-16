@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using eQuantic.Core.Data.EntityFramework.Repository.Options;
 using eQuantic.Core.Data.Repository;
 using eQuantic.Core.Data.Repository.Sql;
@@ -88,20 +90,21 @@ public static class ServiceCollectionExtensions
     
     private static void AddRepositories(IServiceCollection services, RepositoryOptions repoOptions)
     {
+        var lifetime = repoOptions.GetLifetime();
         var types = repoOptions.GetAssemblies()
-            .SelectMany(o => o.GetTypes())
+            .SelectMany(GetLoadableTypes)
             .Where(o => o is { IsAbstract: false, IsInterface: false } &&
                         o.GetInterfaces().Any(i => i == typeof(IRepository)));
         foreach (var type in types)
         {
-            AddRepository(typeof(IRepository<,,>), type, services);
-            AddRepository(typeof(IAsyncRepository<,,>), type, services);
-            AddRepository(typeof(IQueryableRepository<,,>), type, services);
-            AddRepository(typeof(IAsyncQueryableRepository<,,>), type, services);
+            AddRepository(typeof(IRepository<,,>), type, services, lifetime);
+            AddRepository(typeof(IAsyncRepository<,,>), type, services, lifetime);
+            AddRepository(typeof(IQueryableRepository<,,>), type, services, lifetime);
+            AddRepository(typeof(IAsyncQueryableRepository<,,>), type, services, lifetime);
         }
     }
 
-    private static void AddRepository(Type interfaceType, Type type, IServiceCollection services)
+    private static void AddRepository(Type interfaceType, Type type, IServiceCollection services, ServiceLifetime lifetime)
     {
         var interfaces = type.GetInterfaces();
         var repoInterface = interfaces.FirstOrDefault(o =>
@@ -116,7 +119,24 @@ public static class ServiceCollectionExtensions
         var entityType = repoInterface.GenericTypeArguments[1];
         var keyType = repoInterface.GenericTypeArguments[2];
 
-        services.AddTransient(interfaceType.MakeGenericType(uowType, entityType, keyType), type);
+        // Honour the configured lifetime instead of forcing Transient, and use TryAdd so calling the
+        // registration twice does not produce duplicate descriptors.
+        services.TryAdd(new ServiceDescriptor(
+            interfaceType.MakeGenericType(uowType, entityType, keyType), type, lifetime));
+    }
+
+    private static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
+    {
+        // Assembly.GetTypes() throws ReflectionTypeLoadException when a dependency cannot be loaded;
+        // fall back to the types that did load instead of failing the whole registration at startup.
+        try
+        {
+            return assembly.GetTypes();
+        }
+        catch (ReflectionTypeLoadException ex)
+        {
+            return ex.Types.Where(t => t != null)!;
+        }
     }
 
     private static RepositoryOptions GetOptions(Action<RepositoryOptions> options)
