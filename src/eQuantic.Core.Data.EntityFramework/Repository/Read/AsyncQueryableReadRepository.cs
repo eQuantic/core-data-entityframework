@@ -332,6 +332,9 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         Action<QueryableConfiguration<TEntity>> configuration,
         CancellationToken cancellationToken)
     {
+        // NOTE: the Where(_ => true) is load-bearing, not redundant. GetQueryable can return the
+        // SetBase wrapper (which does not implement IAsyncEnumerable); composing a Where turns it into
+        // a real EF IQueryable so ToListAsync works. Removing it breaks the async path.
         return await GetQueryable(configuration, query => query.Where(_ => true))
             .ToListAsync(cancellationToken);
     }

@@ -46,6 +46,9 @@ public class ReadRepositoryQueryTests
     private static QueryableReadRepository<DefaultUnitOfWork, Product, int> NewRepository(out TestDbContext context)
         => new(NewUnitOfWork(out context));
 
+    private static AsyncQueryableReadRepository<DefaultUnitOfWork, Product, int> NewAsyncRepository(out TestDbContext context)
+        => new(NewUnitOfWork(out context));
+
     [Test]
     public void All_WithSpecification_HonoursConfiguration()
     {
@@ -132,6 +135,21 @@ public class ReadRepositoryQueryTests
         literalFinder.Visit(expression);
         Assert.That(literalFinder.Found, Is.False,
             "The key value must be parameterized (held in a closure), not embedded as a literal constant.");
+    }
+
+    [Test]
+    public async System.Threading.Tasks.Task GetAllAsync_ReturnsAllEntities()
+    {
+        var repository = NewAsyncRepository(out var context);
+        context.Products.AddRange(
+            new Product { Id = 1, Name = "a" },
+            new Product { Id = 2, Name = "b" },
+            new Product { Id = 3, Name = "c" });
+        context.SaveChanges();
+
+        var all = await repository.GetAllAsync(System.Threading.CancellationToken.None);
+
+        Assert.That(all.Count(), Is.EqualTo(3));
     }
 
     private sealed class ConstantValueFinder(object target) : ExpressionVisitor
