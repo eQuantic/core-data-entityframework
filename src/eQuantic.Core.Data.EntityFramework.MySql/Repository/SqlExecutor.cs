@@ -131,7 +131,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
         var configuration = GetConfig(config);
         var sql = ParseSql(GetQueryFunction(name, configuration), configuration);
         return Context.Set<TResult>()
-            .FromSqlRaw(sql)
+            .FromSqlRaw(sql, GetParameterValues(configuration))
             .FirstOrDefault();
     }
 
@@ -189,7 +189,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
     {
         var configuration = GetConfig(config);
         var sql = ParseSql(GetQueryFunction(name, configuration), configuration);
-        return Context.Set<TResult>().FromSqlRaw(sql)
+        return Context.Set<TResult>().FromSqlRaw(sql, GetParameterValues(configuration))
             .FirstOrDefaultAsync(cancellationToken);
     }
     
@@ -202,7 +202,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
     public int ExecuteProcedure(string name, Action<DefaultSqlConfiguration> config = null)
     {
         var configuration = GetConfig(config);
-        return ExecuteCommand(GetQueryProcedure(name, configuration) + ";");
+        return ExecuteCommand(GetQueryProcedure(name, configuration) + ";", config);
     }
     
     /// <summary>
@@ -216,7 +216,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
     {
         var configuration = GetConfig(config);
         var sql = ParseSql(sqlQuery, configuration);
-        return Context.Set<TEntity>().FromSqlRaw(sql, configuration.Parameters.Select(p => p.Value));
+        return Context.Set<TEntity>().FromSqlRaw(sql, GetParameterValues(configuration));
     }
     
     /// <summary>
@@ -346,33 +346,64 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
     }
     
     /// <summary>
-    ///     Gets the query function using the specified name
+    ///     Gets the query function using the specified name. Parameter values are emitted as
+    ///     positional placeholders (<c>{0}</c>, <c>{1}</c>, …) so the values travel as
+    ///     <see cref="System.Data.Common.DbParameter" />s through <c>FromSqlRaw</c> and are never
+    ///     interpolated into the SQL text.
     /// </summary>
     /// <param name="name">The name</param>
     /// <param name="config">The configuration.</param>
     /// <returns>The string</returns>
-    private static string GetQueryFunction(string name, SqlConfiguration config)
+    internal static string GetQueryFunction(string name, SqlConfiguration config)
     {
-        return $"SELECT {name}({GetQueryParameters(config.Parameters.ToArray())} )";
+        return $"SELECT {name}({GetPositionalPlaceholders(config.Parameters.Count)} )";
     }
-    
+
     /// <summary>
-    ///     Gets the query procedure using the specified name
+    ///     Gets the query procedure using the specified name. MySQL invokes stored procedures with
+    ///     <c>CALL</c>; parameter values are emitted as named placeholders matching the
+    ///     <see cref="DbParameter" />s created by <see cref="SetCommand" />, so the values are never
+    ///     interpolated into the SQL text.
     /// </summary>
     /// <param name="name">The name</param>
     /// <param name="config">The configuration.</param>
     /// <returns>The string</returns>
-    private static string GetQueryProcedure(string name, SqlConfiguration config)
+    internal static string GetQueryProcedure(string name, SqlConfiguration config)
     {
-        return $"EXEC {name}{GetQueryParameters(config.Parameters.ToArray())}";
+        return $"CALL {name}({GetNamedPlaceholders(config.Parameters.ToArray())} )";
     }
-    
+
     /// <summary>
-    ///     Gets the query parameters using the specified parameters
+    ///     Builds a comma-separated list of positional placeholders (<c>{0}</c>, <c>{1}</c>, …) for the
+    ///     given parameter count. Used by <c>FromSqlRaw</c>, which substitutes each placeholder with a
+    ///     parameter reference.
+    /// </summary>
+    /// <param name="count">The number of parameters.</param>
+    /// <returns>The placeholder string.</returns>
+    internal static string GetPositionalPlaceholders(int count)
+    {
+        var cmdBuilder = new StringBuilder();
+        for (var i = 0; i < count; i++)
+        {
+            if (i > 0)
+            {
+                cmdBuilder.Append(',');
+            }
+
+            cmdBuilder.Append(" {").Append(i).Append('}');
+        }
+
+        return cmdBuilder.ToString();
+    }
+
+    /// <summary>
+    ///     Builds a comma-separated list of named placeholders (<c>@Param0</c>, <c>@Name</c>, …) using
+    ///     the same naming convention as <see cref="SetCommand" />, so the placeholders bind to the
+    ///     parameters added to the command.
     /// </summary>
     /// <param name="parameters">The parameters</param>
-    /// <returns>The string</returns>
-    private static string GetQueryParameters(params ParamValue[] parameters)
+    /// <returns>The placeholder string.</returns>
+    internal static string GetNamedPlaceholders(params ParamValue[] parameters)
     {
         var cmdBuilder = new StringBuilder();
         if (parameters is not { Length: > 0 })
@@ -387,23 +418,23 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
                 cmdBuilder.Append(',');
             }
 
-            if (parameters[i].Value == null)
-            {
-                cmdBuilder.Append(" NULL");
-            }
-            else
-            {
-                var fmt = " {0}";
-                if (parameters[i].Value is Guid or string or DateTime)
-                {
-                    fmt = " '{0}'";
-                }
-
-                cmdBuilder.Append(string.Format(fmt, parameters[i].Value));
-            }
+            var parameterName = string.IsNullOrEmpty(parameters[i].Name) ? $"Param{i}" : parameters[i].Name;
+            cmdBuilder.Append(" @").Append(parameterName);
         }
 
         return cmdBuilder.ToString();
+    }
+
+    /// <summary>
+    ///     Gets the ordered parameter values used to feed <c>FromSqlRaw</c>'s positional placeholders.
+    /// </summary>
+    /// <param name="config">The configuration.</param>
+    /// <returns>The parameter values, in the same order as the emitted placeholders.</returns>
+    internal static object[] GetParameterValues(SqlConfiguration config)
+    {
+        return config.Parameters == null
+            ? Array.Empty<object>()
+            : config.Parameters.Select(p => p.Value).ToArray();
     }
 
     private static string ParseSql(string sql, SqlConfiguration config)
