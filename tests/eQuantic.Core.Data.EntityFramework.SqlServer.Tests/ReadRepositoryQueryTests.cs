@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Linq.Expressions;
+using eQuantic.Core.Data.EntityFramework.Repository.Extensions;
 using eQuantic.Core.Data.EntityFramework.Repository.Read;
 using eQuantic.Core.Data.EntityFramework.SqlServer.Repository;
 using eQuantic.Core.Data.Repository.Config;
@@ -103,5 +104,48 @@ public class ReadRepositoryQueryTests
 
         Assert.That(found, Is.Not.Null);
         Assert.That(found!.Name, Is.EqualTo("found"));
+    }
+
+    [Test]
+    public void Get_WithConfiguration_UsesKeyExpression_ReturnsEntity()
+    {
+        var repository = NewRepository(out var context);
+        context.Products.Add(new Product { Id = 7, Name = "seven" });
+        context.SaveChanges();
+
+        // A non-null configuration routes Get through GetFindByKeyExpression instead of DbSet.Find.
+        var found = repository.Get(7, _ => { });
+
+        Assert.That(found, Is.Not.Null);
+        Assert.That(found!.Name, Is.EqualTo("seven"));
+    }
+
+    [Test]
+    public void GetFindByKeyExpression_DoesNotEmbedKeyValueAsLiteral()
+    {
+        _ = NewUnitOfWork(out var context);
+
+        var expression = context.GetFindByKeyExpression<Product, int>(5);
+
+        Assert.That(expression, Is.Not.Null);
+        var literalFinder = new ConstantValueFinder(5);
+        literalFinder.Visit(expression);
+        Assert.That(literalFinder.Found, Is.False,
+            "The key value must be parameterized (held in a closure), not embedded as a literal constant.");
+    }
+
+    private sealed class ConstantValueFinder(object target) : ExpressionVisitor
+    {
+        public bool Found { get; private set; }
+
+        protected override Expression VisitConstant(ConstantExpression node)
+        {
+            if (Equals(node.Value, target))
+            {
+                Found = true;
+            }
+
+            return base.VisitConstant(node);
+        }
     }
 }
