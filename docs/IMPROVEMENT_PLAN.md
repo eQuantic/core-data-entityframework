@@ -31,6 +31,23 @@ O plano abaixo está em **5 fases**. As Fases 0–2 **não quebram contrato** e 
 As Fases 3–4 definem a **v5.0.0 dos contratos** (breaking deliberado) e a estratégia de versionamento
 no nuget.org.
 
+## Status de implementação (Fase 1 iniciada)
+
+Correções já aplicadas nesta branch, com testes (17 testes passando, todos os 5 pacotes compilando em net10):
+
+| Achado | Correção | Commit |
+|--------|----------|--------|
+| **S1** injeção de SQL + **P4** + **P3** | `SqlExecutor` parametrizado (placeholders em vez de interpolar valores) nos 3 providers SQL; `EXEC`→`CALL` em PG/MySql; `.ToArray()` no `ExecuteQuery`. Testes provam que o valor malicioso não chega ao SQL. | `🔒 fix(sql)` |
+| **C3** crash de DI | `ISqlUnitOfWork` só registrado quando a impl o implementa; removido registro duplicado de `IQueryableUnitOfWork`. | `🐞 fix(core)` |
+| **C1** double-dispose | `_disposed` unificado (`protected`); UoW disposto exatamente uma vez. | `🐞 fix(core)` |
+| **A1** config descartada | `All`/`Any` sync repassam `configuration`. | `🐞 fix(read)` |
+| **A2** chave default | `Get`/`GetAsync` validam `id is null` em vez de `default(TKey)`. | `🐞 fix(read)` |
+
+Substituído o teste placebo (`Assert.Pass()`) por cobertura real (DI, disposal, parametrização de SQL,
+queries via EF InMemory). **Pendente na Fase 1** (próximos passos): C2 (ownership do UoW injetado —
+comportamental, precisa de decisão), P1/P2 (MongoDb banco errado / update de constante), M-core
+(`ConfigureAwait(false)`, cache de expressão de chave, `AddRepository` respeitando lifetime), A4/A5.
+
 ---
 
 ## Parte I — Diagnóstico
