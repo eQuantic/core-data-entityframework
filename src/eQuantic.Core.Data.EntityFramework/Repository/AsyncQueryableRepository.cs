@@ -24,7 +24,6 @@ public class AsyncQueryableRepository<TUnitOfWork, TEntity, TKey> :
 {
     private readonly IAsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> _asyncReadRepository;
     private readonly IAsyncWriteRepository<TUnitOfWork, TEntity> _asyncWriteRepository;
-    private bool _disposed;
 
     public AsyncQueryableRepository(TUnitOfWork unitOfWork) : base(unitOfWork)
     {
@@ -756,9 +755,7 @@ public class AsyncQueryableRepository<TUnitOfWork, TEntity, TKey> :
 
     protected override void Dispose(bool disposing)
     {
-        base.Dispose(disposing);
-
-        if (_disposed)
+        if (Disposed)
         {
             return;
         }
@@ -767,9 +764,10 @@ public class AsyncQueryableRepository<TUnitOfWork, TEntity, TKey> :
         {
             this._asyncReadRepository?.Dispose();
             this._asyncWriteRepository?.Dispose();
-            UnitOfWork?.Dispose();
         }
 
-        _disposed = true;
+        // Base disposes the sync sub-repositories and the unit of work, and flips the shared
+        // Disposed flag. The unit of work is therefore disposed exactly once.
+        base.Dispose(disposing);
     }
 }

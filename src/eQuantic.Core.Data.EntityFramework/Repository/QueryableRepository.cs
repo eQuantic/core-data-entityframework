@@ -21,7 +21,13 @@ public class QueryableRepository<TUnitOfWork, TEntity, TKey> :
 {
     private readonly IQueryableReadRepository<TUnitOfWork, TEntity, TKey> _readRepository;
     private readonly IWriteRepository<TUnitOfWork, TEntity> _writeRepository;
-    private bool _disposed;
+
+    /// <summary>
+    ///     Shared disposal flag. Kept <c>protected</c> so derived repositories observe the same state
+    ///     instead of shadowing it — shadowing let both levels run their disposal block and dispose the
+    ///     unit of work twice.
+    /// </summary>
+    protected bool Disposed;
 
     /// <summary>
     /// Create a new instance of repository
@@ -362,7 +368,7 @@ public class QueryableRepository<TUnitOfWork, TEntity, TKey> :
 
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed)
+        if (Disposed)
         {
             return;
         }
@@ -374,6 +380,6 @@ public class QueryableRepository<TUnitOfWork, TEntity, TKey> :
             UnitOfWork?.Dispose();
         }
 
-        _disposed = true;
+        Disposed = true;
     }
 }

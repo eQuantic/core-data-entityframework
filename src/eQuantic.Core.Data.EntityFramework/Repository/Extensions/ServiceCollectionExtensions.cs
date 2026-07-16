@@ -71,8 +71,13 @@ public static class ServiceCollectionExtensions
         services.TryAdd(new ServiceDescriptor(typeof(TUnitOfWorkInterface), typeof(TUnitOfWorkImpl), lifetime));
         services.TryAdd(new ServiceDescriptor(typeof(IQueryableUnitOfWork), sp => sp.GetRequiredService<TUnitOfWorkInterface>(), lifetime));
 
-        services.TryAdd(new ServiceDescriptor(typeof(ISqlUnitOfWork), sp => sp.GetRequiredService<TUnitOfWorkInterface>(), lifetime));
-        services.TryAdd(new ServiceDescriptor(typeof(IQueryableUnitOfWork), sp => sp.GetRequiredService<TUnitOfWorkInterface>(), lifetime));
+        // Only expose ISqlUnitOfWork when the implementation actually provides it. Non-relational
+        // unit of works (e.g. MongoDb) implement IQueryableUnitOfWork but not ISqlUnitOfWork;
+        // registering it unconditionally made resolving ISqlUnitOfWork throw InvalidCastException.
+        if (typeof(ISqlUnitOfWork).IsAssignableFrom(typeof(TUnitOfWorkImpl)))
+        {
+            services.TryAdd(new ServiceDescriptor(typeof(ISqlUnitOfWork), sp => sp.GetRequiredService<TUnitOfWorkInterface>(), lifetime));
+        }
     }
 
     private static void AddGenericRepositories(IServiceCollection services, ServiceLifetime lifetime)
