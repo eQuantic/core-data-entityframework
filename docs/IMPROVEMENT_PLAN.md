@@ -31,9 +31,10 @@ O plano abaixo está em **5 fases**. As Fases 0–2 **não quebram contrato** e 
 As Fases 3–4 definem a **v5.0.0 dos contratos** (breaking deliberado) e a estratégia de versionamento
 no nuget.org.
 
-## Status de implementação (Fase 1 iniciada)
+## Status de implementação (Fase 1 — grande parte concluída)
 
-Correções já aplicadas nesta branch, com testes (17 testes passando, todos os 5 pacotes compilando em net10):
+Correções já aplicadas nesta branch, **com testes** (21 testes passando; todos os 5 pacotes compilando —
+base/SqlServer/PostgreSql/MySql em net10, MongoDb em net8):
 
 | Achado | Correção | Commit |
 |--------|----------|--------|
@@ -42,11 +43,26 @@ Correções já aplicadas nesta branch, com testes (17 testes passando, todos os
 | **C1** double-dispose | `_disposed` unificado (`protected`); UoW disposto exatamente uma vez. | `🐞 fix(core)` |
 | **A1** config descartada | `All`/`Any` sync repassam `configuration`. | `🐞 fix(read)` |
 | **A2** chave default | `Get`/`GetAsync` validam `id is null` em vez de `default(TKey)`. | `🐞 fix(read)` |
+| **P1/P6** MongoDb | Usa o banco configurado no `DbContext` (não o nome da coleção); lança em vez de retornar `0` silencioso. | `🐞 fix(mongodb)` |
+| **A4/M7** chave | Valor da chave parametrizado (closure) em vez de literal; metadados de PK cacheados; `EF.Property` para shadow keys; lança em chave composta parcial. | `⚡ fix(core)` |
+| **M4** DI | `AddRepository` respeita o lifetime configurado, usa `TryAdd`, e tolera `ReflectionTypeLoadException`. | `🐞 fix(di)` |
+| **M2** async | `ConfigureAwait(false)` em 91 awaits de biblioteca (base + 4 providers). | `⚡ perf(async)` |
 
-Substituído o teste placebo (`Assert.Pass()`) por cobertura real (DI, disposal, parametrização de SQL,
-queries via EF InMemory). **Pendente na Fase 1** (próximos passos): C2 (ownership do UoW injetado —
-comportamental, precisa de decisão), P1/P2 (MongoDb banco errado / update de constante), M-core
-(`ConfigureAwait(false)`, cache de expressão de chave, `AddRepository` respeitando lifetime), A4/A5.
+Substituído o teste placebo (`Assert.Pass()`) por cobertura real: DI, disposal, parametrização de SQL,
+queries e expressão de chave via EF InMemory.
+
+**Investigado e corrigido no diagnóstico:** o item **M8** do plano (remover `Where(_ => true)` em
+`GetAllAsync`) estava **errado** — esse `Where` é load-bearing (o `SetBase` não implementa
+`IAsyncEnumerable`; o `Where` o converte num `IQueryable` real do EF). Documentado no código + teste de
+regressão; nada removido.
+
+**Pendente na Fase 1 (precisa de decisão/design, deixado de fora deste lote):**
+- **C2** — ownership do `UnitOfWork` injetado: hoje o repositório dispõe o UoW recebido por DI. Corrigir
+  é a coisa certa, mas muda comportamento observável — decisão de produto.
+- **P2** — MongoDb `UpdateDefinitionBuilder` grava constante (`x => x.Count + 1` vira `1`): a correção é
+  **rejeitar** (lançar) ou **traduzir para `$inc`** — esforços bem diferentes.
+- **A5** — paginação sem `OrderBy`: um fallback seguro por PK precisa do model na camada do `Set` (4
+  providers), não é one-liner no repo base.
 
 ---
 
