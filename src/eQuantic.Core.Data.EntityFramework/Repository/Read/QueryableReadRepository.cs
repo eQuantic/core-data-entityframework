@@ -205,7 +205,7 @@ public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> :
             throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
         }
 
-        return this.All(specification.SatisfiedBy());
+        return this.All(specification.SatisfiedBy(), configuration);
     }
 
     public bool All(Expression<Func<TEntity, bool>> filter, Action<QueryableConfiguration<TEntity>> configuration = default)
@@ -230,7 +230,7 @@ public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> :
             throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
         }
 
-        return this.Any(specification.SatisfiedBy());
+        return this.Any(specification.SatisfiedBy(), configuration);
     }
 
     public bool Any(Expression<Func<TEntity, bool>> filter, Action<QueryableConfiguration<TEntity>> configuration = default)
@@ -251,7 +251,7 @@ public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> :
 
     public TEntity Get(TKey id, Action<QueryableConfiguration<TEntity>> configuration = default)
     {
-        if (Equals(id, default(TKey)))
+        if (id is null)
         {
             throw new ArgumentNullException(nameof(id));
         }
