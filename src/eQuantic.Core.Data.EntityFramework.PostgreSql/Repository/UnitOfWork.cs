@@ -74,7 +74,7 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
         {
             try
             {
-                changes = await _context.SaveChangesAsync(cancellationToken);
+                changes = await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                 saveFailed = false;
             }
@@ -92,7 +92,7 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
 
     public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.SaveChangesAsync(cancellationToken);
+        return await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public int Commit(Action<SaveOptions> options)
@@ -178,11 +178,11 @@ public abstract class UnitOfWork<TDbContext> : UnitOfWork, ISqlUnitOfWork
     {
         if (filter != null)
         {
-            await _context.Entry<TEntity>(item).Collection(navigationProperty).Query().Where(filter).LoadAsync();
+            await _context.Entry<TEntity>(item).Collection(navigationProperty).Query().Where(filter).LoadAsync().ConfigureAwait(false);
         }
         else
         {
-            await _context.Entry<TEntity>(item).Collection(navigationProperty).LoadAsync();
+            await _context.Entry<TEntity>(item).Collection(navigationProperty).LoadAsync().ConfigureAwait(false);
         }
     }
 

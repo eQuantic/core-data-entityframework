@@ -97,17 +97,17 @@ public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEn
 
     public virtual async Task<TEntity> FindAsync(object[] keyValues, CancellationToken cancellationToken)
     {
-        return await InternalDbSet.FindAsync(keyValues, cancellationToken);
+        return await InternalDbSet.FindAsync(keyValues, cancellationToken).ConfigureAwait(false);
     }
 
     public virtual async Task<TEntity> FindAsync(params object[] keyValues)
     {
-        return await InternalDbSet.FindAsync(keyValues);
+        return await InternalDbSet.FindAsync(keyValues).ConfigureAwait(false);
     }
 
     public virtual async Task<TEntity> FindAsync<TKey>(TKey key, CancellationToken cancellationToken = default)
     {
-        return await InternalDbSet.FindAsync(new object[] { key }, cancellationToken);
+        return await InternalDbSet.FindAsync(new object[] { key }, cancellationToken).ConfigureAwait(false);
     }
 
     public virtual IEnumerator<TEntity> GetEnumerator()
@@ -132,7 +132,7 @@ public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEn
 
     public virtual async Task InsertAsync(TEntity item, CancellationToken cancellationToken = default)
     {
-        await InternalDbSet.AddAsync(item, cancellationToken);
+        await InternalDbSet.AddAsync(item, cancellationToken).ConfigureAwait(false);
     }
 
     public virtual EntityEntry<TEntity> Remove(TEntity entity)

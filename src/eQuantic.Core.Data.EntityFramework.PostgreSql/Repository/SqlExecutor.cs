@@ -55,7 +55,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
     public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
         Transaction?.Dispose();
-        Transaction = await Context.Database.BeginTransactionAsync(cancellationToken);
+        Transaction = await Context.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
     {
         if (Transaction != null)
         {
-            await Transaction.CommitAsync(cancellationToken);
+            await Transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         }
     }
     
@@ -78,7 +78,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
     {
         if (Transaction != null)
         {
-            await Transaction.RollbackAsync(cancellationToken);
+            await Transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
         }
     }
     
@@ -91,11 +91,11 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
         await using var command = Context.Database.GetDbConnection().CreateCommand();
         SetCommand(sql, command, configuration);
 
-        await Context.Database.OpenConnectionAsync(cancellationToken);
-        await using var result = await command.ExecuteReaderAsync(cancellationToken);
+        await Context.Database.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        await using var result = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
 
         var items = new List<T>();
-        while (await result.ReadAsync(cancellationToken))
+        while (await result.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
             items.Add(map(result));
         }
@@ -169,8 +169,8 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
         await using var command = Context.Database.GetDbConnection().CreateCommand();
         SetCommand(sqlCommand, command, configuration);
 
-        await Context.Database.OpenConnectionAsync(cancellationToken);
-        var result = await command.ExecuteScalarAsync(cancellationToken);
+        await Context.Database.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        var result = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
 
         return result == DBNull.Value ? 0 : Convert.ToInt32(result);
     }

@@ -74,7 +74,7 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
         {
             try
             {
-                changes = await Context.SaveChangesAsync(cancellationToken);
+                changes = await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                 saveFailed = false;
             }
@@ -92,7 +92,7 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
 
     public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {
-        return await Context.SaveChangesAsync(cancellationToken);
+        return await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public int Commit(Action<SaveOptions> options)
@@ -145,11 +145,11 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
     {
         if (filter != null)
         {
-            await Context.Entry<TEntity>(item).Collection(navigationProperty).Query().Where(filter).LoadAsync();
+            await Context.Entry<TEntity>(item).Collection(navigationProperty).Query().Where(filter).LoadAsync().ConfigureAwait(false);
         }
         else
         {
-            await Context.Entry<TEntity>(item).Collection(navigationProperty).LoadAsync();
+            await Context.Entry<TEntity>(item).Collection(navigationProperty).LoadAsync().ConfigureAwait(false);
         }
     }
 

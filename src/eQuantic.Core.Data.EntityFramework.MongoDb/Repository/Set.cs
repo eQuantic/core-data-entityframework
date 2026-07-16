@@ -41,7 +41,7 @@ public class Set<TEntity> : SetBase<TEntity> where TEntity : class, IEntity, new
     public override async Task<long> DeleteManyAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
     {
         var mongoFilter = Builders<TEntity>.Filter.Where(filter);
-        var result = await GetCollection().DeleteManyAsync(mongoFilter, cancellationToken);
+        var result = await GetCollection().DeleteManyAsync(mongoFilter, cancellationToken).ConfigureAwait(false);
 
         return result.DeletedCount;
     }
@@ -66,7 +66,7 @@ public class Set<TEntity> : SetBase<TEntity> where TEntity : class, IEntity, new
         if (updateDefinition == null)
             return 0;
 
-        var result = await GetCollection().UpdateManyAsync(mongoFilter, updateDefinition, null, cancellationToken);
+        var result = await GetCollection().UpdateManyAsync(mongoFilter, updateDefinition, null, cancellationToken).ConfigureAwait(false);
         return result.ModifiedCount;
     }
 

@@ -41,7 +41,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         return await GetQueryable(configuration, query =>
                 query
                     .Where(specification.SatisfiedBy()))
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
     
     public Task<IEnumerable<TEntity>> AllMatchingAsync(
@@ -336,7 +336,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         // SetBase wrapper (which does not implement IAsyncEnumerable); composing a Where turns it into
         // a real EF IQueryable so ToListAsync works. Removing it breaks the async path.
         return await GetQueryable(configuration, query => query.Where(_ => true))
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
     
     public Task<IEnumerable<TEntity>> GetAllAsync(
@@ -388,7 +388,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
     {
         return await GetQueryable(configuration, query => query.Where(filter))
             .Select(map)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
     
     public Task<IEnumerable<TResult>> GetMappedAsync<TResult>(
@@ -442,7 +442,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         CancellationToken cancellationToken)
     {
         return await GetQueryable(configuration, query => query.Where(filter))
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
     
     public Task<IEnumerable<TEntity>> GetFilteredAsync(
@@ -465,7 +465,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         CancellationToken cancellationToken)
     {
         return await GetQueryable(configuration, query => query.Where(filter))
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
     
     public Task<TEntity> GetFirstAsync(
@@ -732,10 +732,10 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         if (pageIndex < 1) pageIndex = 1;
         if (pageSize > 0)
         {
-            return await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
+            return await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        return await query.ToListAsync(cancellationToken);
+        return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public Task<IEnumerable<TEntity>> GetPagedAsync(
@@ -760,7 +760,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         CancellationToken cancellationToken)
     {
         return await GetQueryable(configuration, query => query.Where(filter))
-            .SingleOrDefaultAsync(cancellationToken);
+            .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
     
     public Task<TEntity> GetSingleAsync(
@@ -802,12 +802,12 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
     {
         if (configuration == null)
         {
-            return await GetSet().FindAsync(id, cancellationToken);
+            return await GetSet().FindAsync(id, cancellationToken).ConfigureAwait(false);
         }
 
         var idExpression = GetSet().GetExpression(id);
         return await GetQueryable(configuration, query => query.Where(idExpression))
-            .SingleOrDefaultAsync(cancellationToken);
+            .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
     
     private IQueryable<TEntity> GetQueryable(Action<QueryableConfiguration<TEntity>> configuration,

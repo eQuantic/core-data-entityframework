@@ -36,9 +36,9 @@ public class Set<TEntity> : SetBase<TEntity> where TEntity : class, IEntity, new
         CancellationToken cancellationToken = default)
     {
 #if NET6_0 || NETSTANDARD2_1
-        return await InternalDbSet.Where(filter).DeleteAsync(cancellationToken);
+        return await InternalDbSet.Where(filter).DeleteAsync(cancellationToken).ConfigureAwait(false);
 #else
-        return await InternalDbSet.Where(filter).ExecuteDeleteAsync(cancellationToken);
+        return await InternalDbSet.Where(filter).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
 #endif
     }
 
@@ -60,13 +60,13 @@ public class Set<TEntity> : SetBase<TEntity> where TEntity : class, IEntity, new
         Expression<Func<TChildEntity, IEnumerable<TComplexProperty>>> selector)
         where TChildEntity : class where TComplexProperty : class
     {
-        await DbContext.Entry(item).Collection(selector).LoadAsync();
+        await DbContext.Entry(item).Collection(selector).LoadAsync().ConfigureAwait(false);
     }
 
     public async Task LoadCollectionAsync<TChildEntity>(TChildEntity item, string propertyName)
         where TChildEntity : class
     {
-        await DbContext.Entry(item).Collection(propertyName).LoadAsync();
+        await DbContext.Entry(item).Collection(propertyName).LoadAsync().ConfigureAwait(false);
     }
 
     public void LoadProperties(TEntity entity, params string[] properties)
@@ -111,11 +111,11 @@ public class Set<TEntity> : SetBase<TEntity> where TEntity : class, IEntity, new
 
                 if (props.Length == 1)
                 {
-                    await LoadPropertyAsync(entity, property);
+                    await LoadPropertyAsync(entity, property).ConfigureAwait(false);
                 }
                 else
                 {
-                    await LoadCascadeAsync(props, entity);
+                    await LoadCascadeAsync(props, entity).ConfigureAwait(false);
                 }
             }
         }
@@ -146,7 +146,7 @@ public class Set<TEntity> : SetBase<TEntity> where TEntity : class, IEntity, new
         Expression<Func<TChildEntity, TComplexProperty>> selector, CancellationToken cancellationToken = default)
         where TChildEntity : class where TComplexProperty : class
     {
-        await DbContext.Entry(item).Reference(selector).LoadAsync(cancellationToken);
+        await DbContext.Entry(item).Reference(selector).LoadAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task LoadPropertyAsync<TChildEntity>(TChildEntity item, string propertyName,
@@ -155,11 +155,11 @@ public class Set<TEntity> : SetBase<TEntity> where TEntity : class, IEntity, new
     {
         if (typeof(IEnumerable).IsAssignableFrom(typeof(TChildEntity).GetProperty(propertyName)!.PropertyType))
         {
-            await DbContext.Entry(item).Collection(propertyName).LoadAsync(cancellationToken);
+            await DbContext.Entry(item).Collection(propertyName).LoadAsync(cancellationToken).ConfigureAwait(false);
         }
         else
         {
-            await DbContext.Entry(item).Reference(propertyName).LoadAsync(cancellationToken);
+            await DbContext.Entry(item).Reference(propertyName).LoadAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -178,10 +178,10 @@ public class Set<TEntity> : SetBase<TEntity> where TEntity : class, IEntity, new
         Expression<Func<TEntity, TEntity>> updateExpression, CancellationToken cancellationToken = default)
     {
 #if NET6_0 || NETSTANDARD2_1
-        return await InternalDbSet.Where(filter).UpdateAsync(updateExpression, cancellationToken);
+        return await InternalDbSet.Where(filter).UpdateAsync(updateExpression, cancellationToken).ConfigureAwait(false);
 #else
         var convertedExpression = ExpressionConverter<TEntity>.ConvertExpression(updateExpression);
-        return await InternalDbSet.Where(filter).ExecuteUpdateAsync(convertedExpression, cancellationToken);
+        return await InternalDbSet.Where(filter).ExecuteUpdateAsync(convertedExpression, cancellationToken).ConfigureAwait(false);
 #endif
     }
 
@@ -217,13 +217,13 @@ public class Set<TEntity> : SetBase<TEntity> where TEntity : class, IEntity, new
         var nextObj = prop?.GetValue(obj);
         if (nextObj == null)
         {
-            await LoadPropertyAsync(obj, props[index]);
+            await LoadPropertyAsync(obj, props[index]).ConfigureAwait(false);
             nextObj = prop?.GetValue(obj);
         }
 
         if (props.Length > index + 1)
         {
-            await LoadCascadeAsync(props, nextObj, index + 1);
+            await LoadCascadeAsync(props, nextObj, index + 1).ConfigureAwait(false);
         }
     }
 
