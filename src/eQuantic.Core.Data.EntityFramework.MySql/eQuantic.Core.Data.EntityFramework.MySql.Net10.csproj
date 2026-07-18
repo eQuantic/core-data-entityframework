@@ -64,6 +64,6 @@
 
     <ItemGroup>
         <ProjectReference
-            Include="..\eQuantic.Core.Data.EntityFramework\eQuantic.Core.Data.EntityFramework.Net9.csproj" />
+            Include="..\eQuantic.Core.Data.EntityFramework\eQuantic.Core.Data.EntityFramework.Net10.csproj" />
     </ItemGroup>
 </Project>

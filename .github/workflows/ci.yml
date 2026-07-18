@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build ${{ matrix.project }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.csproj
+          - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net6.csproj
+          - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net7.csproj
+          - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net8.csproj
+          - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net9.csproj
+          - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net10.csproj
+          - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.csproj
+          - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net6.csproj
+          - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net7.csproj
+          - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net8.csproj
+          - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net9.csproj
+          - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net10.csproj
+          - src/eQuantic.Core.Data.EntityFramework.MySql/eQuantic.Core.Data.EntityFramework.MySql.csproj
+          - src/eQuantic.Core.Data.EntityFramework.MySql/eQuantic.Core.Data.EntityFramework.MySql.Net8.csproj
+          - src/eQuantic.Core.Data.EntityFramework.MySql/eQuantic.Core.Data.EntityFramework.MySql.Net9.csproj
+          - src/eQuantic.Core.Data.EntityFramework.MySql/eQuantic.Core.Data.EntityFramework.MySql.Net10.csproj
+          - src/eQuantic.Core.Data.EntityFramework.PostgreSql/eQuantic.Core.Data.EntityFramework.PostgreSql.csproj
+          - src/eQuantic.Core.Data.EntityFramework.PostgreSql/eQuantic.Core.Data.EntityFramework.PostgreSql.Net8.csproj
+          - src/eQuantic.Core.Data.EntityFramework.PostgreSql/eQuantic.Core.Data.EntityFramework.PostgreSql.Net9.csproj
+          - src/eQuantic.Core.Data.EntityFramework.PostgreSql/eQuantic.Core.Data.EntityFramework.PostgreSql.Net10.csproj
+          - src/eQuantic.Core.Data.EntityFramework.MongoDb/eQuantic.Core.Data.EntityFramework.MongoDb.csproj
+          - src/eQuantic.Core.Data.EntityFramework.MongoDb/eQuantic.Core.Data.EntityFramework.MongoDb.Net9.csproj
+          - src/eQuantic.Core.Data.EntityFramework.MongoDb/eQuantic.Core.Data.EntityFramework.MongoDb.Net10.csproj
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+      - name: Build
+        run: dotnet build ${{ matrix.project }} --configuration Release -p:ContinuousIntegrationBuild=true
+
+  test:
+    name: Test ${{ matrix.project }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - tests/eQuantic.Core.Data.EntityFramework.Tests/eQuantic.Core.Data.EntityFramework.Tests.csproj
+          - tests/eQuantic.Core.Data.EntityFramework.SqlServer.Tests/eQuantic.Core.Data.EntityFramework.SqlServer.Tests.csproj
+          - tests/eQuantic.Core.Data.EntityFramework.MongoDb.Tests/eQuantic.Core.Data.EntityFramework.MongoDb.Tests.csproj
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+      - name: Test
+        run: dotnet test ${{ matrix.project }} --configuration Release
