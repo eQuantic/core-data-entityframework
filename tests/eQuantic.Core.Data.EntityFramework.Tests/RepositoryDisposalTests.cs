@@ -4,21 +4,22 @@ using eQuantic.Core.Data.EntityFramework.Tests.Fakes;
 namespace eQuantic.Core.Data.EntityFramework.Tests;
 
 /// <summary>
-///     Guards the fix for the double-dispose defect: disposing an <see cref="AsyncQueryableRepository{TUnitOfWork,TEntity,TKey}" />
-///     must dispose its unit of work exactly once, not twice (the shadowed disposal flag made both the
-///     base and derived disposal blocks run).
+///     Covers unit-of-work ownership on disposal. The repository receives its <c>UnitOfWork</c> by
+///     injection, so it must NOT dispose it (its creator — the DI container or the caller — owns the
+///     lifetime). This also removes the previous double-dispose of the shared DbContext.
 /// </summary>
 public class RepositoryDisposalTests
 {
     [Test]
-    public void Dispose_AsyncQueryableRepository_DisposesUnitOfWork_Once()
+    public void Dispose_AsyncQueryableRepository_DoesNotDisposeInjectedUnitOfWork()
     {
         var unitOfWork = new FakeQueryableUnitOfWork();
         var repository = new AsyncQueryableRepository<FakeQueryableUnitOfWork, FakeEntity, int>(unitOfWork);
 
         repository.Dispose();
 
-        Assert.That(unitOfWork.DisposeCount, Is.EqualTo(1));
+        Assert.That(unitOfWork.DisposeCount, Is.EqualTo(0),
+            "The repository must not dispose a UnitOfWork it did not create.");
     }
 
     [Test]
@@ -30,6 +31,18 @@ public class RepositoryDisposalTests
         repository.Dispose();
         repository.Dispose();
 
-        Assert.That(unitOfWork.DisposeCount, Is.EqualTo(1));
+        Assert.That(unitOfWork.DisposeCount, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void Dispose_QueryableReadRepository_DoesNotDisposeInjectedUnitOfWork()
+    {
+        var unitOfWork = new FakeQueryableUnitOfWork();
+        var repository = new eQuantic.Core.Data.EntityFramework.Repository.Read
+            .QueryableReadRepository<FakeQueryableUnitOfWork, FakeEntity, int>(unitOfWork);
+
+        repository.Dispose();
+
+        Assert.That(unitOfWork.DisposeCount, Is.EqualTo(0));
     }
 }

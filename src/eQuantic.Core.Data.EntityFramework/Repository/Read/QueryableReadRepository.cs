@@ -19,7 +19,13 @@ public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> :
 {
     internal SetBase<TEntity> _dbSet;
     private bool _disposed;
-    internal bool OwnUnitOfWork { get; set; } = true;
+
+    /// <summary>
+    ///     Whether this repository owns the injected <see cref="UnitOfWork" />'s lifetime. Defaults to
+    ///     <c>false</c>: the UnitOfWork is provided by its creator (the DI container or the caller), and
+    ///     disposing the repository must not dispose a UnitOfWork it did not create.
+    /// </summary>
+    internal bool OwnUnitOfWork { get; set; } = false;
     private const string SpecificationCannotBeNull = "Specification cannot be null";
     private const string FilterExpressionCannotBeNull = "Filter expression cannot be null";
     /// <summary>

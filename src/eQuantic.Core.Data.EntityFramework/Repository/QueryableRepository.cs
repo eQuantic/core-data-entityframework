@@ -377,7 +377,10 @@ public class QueryableRepository<TUnitOfWork, TEntity, TKey> :
         {
             this._readRepository?.Dispose();
             this._writeRepository?.Dispose();
-            UnitOfWork?.Dispose();
+            // The UnitOfWork is injected, not created here, so its creator owns its lifetime — the DI
+            // container (which registers the UoW and the repository together) or the caller that built
+            // it. Disposing it here disposed the shared DbContext out from under the other repositories
+            // in the same scope and double-disposed it alongside the container.
         }
 
         Disposed = true;
