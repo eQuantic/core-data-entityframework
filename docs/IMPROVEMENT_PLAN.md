@@ -63,17 +63,53 @@ DI já faz isso). Documentado no commit.
 `IAsyncEnumerable`; o `Where` o converte num `IQueryable` real do EF). Documentado no código + teste de
 regressão; nada removido.
 
-**Fase 1 concluída.** Próximos passos (fases maiores, arquiteturais/breaking — aguardam definição de
-abordagem):
-- **Fase 0** — separar CI de release, gatear a publicação por tag/environment protegido, adotar MinVer,
-  remover o `build/` (MSBump morto).
-- **Fase 2** — de-duplicação dos providers (~2.400 linhas idênticas → base com hooks de dialeto).
-- **Fase 3/4** — v5.0.0 dos contratos (`eQuantic.Core.Data`) e consolidação das linhas de versão no
-  nuget.org (ver Partes III e IV).
+**Fase 1 concluída.**
 
 Nota sobre o **P2**: a correção atual **rejeita** updates que referenciam a entidade (evita corrupção
 silenciosa). Suportá-los de fato via `$inc`/pipeline updates fica para uma iteração futura do provider
 MongoDb.
+
+## Status de implementação (Fase 0 — concluída, escopo reduzido)
+
+| Achado | Correção |
+|--------|----------|
+| **PK7** MSBump morto | Removido `build/MSBump.props` (import circular), `build/MSBump.targets` (task inexistente) e `build/Directory.Build.targets` (fora da cadeia de ancestrais — nunca era importado). Nada os referenciava; confirmado por grep antes de apagar. |
+| **PK2** bug de grafo | `MySql.Net10.csproj` referenciava o core **Net9** em vez do **Net10** — corrigido. |
+| **Q1** publicação por acidente | CI dividido em **`ci.yml`** (build + test em todo push/PR, sem publicar nada) e **`release.yml`** (só dispara em tag `vX.Y.Z`, publica atrás de um GitHub Environment `nuget-release`). |
+| **Q2** sem testes no CI | `ci.yml` roda `dotnet test` nos 3 projetos de teste (antes não rodava nenhum). |
+| **Q3** pipeline datado | Actions atualizadas (`checkout@v4`, `setup-dotnet@v4`), `ubuntu-latest` no lugar de `windows-latest`, cache de NuGet, `-p:ContinuousIntegrationBuild=true`. |
+| **Q4** SDK não fixado | `global.json` na raiz fixando `10.0.100` com `rollForward: latestFeature`. |
+
+**Decisão de design (build por matriz, não por `dotnet build sln`):** tentei rodar
+`dotnet build eQuantic.Core.Data.EntityFramework.sln` localmente para simplificar os 23 steps de build —
+e reproduzi exatamente o problema do achado **PK4**: como vários `.csproj` de um mesmo pacote
+(`eQuantic.Core.Data.EntityFramework.csproj`, `.Net6.csproj`, `.Net7.csproj`, …) compartilham a mesma
+pasta sem `BaseIntermediateOutputPath` próprio, o build paralelo da solution corrompeu o
+`project.assets.json` de uns com os outros e um `IOException` de arquivo em uso em outro. Os dois
+workflows novos mantêm os 23 builds **individuais** (como o workflow antigo já fazia), mas cada um roda
+numa **matrix job** — ou seja, em runner/checkout isolado — o que elimina o compartilhamento de
+`obj`/`bin` sem precisar resolver a decisão de versionamento (Parte IV) primeiro.
+
+⚠️ **Duas coisas que só um mantenedor com acesso ao GitHub consegue terminar:**
+1. **Nada publica automaticamente até existir uma tag.** Antes, qualquer push em qualquer branch tentava
+   publicar (mitigado só por `--skip-duplicate`). Agora é preciso `git tag vX.Y.Z && git push origin
+   vX.Y.Z` para disparar o `release.yml`. Isso é intencional (achado Q1), mas muda o fluxo de trabalho.
+2. **O `environment: nuget-release` referenciado no `release.yml` não tem proteção nenhuma até ser
+   configurado.** O GitHub cria o Environment automaticamente no primeiro uso, sem revisores obrigatórios
+   nem restrição de branch/tag — a ferramenta de PR desta sessão não tem permissão para configurar isso.
+   Em *Settings → Environments → nuget-release*, adicionar ao menos um revisor obrigatório para o gate
+   funcionar de verdade.
+
+**Deliberadamente fora do escopo desta Fase 0** (não fiz, porque dependem da decisão de versionamento
+ainda em aberto — Parte IV): adoção de MinVer (mexeria em como a `<Version>` de cada um dos 23 csproj é
+determinada) e qualquer mudança nos números de versão publicados. Fazer isso agora, antes de decidir entre
+consolidar numa linha única (opção A) ou manter `PackageId`s separados por .NET (opção B), arriscaria
+retrabalho.
+
+**Próximos passos** (fases maiores, arquiteturais/breaking — aguardam definição de abordagem):
+- **Fase 2** — de-duplicação dos providers (~2.400 linhas idênticas → base com hooks de dialeto).
+- **Fase 3/4** — v5.0.0 dos contratos (`eQuantic.Core.Data`) e consolidação das linhas de versão no
+  nuget.org (ver Partes III e IV) — inclui a decisão de versionamento que bloqueia o MinVer.
 
 ---
 
