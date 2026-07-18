@@ -31,9 +31,9 @@ O plano abaixo está em **5 fases**. As Fases 0–2 **não quebram contrato** e 
 As Fases 3–4 definem a **v5.0.0 dos contratos** (breaking deliberado) e a estratégia de versionamento
 no nuget.org.
 
-## Status de implementação (Fase 1 — grande parte concluída)
+## Status de implementação (Fase 1 — concluída)
 
-Correções já aplicadas nesta branch, **com testes** (21 testes passando; todos os 5 pacotes compilando —
+Correções já aplicadas nesta branch, **com testes** (28 testes passando; todos os 5 pacotes compilando —
 base/SqlServer/PostgreSql/MySql em net10, MongoDb em net8):
 
 | Achado | Correção | Commit |
@@ -47,22 +47,33 @@ base/SqlServer/PostgreSql/MySql em net10, MongoDb em net8):
 | **A4/M7** chave | Valor da chave parametrizado (closure) em vez de literal; metadados de PK cacheados; `EF.Property` para shadow keys; lança em chave composta parcial. | `⚡ fix(core)` |
 | **M4** DI | `AddRepository` respeita o lifetime configurado, usa `TryAdd`, e tolera `ReflectionTypeLoadException`. | `🐞 fix(di)` |
 | **M2** async | `ConfigureAwait(false)` em 91 awaits de biblioteca (base + 4 providers). | `⚡ perf(async)` |
+| **P2** MongoDb | `UpdateDefinitionBuilder` rejeita (lança) updates que referenciam a entidade em vez de gravar constante silenciosamente. Novo projeto de testes do MongoDb. | `🐞 fix(mongodb)` |
+| **C2** ownership ⚠️ | O repositório **não** dispõe mais o `UnitOfWork` injetado (o criador — container DI ou chamador — é dono do ciclo de vida). **Mudança comportamental.** | `🐞 fix(core)` |
+| **A5** paginação | `GetPaged`/`GetPagedAsync` ordenam pela PK quando não há ordenação explícita (paginação determinística); ordenação do chamador é preservada. | `🐞 fix(read)` |
 
 Substituído o teste placebo (`Assert.Pass()`) por cobertura real: DI, disposal, parametrização de SQL,
-queries e expressão de chave via EF InMemory.
+queries, expressão de chave, paginação e `UpdateDefinitionBuilder` do MongoDb, via EF InMemory.
+
+⚠️ **C2 é a única mudança comportamental do lote.** Quem dependia de dispor o repositório para fechar um
+contexto criado manualmente passa a precisar dispor o `UnitOfWork`/`DbContext` diretamente (o container
+DI já faz isso). Documentado no commit.
 
 **Investigado e corrigido no diagnóstico:** o item **M8** do plano (remover `Where(_ => true)` em
 `GetAllAsync`) estava **errado** — esse `Where` é load-bearing (o `SetBase` não implementa
 `IAsyncEnumerable`; o `Where` o converte num `IQueryable` real do EF). Documentado no código + teste de
 regressão; nada removido.
 
-**Pendente na Fase 1 (precisa de decisão/design, deixado de fora deste lote):**
-- **C2** — ownership do `UnitOfWork` injetado: hoje o repositório dispõe o UoW recebido por DI. Corrigir
-  é a coisa certa, mas muda comportamento observável — decisão de produto.
-- **P2** — MongoDb `UpdateDefinitionBuilder` grava constante (`x => x.Count + 1` vira `1`): a correção é
-  **rejeitar** (lançar) ou **traduzir para `$inc`** — esforços bem diferentes.
-- **A5** — paginação sem `OrderBy`: um fallback seguro por PK precisa do model na camada do `Set` (4
-  providers), não é one-liner no repo base.
+**Fase 1 concluída.** Próximos passos (fases maiores, arquiteturais/breaking — aguardam definição de
+abordagem):
+- **Fase 0** — separar CI de release, gatear a publicação por tag/environment protegido, adotar MinVer,
+  remover o `build/` (MSBump morto).
+- **Fase 2** — de-duplicação dos providers (~2.400 linhas idênticas → base com hooks de dialeto).
+- **Fase 3/4** — v5.0.0 dos contratos (`eQuantic.Core.Data`) e consolidação das linhas de versão no
+  nuget.org (ver Partes III e IV).
+
+Nota sobre o **P2**: a correção atual **rejeita** updates que referenciam a entidade (evita corrupção
+silenciosa). Suportá-los de fato via `$inc`/pipeline updates fica para uma iteração futura do provider
+MongoDb.
 
 ---
 
