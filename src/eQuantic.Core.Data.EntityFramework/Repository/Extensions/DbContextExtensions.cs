@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
@@ -63,6 +64,51 @@ public static class DbContextExtensions
         return expression == null ? null : Expression.Lambda<Func<TEntity, bool>>(expression, parameter);
     }
 
+    /// <summary>
+    ///     Ensures a deterministic order before paging. If the query is already ordered, it is returned
+    ///     unchanged; otherwise it is ordered by the primary key. Skip/Take without an OrderBy produces
+    ///     non-deterministic pages (rows may repeat or vanish between pages) and warns in EF Core.
+    /// </summary>
+    public static IQueryable<TEntity> OrderByPrimaryKeyIfUnordered<TEntity>(this IQueryable<TEntity> query, DbContext dbContext)
+        where TEntity : class
+    {
+        if (IsOrdered(query.Expression))
+        {
+            return query;
+        }
+
+        var keyProperties = GetKeyProperties<TEntity>(dbContext);
+        if (keyProperties.Length == 0)
+        {
+            // No primary key to fall back on (e.g. a keyless entity); leave ordering to the caller.
+            return query;
+        }
+
+        var ordered = query;
+        for (var i = 0; i < keyProperties.Length; i++)
+        {
+            var keyProperty = keyProperties[i];
+            var parameter = Expression.Parameter(typeof(TEntity), "entity");
+            var access = BuildPropertyAccess(parameter, keyProperty);
+            var selector = Expression.Lambda(access, parameter);
+
+            var methodName = i == 0 ? nameof(Queryable.OrderBy) : nameof(Queryable.ThenBy);
+            var method = typeof(Queryable).GetMethods()
+                .First(m => m.Name == methodName && m.GetParameters().Length == 2)
+                .MakeGenericMethod(typeof(TEntity), keyProperty.ClrType);
+            ordered = (IQueryable<TEntity>)method.Invoke(null, new object[] { ordered, selector })!;
+        }
+
+        return ordered;
+    }
+
+    private static bool IsOrdered(Expression expression)
+    {
+        var detector = new OrderingDetector();
+        detector.Visit(expression);
+        return detector.Found;
+    }
+
     private static KeyProperty[] GetKeyProperties<TEntity>(DbContext dbContext)
     {
         return KeyCache.GetOrAdd((dbContext.GetType(), typeof(TEntity)), _ =>
@@ -96,6 +142,27 @@ public static class DbContextExtensions
     private static Expression EnsureType(Expression expression, Type targetType)
     {
         return expression.Type == targetType ? expression : Expression.Convert(expression, targetType);
+    }
+
+    private sealed class OrderingDetector : ExpressionVisitor
+    {
+        private static readonly HashSet<string> OrderingMethods = new()
+        {
+            nameof(Queryable.OrderBy), nameof(Queryable.OrderByDescending),
+            nameof(Queryable.ThenBy), nameof(Queryable.ThenByDescending)
+        };
+
+        public bool Found { get; private set; }
+
+        protected override Expression VisitMethodCall(MethodCallExpression node)
+        {
+            if (node.Method.DeclaringType == typeof(Queryable) && OrderingMethods.Contains(node.Method.Name))
+            {
+                Found = true;
+            }
+
+            return base.VisitMethodCall(node);
+        }
     }
 
     private readonly struct KeyProperty

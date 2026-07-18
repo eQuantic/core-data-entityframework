@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using eQuantic.Core.Data.EntityFramework.Repository.Extensions;
 using eQuantic.Core.Data.Repository;
 using eQuantic.Core.Data.Repository.Config;
 using eQuantic.Core.Data.Repository.Read;
@@ -732,6 +733,7 @@ public class AsyncQueryableReadRepository<TUnitOfWork, TEntity, TKey> :
         if (pageIndex < 1) pageIndex = 1;
         if (pageSize > 0)
         {
+            query = query.OrderByPrimaryKeyIfUnordered(GetSet().DbContext);
             return await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 

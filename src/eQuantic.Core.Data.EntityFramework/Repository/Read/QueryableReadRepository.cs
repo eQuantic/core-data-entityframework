@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using eQuantic.Core.Data.EntityFramework.Repository.Extensions;
 using eQuantic.Core.Data.Repository;
 using eQuantic.Core.Data.Repository.Config;
 using eQuantic.Core.Data.Repository.Read;
@@ -399,7 +400,13 @@ public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> :
             return internalQuery;
         });
         if (pageIndex < 1) pageIndex = 1;
-        return pageSize > 0 ? query.Skip((pageIndex - 1) * pageSize).Take(pageSize) : query;
+        if (pageSize <= 0)
+        {
+            return query;
+        }
+
+        query = query.OrderByPrimaryKeyIfUnordered(GetSet().DbContext);
+        return query.Skip((pageIndex - 1) * pageSize).Take(pageSize);
     }
 
     public TEntity GetSingle(Expression<Func<TEntity, bool>> filter, Action<QueryableConfiguration<TEntity>> configuration = default)

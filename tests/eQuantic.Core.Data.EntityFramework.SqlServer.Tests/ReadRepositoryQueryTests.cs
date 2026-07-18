@@ -152,6 +152,51 @@ public class ReadRepositoryQueryTests
         Assert.That(all.Count(), Is.EqualTo(3));
     }
 
+    [Test]
+    public void GetPaged_WithoutSorting_OrdersByPrimaryKeyDeterministically()
+    {
+        var repository = NewRepository(out var context);
+        // Insert out of key order; without a fallback OrderBy the page order would be undefined.
+        context.Products.AddRange(
+            new Product { Id = 3, Name = "c" },
+            new Product { Id = 1, Name = "a" },
+            new Product { Id = 2, Name = "b" });
+        context.SaveChanges();
+
+        var firstPage = repository.GetPaged(p => true, 1, 2, null).ToList();
+
+        Assert.That(firstPage.Select(p => p.Id), Is.EqualTo(new[] { 1, 2 }));
+    }
+
+    [Test]
+    public void GetPaged_WithExplicitOrdering_IsPreserved()
+    {
+        var repository = NewRepository(out var context);
+        context.Products.AddRange(
+            new Product { Id = 1, Name = "a" },
+            new Product { Id = 2, Name = "b" },
+            new Product { Id = 3, Name = "c" });
+        context.SaveChanges();
+
+        // Caller orders descending; the primary-key fallback must NOT override it.
+        var firstPage = repository
+            .GetPaged(p => true, 1, 2, cfg => cfg.WithAfterCustomization(q => q.OrderByDescending(p => p.Id)))
+            .ToList();
+
+        Assert.That(firstPage.Select(p => p.Id), Is.EqualTo(new[] { 3, 2 }));
+    }
+
+    [Test]
+    public void OrderByPrimaryKeyIfUnordered_AlreadyOrdered_ReturnsSameQuery()
+    {
+        _ = NewUnitOfWork(out var context);
+        var ordered = context.Set<Product>().OrderByDescending(p => p.Name);
+
+        var result = ordered.OrderByPrimaryKeyIfUnordered(context);
+
+        Assert.That(result, Is.SameAs(ordered));
+    }
+
     private sealed class ConstantValueFinder(object target) : ExpressionVisitor
     {
         public bool Found { get; private set; }
