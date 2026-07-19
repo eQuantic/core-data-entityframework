@@ -5,7 +5,6 @@
         <Description>Core Data library for Entity Framework and MySQL</Description>
         <AssemblyTitle>eQuantic.Core.Data.EntityFramework.MySql</AssemblyTitle>
         <Version>8.1.2.0</Version>
-        <Authors>eQuantic Systems</Authors>
         <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>eQuantic.Core.Data.EntityFramework.MySql</AssemblyName>
         <PackageId>eQuantic.Core.Data.EntityFramework.MySql</PackageId>
@@ -13,21 +12,8 @@
         <PackageReleaseNotes>Entity ignorant persistance with Repository Pattern for Entity
             Framework</PackageReleaseNotes>
 
-        <PackageProjectUrl>https://github.com/eQuantic/core-data-entityframework</PackageProjectUrl>
-        <PackageOutputPath>../../artifacts/</PackageOutputPath>
-        <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-        <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-        <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-        <RepositoryUrl>https://github.com/eQuantic/core-data-entityframework</RepositoryUrl>
-        <RepositoryType>Git</RepositoryType>
-        <PackageLicenseFile>LICENSE</PackageLicenseFile>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-        <Copyright>Copyright © 2016</Copyright>
         <AssemblyVersion>8.1.2.0</AssemblyVersion>
         <FileVersion>8.1.2.0</FileVersion>
-        <PackageIcon>Icon.png</PackageIcon>
-        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -52,8 +38,6 @@
         <None Include="Icon_details.png" Pack="true" PackagePath="Icon_details.png" />
         <None Include="Icon_dialog.png" Pack="true" PackagePath="Icon_dialog.png" />
         <None Include="Icon_list.png" Pack="true" PackagePath="Icon_list.png" />
-        <None Include="../../LICENSE" Pack="true" PackagePath="" />
-        <None Include="../../README.md" Pack="true" PackagePath="" />
     </ItemGroup>
 
     <ItemGroup>

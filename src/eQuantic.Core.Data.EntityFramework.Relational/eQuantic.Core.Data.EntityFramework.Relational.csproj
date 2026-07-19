@@ -5,28 +5,14 @@
         <Description>Shared relational implementation for eQuantic Core Data Entity Framework providers</Description>
         <AssemblyTitle>eQuantic.Core.Data.EntityFramework.Relational</AssemblyTitle>
         <Version>1.0.0.0</Version>
-        <Authors>eQuantic Systems</Authors>
         <TargetFrameworks>net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
         <AssemblyName>eQuantic.Core.Data.EntityFramework.Relational</AssemblyName>
         <PackageId>eQuantic.Core.Data.EntityFramework.Relational</PackageId>
         <PackageTags>eQuantic;Core;Data;Library;Repository;Pattern;SQL;Relational</PackageTags>
         <PackageReleaseNotes>Shared relational base used by the SqlServer, PostgreSql and MySql providers</PackageReleaseNotes>
 
-        <PackageProjectUrl>https://github.com/eQuantic/core-data-entityframework</PackageProjectUrl>
-        <PackageOutputPath>../../artifacts/</PackageOutputPath>
-        <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-        <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-        <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-        <RepositoryUrl>https://github.com/eQuantic/core-data-entityframework</RepositoryUrl>
-        <RepositoryType>Git</RepositoryType>
-        <PackageLicenseFile>LICENSE</PackageLicenseFile>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-        <Copyright>Copyright © 2016</Copyright>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
         <FileVersion>1.0.0.0</FileVersion>
-        <PackageIcon>Icon.png</PackageIcon>
-        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -57,8 +43,6 @@
 
     <ItemGroup>
         <None Include="../eQuantic.Core.Data.EntityFramework.SqlServer/Icon.png" Pack="true" PackagePath="Icon.png" />
-        <None Include="../../LICENSE" Pack="true" PackagePath="" />
-        <None Include="../../README.md" Pack="true" PackagePath="" />
     </ItemGroup>
 
     <ItemGroup>
