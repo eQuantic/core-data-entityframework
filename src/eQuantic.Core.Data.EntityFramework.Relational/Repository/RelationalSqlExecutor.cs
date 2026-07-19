@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -7,22 +7,24 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using eQuantic.Core.Data.EntityFramework.MySql.Repository.Extensions;
+using eQuantic.Core.Data.EntityFramework.Relational.Repository.Extensions;
 using eQuantic.Core.Data.Repository.Config;
 using eQuantic.Core.Data.Repository.Sql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace eQuantic.Core.Data.EntityFramework.MySql.Repository;
+namespace eQuantic.Core.Data.EntityFramework.Relational.Repository;
 
 /// <summary>
-///     The sql executor class
+///     The shared relational sql executor. Providers reuse this implementation and only override the
+///     dialect-specific <see cref="BuildProcedureSql" /> when needed (e.g. SQL Server uses <c>EXEC</c>
+///     whereas PostgreSQL/MySQL use the ANSI <c>CALL</c>).
 /// </summary>
 /// <seealso cref="ISqlExecutor" />
 /// <seealso cref="IAsyncSqlExecutor" />
 /// <seealso cref="IDisposable" />
 [ExcludeFromCodeCoverage]
-public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
+public abstract class RelationalSqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
 {
     /// <summary>
     ///     The context
@@ -38,12 +40,12 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
     ///     The transaction
     /// </summary>
     protected IDbContextTransaction Transaction;
-    
+
     /// <summary>
     ///     Initializes a new instance of the class
     /// </summary>
     /// <param name="context">The context</param>
-    protected SqlExecutor(DbContext context)
+    protected RelationalSqlExecutor(DbContext context)
     {
         Context = context;
     }
@@ -69,7 +71,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
             await Transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         }
     }
-    
+
     /// <summary>
     ///     Rollbacks the transaction using the specified cancellation token
     /// </summary>
@@ -81,13 +83,13 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
             await Transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
         }
     }
-    
+
     /// <inheritdoc />
     public async Task<IEnumerable<T>> ExecuteRawSqlAsync<T>(string sql, Func<DbDataReader, T> map,
         Action<DefaultSqlConfiguration> config = null, CancellationToken cancellationToken = default)
     {
         var configuration = GetConfig(config);
-        
+
         await using var command = Context.Database.GetDbConnection().CreateCommand();
         SetCommand(sql, command, configuration);
 
@@ -144,7 +146,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
     public int ExecuteCommand(string sqlCommand, Action<DefaultSqlConfiguration> config = null)
     {
         var configuration = GetConfig(config);
-        
+
         using var command = Context.Database.GetDbConnection().CreateCommand();
         SetCommand(sqlCommand, command, configuration);
 
@@ -153,7 +155,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
 
         return result == DBNull.Value ? 0 : Convert.ToInt32(result);
     }
-    
+
     /// <summary>
     ///     Executes the command using the specified command timeout
     /// </summary>
@@ -165,7 +167,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
         Action<DefaultSqlConfiguration> config = null, CancellationToken cancellationToken = default)
     {
         var configuration = GetConfig(config);
-        
+
         await using var command = Context.Database.GetDbConnection().CreateCommand();
         SetCommand(sqlCommand, command, configuration);
 
@@ -183,7 +185,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
     /// <param name="config"></param>
     /// <param name="cancellationToken">The cancellation token</param>
     /// <returns>A task containing the result</returns>
-    public Task<TResult> ExecuteFunctionAsync<TResult>(string name, 
+    public Task<TResult> ExecuteFunctionAsync<TResult>(string name,
         Action<DefaultSqlConfiguration> config = null,
         CancellationToken cancellationToken = default) where TResult : class
     {
@@ -192,7 +194,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
         return Context.Set<TResult>().FromSqlRaw(sql, GetParameterValues(configuration))
             .FirstOrDefaultAsync(cancellationToken);
     }
-    
+
     /// <summary>
     /// Executes the procedure using the specified name
     /// </summary>
@@ -202,9 +204,9 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
     public int ExecuteProcedure(string name, Action<DefaultSqlConfiguration> config = null)
     {
         var configuration = GetConfig(config);
-        return ExecuteCommand(GetQueryProcedure(name, configuration) + ";", config);
+        return ExecuteCommand(BuildProcedureSql(name, configuration) + ";", config);
     }
-    
+
     /// <summary>
     /// Executes the query using the specified sql query
     /// </summary>
@@ -218,7 +220,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
         var sql = ParseSql(sqlQuery, configuration);
         return Context.Set<TEntity>().FromSqlRaw(sql, GetParameterValues(configuration));
     }
-    
+
     /// <summary>
     ///     Executes the transaction using the specified operation
     /// </summary>
@@ -247,7 +249,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
         CancellationToken cancellationToken = default)
     {
         var configuration = GetConfig(config);
-        return ExecuteCommandAsync(GetQueryProcedure(name, configuration) + ";", config, cancellationToken);
+        return ExecuteCommandAsync(BuildProcedureSql(name, configuration) + ";", config, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -293,7 +295,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
         Action<DefaultSqlConfiguration> config = null)
     {
         var configuration = GetConfig(config);
-        
+
         using var command = Context.Database.GetDbConnection().CreateCommand();
         SetCommand(sql, command, configuration);
 
@@ -308,7 +310,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
 
         return items;
     }
-    
+
     /// <summary>
     ///     Gets the transaction
     /// </summary>
@@ -334,7 +336,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
     {
         Context.Database.UseTransaction(transaction);
     }
-    
+
     /// <summary>
     ///     Uses the transaction using the specified transaction
     /// </summary>
@@ -344,10 +346,10 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
     {
         return Context.Database.UseTransactionAsync(transaction, cancellationToken);
     }
-    
+
     /// <summary>
-    ///     Gets the query function using the specified name. Parameter values are emitted as
-    ///     positional placeholders (<c>{0}</c>, <c>{1}</c>, …) so the values travel as
+    ///     Gets the query function using the specified name. Parameter values are emitted as positional
+    ///     placeholders (<c>{0}</c>, <c>{1}</c>, …) so the values travel as
     ///     <see cref="System.Data.Common.DbParameter" />s through <c>FromSqlRaw</c> and are never
     ///     interpolated into the SQL text.
     /// </summary>
@@ -360,15 +362,15 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
     }
 
     /// <summary>
-    ///     Gets the query procedure using the specified name. MySQL invokes stored procedures with
-    ///     <c>CALL</c>; parameter values are emitted as named placeholders matching the
-    ///     <see cref="DbParameter" />s created by <see cref="SetCommand" />, so the values are never
-    ///     interpolated into the SQL text.
+    ///     Builds the stored-procedure invocation. The default is the ANSI <c>CALL name(args)</c> form;
+    ///     SQL Server overrides this with <c>EXEC name args</c>. Parameter values are emitted as named
+    ///     placeholders matching the <see cref="DbParameter" />s created by <see cref="SetCommand" />, so
+    ///     the values are never interpolated into the SQL text.
     /// </summary>
-    /// <param name="name">The name</param>
+    /// <param name="name">The procedure name.</param>
     /// <param name="config">The configuration.</param>
-    /// <returns>The string</returns>
-    internal static string GetQueryProcedure(string name, SqlConfiguration config)
+    /// <returns>The SQL text.</returns>
+    internal virtual string BuildProcedureSql(string name, SqlConfiguration config)
     {
         return $"CALL {name}({GetNamedPlaceholders(config.Parameters.ToArray())} )";
     }
@@ -441,6 +443,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
     {
         return !string.IsNullOrEmpty(config.Tag) ? GetQueryWithTag(sql, config.Tag) : sql;
     }
+
     /// <summary>
     ///     Sets the command using the specified command timeout
     /// </summary>
@@ -489,15 +492,15 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
         queryBuilder.Append(query);
         return queryBuilder.ToString();
     }
-    
-    private static SqlConfiguration GetConfig(Action<DefaultSqlConfiguration> config = null)
+
+    private static DefaultSqlConfiguration GetConfig(Action<DefaultSqlConfiguration> config = null)
     {
         var configuration = new DefaultSqlConfiguration();
         config?.Invoke(configuration);
 
         return configuration;
     }
-    
+
     /// <summary>
     ///     Disposes this instance
     /// </summary>
@@ -506,7 +509,7 @@ public abstract class SqlExecutor : ISqlExecutor, IAsyncSqlExecutor, IDisposable
         Dispose(true);
         GC.SuppressFinalize(this);
     }
-    
+
     /// <summary>
     ///     Disposes the disposing
     /// </summary>

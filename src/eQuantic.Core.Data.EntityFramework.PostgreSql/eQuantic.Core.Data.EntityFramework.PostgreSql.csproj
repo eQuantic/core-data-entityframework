@@ -98,5 +98,7 @@
     <ItemGroup>
         <ProjectReference
             Include="..\eQuantic.Core.Data.EntityFramework\eQuantic.Core.Data.EntityFramework.csproj" />
+        <ProjectReference
+            Include="..\eQuantic.Core.Data.EntityFramework.Relational\eQuantic.Core.Data.EntityFramework.Relational.csproj" />
     </ItemGroup>
 </Project>

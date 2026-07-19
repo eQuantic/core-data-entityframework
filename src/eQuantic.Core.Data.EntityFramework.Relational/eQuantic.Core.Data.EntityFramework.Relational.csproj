@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>Shared relational implementation for eQuantic Core Data Entity Framework providers</Description>
+        <AssemblyTitle>eQuantic.Core.Data.EntityFramework.Relational</AssemblyTitle>
+        <Version>1.0.0.0</Version>
+        <Authors>eQuantic Systems</Authors>
+        <TargetFrameworks>net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
+        <AssemblyName>eQuantic.Core.Data.EntityFramework.Relational</AssemblyName>
+        <PackageId>eQuantic.Core.Data.EntityFramework.Relational</PackageId>
+        <PackageTags>eQuantic;Core;Data;Library;Repository;Pattern;SQL;Relational</PackageTags>
+        <PackageReleaseNotes>Shared relational base used by the SqlServer, PostgreSql and MySql providers</PackageReleaseNotes>
+
+        <PackageProjectUrl>https://github.com/eQuantic/core-data-entityframework</PackageProjectUrl>
+        <PackageOutputPath>../../artifacts/</PackageOutputPath>
+        <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+        <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+        <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <RepositoryUrl>https://github.com/eQuantic/core-data-entityframework</RepositoryUrl>
+        <RepositoryType>Git</RepositoryType>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <Copyright>Copyright © 2016</Copyright>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <FileVersion>1.0.0.0</FileVersion>
+        <PackageIcon>Icon.png</PackageIcon>
+        <LangVersion>latest</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="eQuantic.Core" Version="1.8.4" />
+        <PackageReference Include="eQuantic.Core.Data" Version="4.3.2" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.36" />
+        <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="6.105.2" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' ">
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.20" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.24" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(TargetFramework)' == 'net9.0' ">
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.13" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="../eQuantic.Core.Data.EntityFramework.SqlServer/Icon.png" Pack="true" PackagePath="Icon.png" />
+        <None Include="../../LICENSE" Pack="true" PackagePath="" />
+        <None Include="../../README.md" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>eQuantic.Core.Data.EntityFramework.SqlServer</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>eQuantic.Core.Data.EntityFramework.PostgreSql</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>eQuantic.Core.Data.EntityFramework.MySql</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>eQuantic.Core.Data.EntityFramework.SqlServer.Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference
+            Include="..\eQuantic.Core.Data.EntityFramework\eQuantic.Core.Data.EntityFramework.csproj" />
+    </ItemGroup>
+</Project>

@@ -26,6 +26,7 @@ jobs:
           - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net8.csproj
           - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net9.csproj
           - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net10.csproj
+          - src/eQuantic.Core.Data.EntityFramework.Relational/eQuantic.Core.Data.EntityFramework.Relational.csproj
           - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.csproj
           - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net6.csproj
           - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net7.csproj

@@ -1,7 +1,7 @@
 using System;
 using System.Linq.Expressions;
+using eQuantic.Core.Data.EntityFramework.Relational.Repository;
 using eQuantic.Core.Data.EntityFramework.Repository.Extensions;
-using eQuantic.Core.Data.EntityFramework.SqlServer.Repository;
 using eQuantic.Core.Data.Repository;
 using eQuantic.Linq.Specification;
 
@@ -11,9 +11,9 @@ public class GetEntityByIdSpecification<TEntity, TKey> : Specification<TEntity>
     where TEntity : class, IEntity<TKey>, new()
 {
     private readonly TKey _id;
-    private readonly UnitOfWork _unitOfWork;
+    private readonly RelationalUnitOfWork _unitOfWork;
 
-    public GetEntityByIdSpecification(TKey id, UnitOfWork unitOfWork)
+    public GetEntityByIdSpecification(TKey id, RelationalUnitOfWork unitOfWork)
     {
         _id = id;
         _unitOfWork = unitOfWork;

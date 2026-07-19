@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using eQuantic.Core.Data.EntityFramework.Relational;
 using Microsoft.EntityFrameworkCore.Query;
 
 namespace eQuantic.Core.Data.EntityFramework.SqlServer.Tests;
