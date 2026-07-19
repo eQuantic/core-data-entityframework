@@ -1,307 +1,331 @@
-# Plano de Melhoria — eQuantic.Core.Data.EntityFramework
+# Improvement Plan — eQuantic.Core.Data.EntityFramework
 
-> Análise profunda realizada em 2026-07-16 sobre este repositório (v4.4.2 / linhas 6.x–10.x publicadas)
-> e sobre o repositório de contratos [`eQuantic/core-data`](https://github.com/eQuantic/core-data) (v4.3.2).
-> Todos os achados citam `arquivo:linha` e foram verificados no código-fonte, não inferidos.
+> Deep analysis performed on 2026-07-16 of this repository (v4.4.2 / published 6.x–10.x lines) and of the
+> contracts repository [`eQuantic/core-data`](https://github.com/eQuantic/core-data) (v4.3.2).
+> Every finding cites `file:line` and was verified against the source code, not inferred.
 
-## Sumário executivo
+## Executive summary
 
-O pacote funciona e está publicado no nuget.org há anos (106 versões do pacote principal, 57 do
-contrato), mas acumulou dívida em cinco camadas. Em ordem de gravidade:
+The package works and has been published on nuget.org for years (106 versions of the main package, 57 of
+the contract), but it accumulated debt across five layers. In order of severity:
 
-1. **Segurança (crítico):** o `SqlExecutor` monta SQL interpolando valores sem escape — injeção de SQL
-   real em `ExecuteFunction`/`ExecuteProcedure` nos providers SqlServer, PostgreSql e MySql. Além disso,
-   o CI publica no nuget.org a cada push em qualquer branch.
-2. **Correção (crítico/alto):** disposal duplo do `UnitOfWork`, provider MongoDb operando no banco
-   errado (grava/apaga em silêncio), `EXEC` (T-SQL) copiado para PostgreSQL/MySQL, parâmetros perdidos no
-   `FromSqlRaw`, `configuration` descartado em `All`/`Any`, registro de DI que quebra em runtime para o
-   MongoDb, e updates em massa que gravam valores errados sem erro.
-3. **Packaging/versionamento (crítico para consumidores):** o mesmo `PackageId` é publicado em linhas de
-   versão paralelas (4.x multi-target + 6.x/7.x/8.x/9.x/10.x single-target). O NuGet trata tudo como uma
-   linha do tempo única: "latest" = 10.0.2 (net10-only), quebrando o restore de quem está em net6–net9 e
-   fazendo a linha 4.x (a mais completa) parecer abandonada. São 21 csproj mantidos à mão, e o esquema já
-   produziu bugs reais de grafo de dependência.
-4. **Duplicação estrutural:** ~2.400 linhas são cópias idênticas entre providers — PostgreSql e MySql são
-   100% cópias renomeadas do SqlServer. É a causa-raiz do bug `EXEC`→`CALL` (copiado sem adaptar).
-5. **Contratos (`eQuantic.Core.Data`):** explosão combinatória de interfaces
-   (`IAsyncReadRepository<TConfig,TEntity,TKey>` tem **100 membros**; só `SumAsync` são 30 overloads),
-   NRT desabilitado, e a paginação retorna `IEnumerable<T>` sem total de registros.
+1. **Security (critical):** `SqlExecutor` builds SQL by interpolating values without escaping — a real SQL
+   injection in `ExecuteFunction`/`ExecuteProcedure` across the SqlServer, PostgreSql and MySql providers.
+   In addition, CI publishes to nuget.org on every push to any branch.
+2. **Correctness (critical/high):** double-dispose of the `UnitOfWork`, the MongoDb provider operating
+   against the wrong database (silently writing/deleting), `EXEC` (T-SQL) copied to PostgreSQL/MySQL,
+   parameters lost in `FromSqlRaw`, `configuration` discarded in `All`/`Any`, a DI registration that throws
+   at runtime for MongoDb, and bulk updates that silently write the wrong values.
+3. **Packaging/versioning (critical for consumers):** the same `PackageId` is published as parallel version
+   lines (4.x multi-target + 6.x/7.x/8.x/9.x/10.x single-target). NuGet treats it all as a single timeline:
+   "latest" = 10.0.2 (net10-only), breaking restore for anyone on net6–net9 and making the 4.x line (the
+   most complete) look abandoned. There are 21 hand-maintained csproj files, and the scheme already produced
+   real dependency-graph bugs.
+4. **Structural duplication:** ~2,400 lines are identical copies between providers — PostgreSql and MySql
+   are 100% renamed copies of SqlServer. That is the root cause of the `EXEC`→`CALL` bug (copied without
+   adapting the dialect).
+5. **Contracts (`eQuantic.Core.Data`):** combinatorial interface explosion
+   (`IAsyncReadRepository<TConfig,TEntity,TKey>` has **100 members**; `SumAsync` alone is 30 overloads),
+   NRT disabled, and pagination returning `IEnumerable<T>` with no total count.
 
-O plano abaixo está em **5 fases**. As Fases 0–2 **não quebram contrato** e podem sair na linha atual.
-As Fases 3–4 definem a **v5.0.0 dos contratos** (breaking deliberado) e a estratégia de versionamento
-no nuget.org.
+The plan below is organized into **5 phases**. Phases 0–2 are **non contract-breaking** and can ship on the
+current line. Phases 3–4 define the **v5.0.0 of the contracts** (deliberately breaking) and the versioning
+strategy on nuget.org.
 
-## Status de implementação (Fase 1 — concluída)
+## Implementation status (Phase 1 — done)
 
-Correções já aplicadas nesta branch, **com testes** (28 testes passando; todos os 5 pacotes compilando —
-base/SqlServer/PostgreSql/MySql em net10, MongoDb em net8):
+Fixes already applied on this branch, **with tests** (28 tests passing; all packages build —
+base/Relational/SqlServer/PostgreSql/MySql on net10, MongoDb on net8):
 
-| Achado | Correção | Commit |
+| Finding | Fix | Commit |
 |--------|----------|--------|
-| **S1** injeção de SQL + **P4** + **P3** | `SqlExecutor` parametrizado (placeholders em vez de interpolar valores) nos 3 providers SQL; `EXEC`→`CALL` em PG/MySql; `.ToArray()` no `ExecuteQuery`. Testes provam que o valor malicioso não chega ao SQL. | `🔒 fix(sql)` |
-| **C3** crash de DI | `ISqlUnitOfWork` só registrado quando a impl o implementa; removido registro duplicado de `IQueryableUnitOfWork`. | `🐞 fix(core)` |
-| **C1** double-dispose | `_disposed` unificado (`protected`); UoW disposto exatamente uma vez. | `🐞 fix(core)` |
-| **A1** config descartada | `All`/`Any` sync repassam `configuration`. | `🐞 fix(read)` |
-| **A2** chave default | `Get`/`GetAsync` validam `id is null` em vez de `default(TKey)`. | `🐞 fix(read)` |
-| **P1/P6** MongoDb | Usa o banco configurado no `DbContext` (não o nome da coleção); lança em vez de retornar `0` silencioso. | `🐞 fix(mongodb)` |
-| **A4/M7** chave | Valor da chave parametrizado (closure) em vez de literal; metadados de PK cacheados; `EF.Property` para shadow keys; lança em chave composta parcial. | `⚡ fix(core)` |
-| **M4** DI | `AddRepository` respeita o lifetime configurado, usa `TryAdd`, e tolera `ReflectionTypeLoadException`. | `🐞 fix(di)` |
-| **M2** async | `ConfigureAwait(false)` em 91 awaits de biblioteca (base + 4 providers). | `⚡ perf(async)` |
-| **P2** MongoDb | `UpdateDefinitionBuilder` rejeita (lança) updates que referenciam a entidade em vez de gravar constante silenciosamente. Novo projeto de testes do MongoDb. | `🐞 fix(mongodb)` |
-| **C2** ownership ⚠️ | O repositório **não** dispõe mais o `UnitOfWork` injetado (o criador — container DI ou chamador — é dono do ciclo de vida). **Mudança comportamental.** | `🐞 fix(core)` |
-| **A5** paginação | `GetPaged`/`GetPagedAsync` ordenam pela PK quando não há ordenação explícita (paginação determinística); ordenação do chamador é preservada. | `🐞 fix(read)` |
+| **S1** SQL injection + **P4** + **P3** | Parameterized `SqlExecutor` (placeholders instead of interpolating values) across the 3 SQL providers; `EXEC`→`CALL` on PG/MySql; `.ToArray()` in `ExecuteQuery`. Tests prove the malicious value never reaches the SQL. | `fix(sql)` |
+| **C3** DI crash | `ISqlUnitOfWork` registered only when the implementation provides it; removed the duplicate `IQueryableUnitOfWork` registration. | `fix(core)` |
+| **C1** double-dispose | Unified `_disposed` flag (`protected`); the UoW is disposed exactly once. | `fix(core)` |
+| **A1** configuration discarded | Sync `All`/`Any` forward `configuration`. | `fix(read)` |
+| **A2** default key | `Get`/`GetAsync` validate `id is null` instead of `default(TKey)`. | `fix(read)` |
+| **P1/P6** MongoDb | Uses the database configured on the `DbContext` (not the collection name); throws instead of returning a silent `0`. | `fix(mongodb)` |
+| **A4/M7** key | Key value parameterized (closure) instead of a literal; PK metadata cached; `EF.Property` for shadow keys; throws on a partial composite key. | `fix(core)` |
+| **M4** DI | `AddRepository` honours the configured lifetime, uses `TryAdd`, and tolerates `ReflectionTypeLoadException`. | `fix(di)` |
+| **M2** async | `ConfigureAwait(false)` across 91 library awaits (base + 4 providers). | `perf(async)` |
+| **P2** MongoDb | `UpdateDefinitionBuilder` rejects (throws on) update expressions that reference the entity instead of silently writing a constant. New MongoDb test project. | `fix(mongodb)` |
+| **C2** ownership ⚠️ | The repository no longer disposes the injected `UnitOfWork` (the creator — DI container or caller — owns the lifetime). **Behavioural change.** | `fix(core)` |
+| **A5** pagination | `GetPaged`/`GetPagedAsync` order by the primary key when no explicit ordering is given (deterministic pagination); the caller's ordering is preserved. | `fix(read)` |
 
-Substituído o teste placebo (`Assert.Pass()`) por cobertura real: DI, disposal, parametrização de SQL,
-queries, expressão de chave, paginação e `UpdateDefinitionBuilder` do MongoDb, via EF InMemory.
+The placebo test (`Assert.Pass()`) was replaced with real coverage: DI, disposal, SQL parameterization,
+queries, the key expression, pagination and the MongoDb `UpdateDefinitionBuilder`, via EF InMemory.
 
-⚠️ **C2 é a única mudança comportamental do lote.** Quem dependia de dispor o repositório para fechar um
-contexto criado manualmente passa a precisar dispor o `UnitOfWork`/`DbContext` diretamente (o container
-DI já faz isso). Documentado no commit.
+⚠️ **C2 is the only behavioural change in this batch.** Anyone who relied on disposing the repository to
+close a manually-created context must now dispose the `UnitOfWork`/`DbContext` directly (the DI container
+already does this). Documented in the commit.
 
-**Investigado e corrigido no diagnóstico:** o item **M8** do plano (remover `Where(_ => true)` em
-`GetAllAsync`) estava **errado** — esse `Where` é load-bearing (o `SetBase` não implementa
-`IAsyncEnumerable`; o `Where` o converte num `IQueryable` real do EF). Documentado no código + teste de
-regressão; nada removido.
+**Investigated and corrected during diagnosis:** plan item **M8** (remove `Where(_ => true)` in
+`GetAllAsync`) was **wrong** — that `Where` is load-bearing (`SetBase` does not implement
+`IAsyncEnumerable`; the `Where` turns it into a real EF `IQueryable`). Documented in code + a regression
+test; nothing removed.
 
-**Fase 1 concluída.**
+Note on **P2**: the current fix **rejects** update expressions that reference the entity (avoids silent
+corruption). Actually supporting them via `$inc`/pipeline updates is left for a future MongoDb iteration.
 
-Nota sobre o **P2**: a correção atual **rejeita** updates que referenciam a entidade (evita corrupção
-silenciosa). Suportá-los de fato via `$inc`/pipeline updates fica para uma iteração futura do provider
-MongoDb.
+## Implementation status (Phase 0 — done, reduced scope)
 
-## Status de implementação (Fase 0 — concluída, escopo reduzido)
-
-| Achado | Correção |
+| Finding | Fix |
 |--------|----------|
-| **PK7** MSBump morto | Removido `build/MSBump.props` (import circular), `build/MSBump.targets` (task inexistente) e `build/Directory.Build.targets` (fora da cadeia de ancestrais — nunca era importado). Nada os referenciava; confirmado por grep antes de apagar. |
-| **PK2** bug de grafo | `MySql.Net10.csproj` referenciava o core **Net9** em vez do **Net10** — corrigido. |
-| **Q1** publicação por acidente | CI dividido em **`ci.yml`** (build + test em todo push/PR, sem publicar nada) e **`release.yml`** (só dispara em tag `vX.Y.Z`, publica atrás de um GitHub Environment `nuget-release`). |
-| **Q2** sem testes no CI | `ci.yml` roda `dotnet test` nos 3 projetos de teste (antes não rodava nenhum). |
-| **Q3** pipeline datado | Actions atualizadas (`checkout@v4`, `setup-dotnet@v4`), `ubuntu-latest` no lugar de `windows-latest`, cache de NuGet, `-p:ContinuousIntegrationBuild=true`. |
-| **Q4** SDK não fixado | `global.json` na raiz fixando `10.0.100` com `rollForward: latestFeature`. |
+| **PK7** dead MSBump | Removed `build/MSBump.props` (circular self-import), `build/MSBump.targets` (missing task) and `build/Directory.Build.targets` (outside any ancestor chain — never imported). Nothing referenced them; verified by grep before deleting. |
+| **PK2** graph bug | `MySql.Net10.csproj` referenced the **Net9** base instead of **Net10** — fixed. |
+| **Q1** accidental publishing | CI split into **`ci.yml`** (build + test on every push/PR, publishing nothing) and **`release.yml`** (only on a `vX.Y.Z` tag, publishing behind a `nuget-release` GitHub Environment). |
+| **Q2** no tests in CI | `ci.yml` runs `dotnet test` on the 3 test projects (previously none ran). |
+| **Q3** dated pipeline | Actions updated (`checkout@v4`, `setup-dotnet@v4`), `ubuntu-latest` instead of `windows-latest`, NuGet cache, `-p:ContinuousIntegrationBuild=true`. |
+| **Q4** unpinned SDK | `global.json` at the root pinning `10.0.100` with `rollForward: latestFeature`. |
 
-**Decisão de design (build por matriz, não por `dotnet build sln`):** tentei rodar
-`dotnet build eQuantic.Core.Data.EntityFramework.sln` localmente para simplificar os 23 steps de build —
-e reproduzi exatamente o problema do achado **PK4**: como vários `.csproj` de um mesmo pacote
-(`eQuantic.Core.Data.EntityFramework.csproj`, `.Net6.csproj`, `.Net7.csproj`, …) compartilham a mesma
-pasta sem `BaseIntermediateOutputPath` próprio, o build paralelo da solution corrompeu o
-`project.assets.json` de uns com os outros e um `IOException` de arquivo em uso em outro. Os dois
-workflows novos mantêm os 23 builds **individuais** (como o workflow antigo já fazia), mas cada um roda
-numa **matrix job** — ou seja, em runner/checkout isolado — o que elimina o compartilhamento de
-`obj`/`bin` sem precisar resolver a decisão de versionamento (Parte IV) primeiro.
+**Design decision (matrix build, not `dotnet build sln`):** I tried running
+`dotnet build eQuantic.Core.Data.EntityFramework.sln` locally to simplify the 23 build steps — and
+reproduced exactly the **PK4** finding: because several `.csproj` files of the same package
+(`eQuantic.Core.Data.EntityFramework.csproj`, `.Net6.csproj`, `.Net7.csproj`, …) share the same folder
+without their own `BaseIntermediateOutputPath`, the parallel solution build corrupted each other's
+`project.assets.json` and hit a file-in-use `IOException`. The two new workflows keep the builds
+**individual** (as the old workflow already did), but each one runs as a **matrix job** — i.e. an isolated
+runner/checkout — which eliminates the shared `obj`/`bin` without having to settle the versioning decision
+(Part IV) first.
 
-⚠️ **Duas coisas que só um mantenedor com acesso ao GitHub consegue terminar:**
-1. **Nada publica automaticamente até existir uma tag.** Antes, qualquer push em qualquer branch tentava
-   publicar (mitigado só por `--skip-duplicate`). Agora é preciso `git tag vX.Y.Z && git push origin
-   vX.Y.Z` para disparar o `release.yml`. Isso é intencional (achado Q1), mas muda o fluxo de trabalho.
-2. **O `environment: nuget-release` referenciado no `release.yml` não tem proteção nenhuma até ser
-   configurado.** O GitHub cria o Environment automaticamente no primeiro uso, sem revisores obrigatórios
-   nem restrição de branch/tag — a ferramenta de PR desta sessão não tem permissão para configurar isso.
-   Em *Settings → Environments → nuget-release*, adicionar ao menos um revisor obrigatório para o gate
-   funcionar de verdade.
+⚠️ **Two things only a maintainer with GitHub access can finish:**
+1. **Nothing publishes automatically until a tag exists.** Before, any push to any branch attempted to
+   publish (mitigated only by `--skip-duplicate`). Now you need `git tag vX.Y.Z && git push origin vX.Y.Z`
+   to trigger `release.yml`. This is intentional (finding Q1) but changes the workflow.
+2. **The `environment: nuget-release` referenced by `release.yml` has no protection until configured.**
+   GitHub auto-creates the Environment on first use with no required reviewers or branch/tag restriction —
+   this session's PR tool has no permission to configure it. In *Settings → Environments → nuget-release*,
+   add at least one required reviewer for the gate to actually work.
 
-**Deliberadamente fora do escopo desta Fase 0** (não fiz, porque dependem da decisão de versionamento
-ainda em aberto — Parte IV): adoção de MinVer (mexeria em como a `<Version>` de cada um dos 23 csproj é
-determinada) e qualquer mudança nos números de versão publicados. Fazer isso agora, antes de decidir entre
-consolidar numa linha única (opção A) ou manter `PackageId`s separados por .NET (opção B), arriscaria
-retrabalho.
+**Deliberately out of scope for Phase 0** (not done, because it depends on the still-open versioning
+decision — Part IV): adopting MinVer (would change how each of the 23 csproj `<Version>` values is
+determined) and any change to the published version numbers. Doing that now, before choosing between
+consolidating to a single line (option A) and keeping per-.NET `PackageId`s (option B), would risk rework.
 
-**Próximos passos** (fases maiores, arquiteturais/breaking — aguardam definição de abordagem):
-- **Fase 2** — de-duplicação dos providers (~2.400 linhas idênticas → base com hooks de dialeto).
-- **Fase 3/4** — v5.0.0 dos contratos (`eQuantic.Core.Data`) e consolidação das linhas de versão no
-  nuget.org (ver Partes III e IV) — inclui a decisão de versionamento que bloqueia o MinVer.
+## Implementation status (Phase 2 — done)
+
+Extracted the shared relational implementation into a **single package**,
+`eQuantic.Core.Data.EntityFramework.Relational`, referenced by the 3 SQL providers.
+
+| Finding | Fix |
+|--------|----------|
+| **Structural duplication** (§4) | `RelationalSqlExecutor`, `RelationalUnitOfWork`/`RelationalUnitOfWork<TDbContext>`, `RelationalSet` and the internal `ExpressionConverter`/`SqlConfigurationExtensions` now live once in the shared package. Each provider keeps thin `Set` and `UnitOfWork<TDbContext>` subclasses plus `DefaultUnitOfWork`, so the consumer-facing types stay in their namespaces. **~2,200 fewer lines of duplicated source.** |
+| **P3 root cause** | The only genuine dialect difference — stored procedures use `EXEC` on SQL Server and the ANSI `CALL` elsewhere — is a single `BuildProcedureSql` virtual, overridden only by SQL Server. The copy-paste that let `EXEC`/`CALL` diverge is gone. |
+| **PK3 (partial)** | MySql's per-framework variants are realigned to reference the multi-target base project (matching SqlServer/PostgreSql) so the shared multi-target project does not pull a second copy of the base assembly. |
+
+**Why a new package rather than the base package or shared source** (the plan originally proposed "base
+package with dialect hooks", which the deeper analysis showed to be wrong):
+- The base package must **not** depend on `Microsoft.EntityFrameworkCore.Relational` — the MongoDb provider
+  references the base and is not relational (it depends only on `Microsoft.EntityFrameworkCore` core +
+  `MongoDB.Driver`). Putting relational code in the base would add `Relational` to every MongoDb consumer.
+- **Linked source** (`<Compile Include>`) does not work for public types shared across providers: the type
+  would be compiled into every provider assembly and collide if a consumer references two providers at once
+  (a scenario the library supports).
+- Changing the types' **namespace** would break the public API — that belongs to the v5 work.
+
+A separate shared assembly is therefore the only clean option. It is multi-target only (net6–net10, one
+version line) — no per-framework variants needed, because SqlServer/PostgreSql already reference the base
+multi-target project everywhere, so the shared multi-target project composes with them with a single base
+assembly (no duplicate).
+
+Note: the implementation-only public types `SqlExecutor`, the non-generic `UnitOfWork` and
+`SqlConfigurationExtensions` move to the `Relational` namespace, and `GetEntityByIdSpecification` now takes
+`RelationalUnitOfWork`. These are implementation types (not the consumer-facing `DefaultUnitOfWork` /
+`UnitOfWork<TDbContext>` / `Set<TEntity>`), but referencing them by name is a minor source break.
+
+**What a maintainer still owns:** the new `eQuantic.Core.Data.EntityFramework.Relational` package is a new
+published package the SQL providers now depend on. Its version (`1.0.0`) and how it fits the versioning
+scheme is part of the Part IV decision.
+
+**Next steps** (larger, architectural/breaking phases — awaiting a chosen approach):
+- **Phase 3/4** — v5.0.0 of the contracts (`eQuantic.Core.Data`) and consolidation of the version lines on
+  nuget.org (see Parts III and IV) — this includes the versioning decision that also blocks MinVer.
 
 ---
 
-## Parte I — Diagnóstico
+## Part I — Diagnosis
 
-### 1. Segurança
+### 1. Security
 
-| # | Sev. | Problema | Local |
+| # | Sev. | Problem | Location |
 |---|------|----------|-------|
-| S1 | 🔴 Crítico | **Injeção de SQL**: `GetQueryParameters` interpola valores com `string.Format(" '{0}'", value)` sem escapar aspas simples; `string`/`Guid`/`DateTime` entram crus no texto SQL, que vai para `FromSqlRaw`/`ExecuteSqlRaw` **sem `DbParameter`**. O `name` da função/procedure também é interpolado. Arquivo idêntico nos 3 providers SQL. | `SqlServer/Repository/SqlExecutor.cs:367,375-407` (idem PostgreSql e MySql) |
-| S2 | 🟡 Médio | Chave NuGet exposta a qualquer push: workflow publica com `secrets.nuget_key` em push de **qualquer branch**, sem environment protegido nem gate de tag/release. | `.github/workflows/dotnetcore.yml:3,66-67` |
+| S1 | 🔴 Critical | **SQL injection**: `GetQueryParameters` interpolates values with `string.Format(" '{0}'", value)` without escaping single quotes; `string`/`Guid`/`DateTime` go raw into the SQL text, which reaches `FromSqlRaw`/`ExecuteSqlRaw` **with no `DbParameter`**. The function/procedure `name` is interpolated too. Identical file across the 3 SQL providers. | `SqlServer/Repository/SqlExecutor.cs:367,375-407` (same in PostgreSql and MySql) |
+| S2 | 🟡 Medium | NuGet key exposed to any push: the workflow publishes with `secrets.nuget_key` on a push to **any branch**, with no protected environment and no tag/release gate. | `.github/workflows/dotnetcore.yml:3,66-67` |
 
-**Correção do S1:** gerar placeholders (`@p0`/`$1`/`?`) e passar `DbParameter`s reais — a infraestrutura já
-existe no próprio arquivo (`SetCommand`, `SqlExecutor.cs:419-445`) e é simplesmente ignorada nesses métodos.
+**S1 fix:** emit placeholders (`@p0`/`$1`/`?`) and pass real `DbParameter`s — the infrastructure already
+exists in the same file (`SetCommand`, `SqlExecutor.cs:419-445`) and is simply ignored by those methods.
 
-### 2. Bugs de correção — Core (`eQuantic.Core.Data.EntityFramework`)
+### 2. Correctness bugs — Core (`eQuantic.Core.Data.EntityFramework`)
 
-| # | Sev. | Problema | Local |
+| # | Sev. | Problem | Location |
 |---|------|----------|-------|
-| C1 | 🔴 | **Double-dispose do UnitOfWork**: `AsyncQueryableRepository.Dispose(bool)` chama `base.Dispose()` (que já dispõe o UoW) e dispõe o UoW de novo — causado por campo `_disposed` sombreado na derivada. | `Repository/AsyncQueryableRepository.cs:756-773` + `Repository/QueryableRepository.cs:363-378` |
-| C2 | 🔴 | **Ownership invertido do UoW**: repositórios dispõem o UnitOfWork **injetado**; com `AddGenericRepositories` o container também o dispõe → DbContext morto para os demais repositórios do escopo. | `Repository/QueryableRepository.cs:374`; `Read/QueryableReadRepository.cs:22`; `Write/WriteRepository.cs:15` |
-| C3 | 🔴 | **Registro de DI quebra em runtime**: `ISqlUnitOfWork` é registrado incondicionalmente mesmo quando a implementação não o implementa (MongoDb) → `InvalidCastException` ao resolver. A linha 75 ainda duplica o registro de `IQueryableUnitOfWork` (código morto). | `Repository/Extensions/ServiceCollectionExtensions.cs:74-75` |
-| A1 | 🟠 | **`All`/`Any` (sync) descartam `configuration`**: `return this.All(specification.SatisfiedBy());` ignora includes/no-tracking/sorting. As variantes async fazem certo — prova de que é bug, não design. | `Read/QueryableReadRepository.cs:208,233` |
-| A2 | 🟠 | **`Get(id)` rejeita chaves default válidas com exceção errada**: `if (Equals(id, default(TKey))) throw new ArgumentNullException` — `Get(0)`/`Guid.Empty` lançam sobre um argumento não-nulo. | `Read/QueryableReadRepository.cs:254-257`; `Read/AsyncQueryableReadRepository.cs:357-360` |
-| A3 | 🟠 | **Sync deferred vs async materializado**: `GetAll`/`GetFiltered`/`GetPaged` sync devolvem `IQueryable` viva disfarçada de `IEnumerable` (dupla enumeração = 2 queries; `ObjectDisposedException` tardia), enquanto os async fazem `ToListAsync`. Mesmo método, semânticas divergentes. | `Read/QueryableReadRepository.cs:47,271,299,396` vs `Read/AsyncQueryableReadRepository.cs:44,336,732` |
-| A4 | 🟠 | **Chave como `Expression.Constant`**: `GetFindByKeyExpression` embute o valor da chave na árvore → EF não parametriza; cada id gera entrada nova no cache de queries e SQL com literal (poluição do plan cache). | `Repository/Extensions/DbContextExtensions.cs:25,43` |
-| A5 | 🟠 | **Paginação sem `OrderBy`**: `Skip/Take` sem ordenação garantida → páginas não determinísticas + warning `RowLimitingOperationWithoutOrderBy` do EF. | `Read/QueryableReadRepository.cs:395`; `Read/AsyncQueryableReadRepository.cs:729` |
-| M-core | 🟡 | Vários: NRT desabilitado no pacote inteiro; **zero `ConfigureAwait(false)`** em toda a biblioteca; `SumAsync` (≈24 overloads) sem `CancellationToken` nem validação de null; `AddRepository` ignora o lifetime configurado; reflection sem cache no caminho quente de `Get(id, config)`; `GetAllAsync` injeta `Where(_ => true)` redundante; tracking inconsistente entre `Get(id)` (usa `Find`) e `Get(id, config)` (usa query). | ver relatório detalhado por arquivo |
+| C1 | 🔴 | **UnitOfWork double-dispose**: `AsyncQueryableRepository.Dispose(bool)` calls `base.Dispose()` (which already disposes the UoW) and disposes the UoW again — caused by a shadowed `_disposed` field on the derived class. | `Repository/AsyncQueryableRepository.cs:756-773` + `Repository/QueryableRepository.cs:363-378` |
+| C2 | 🔴 | **Inverted UoW ownership**: repositories dispose the **injected** UnitOfWork; with `AddGenericRepositories` the container disposes it too → dead DbContext for the other repositories in the scope. | `Repository/QueryableRepository.cs:374`; `Read/QueryableReadRepository.cs:22`; `Write/WriteRepository.cs:15` |
+| C3 | 🔴 | **DI registration throws at runtime**: `ISqlUnitOfWork` is registered unconditionally even when the implementation does not implement it (MongoDb) → `InvalidCastException` on resolve. Line 75 also duplicates the `IQueryableUnitOfWork` registration (dead code). | `Repository/Extensions/ServiceCollectionExtensions.cs:74-75` |
+| A1 | 🟠 | **Sync `All`/`Any` discard `configuration`**: `return this.All(specification.SatisfiedBy());` ignores includes/no-tracking/sorting. The async variants do it right — proof it is a bug, not design. | `Read/QueryableReadRepository.cs:208,233` |
+| A2 | 🟠 | **`Get(id)` rejects valid default keys with the wrong exception**: `if (Equals(id, default(TKey))) throw new ArgumentNullException` — `Get(0)`/`Guid.Empty` throw on a non-null argument. | `Read/QueryableReadRepository.cs:254-257`; `Read/AsyncQueryableReadRepository.cs:357-360` |
+| A3 | 🟠 | **Sync deferred vs async materialized**: sync `GetAll`/`GetFiltered`/`GetPaged` return a live `IQueryable` disguised as `IEnumerable` (double enumeration = 2 queries; late `ObjectDisposedException`), while the async ones do `ToListAsync`. Same method, divergent semantics. | `Read/QueryableReadRepository.cs:47,271,299,396` vs `Read/AsyncQueryableReadRepository.cs:44,336,732` |
+| A4 | 🟠 | **Key as `Expression.Constant`**: `GetFindByKeyExpression` embeds the key value in the tree → EF does not parameterize; each id creates a new query-cache entry and SQL with a literal (plan-cache pollution). | `Repository/Extensions/DbContextExtensions.cs:25,43` |
+| A5 | 🟠 | **Pagination without `OrderBy`**: `Skip/Take` with no guaranteed ordering → non-deterministic pages + EF's `RowLimitingOperationWithoutOrderBy` warning. | `Read/QueryableReadRepository.cs:395`; `Read/AsyncQueryableReadRepository.cs:729` |
+| M-core | 🟡 | Several: NRT disabled across the package; **zero `ConfigureAwait(false)`** in the whole library; `SumAsync` (~24 overloads) with no `CancellationToken` and no null validation; `AddRepository` ignores the configured lifetime; uncached reflection on the hot `Get(id, config)` path; `GetAllAsync` injects a redundant `Where(_ => true)`; inconsistent tracking between `Get(id)` (uses `Find`) and `Get(id, config)` (uses a query). | see the per-file detailed report |
 
-### 3. Bugs de correção — Providers
+### 3. Correctness bugs — Providers
 
-| # | Sev. | Problema | Local |
+| # | Sev. | Problem | Location |
 |---|------|----------|-------|
-| P1 | 🔴 | **MongoDb opera no banco errado**: `GetDatabase(_collectionName)` usa o nome da **coleção** como nome do **banco** → `DeleteMany`/`UpdateMany` executam contra banco inexistente e retornam `0` **silenciosamente**. | `MongoDb/Repository/Set.cs:129-131` |
-| P2 | 🔴 | **MongoDb `UpdateDefinitionBuilder` grava constante**: `x => new E { Count = x.Count + 1 }` é compilado e invocado contra `Activator.CreateInstance(...)` (instância default) → grava `0+1=1` em todos os documentos, em vez de incrementar. Corrupção silenciosa. | `MongoDb/UpdateDefinitionBuilder.cs:38-43` |
-| P3 | 🟠 | **`EXEC` (T-SQL) copiado para PG/MySQL**: `GetQueryProcedure` retorna `$"EXEC {name}..."`; PostgreSQL/MySQL exigem `CALL` → `ExecuteProcedure` falha em runtime. Evidência direta do copy-paste. | `PostgreSql/Repository/SqlExecutor.cs:367`; `MySql/…:367` |
-| P4 | 🟠 | **`FromSqlRaw` recebe `IEnumerable` como 1 parâmetro**: `FromSqlRaw(sql, configuration.Parameters.Select(p => p.Value))` — o `Select` vira um único elemento do `params object[]`. Falta `.ToArray()`. | `SqlExecutor.cs:219` (3 providers SQL) |
-| P5 | 🟠 | **`ExpressionConverter` frágil**: `RewriteBinding` não faz rebind do parâmetro → updates que referenciam a entidade lançam em runtime; `GetMethods().…Single(...)` quebra se o EF adicionar overload de `SetProperty`; sem cache. | `SqlServer/ExpressionConverter.cs:50-68,137-155` (3 providers SQL) |
-| P6 | 🟡 | **MongoDb: retornos silenciosos**: sem `IMongoClient` no DI, `GetCollection()` retorna null e os bulk ops retornam `0` sem lançar. `IsSimpleType` não cobre `Guid`/`DateTimeOffset`/coleções → updates descartados ou `TargetParameterCountException`. | `MongoDb/Repository/Set.cs:29-65`; `UpdateDefinitionBuilder.cs:45-73` |
-| P7 | 🟡 | **`SqlExecutor.Dispose` destrói o `DbContext` injetado** (double-dispose no escopo DI). `IsMigrating` é `static` compartilhado entre todos os contextos do processo. Loop `do/while` de retry sem limite em `CommitAndRefreshChanges`. | `SqlExecutor.cs:483-497`; `UnitOfWork.cs:17,43-91` |
-| P8 | 🟡 | **`GetEntityByIdSpecification` órfão**: existe só no SqlServer, nada nele é específico de SQL Server (delega para `DbContextExtensions` do base), zero usos no repo. Deveria estar no base ou ser deprecado. | `SqlServer/Specifications/GetEntityByIdSpecification.cs` |
+| P1 | 🔴 | **MongoDb operates against the wrong database**: `GetDatabase(_collectionName)` uses the **collection** name as the **database** name → `DeleteMany`/`UpdateMany` run against a non-existent database and return `0` **silently**. | `MongoDb/Repository/Set.cs:129-131` |
+| P2 | 🔴 | **MongoDb `UpdateDefinitionBuilder` writes a constant**: `x => new E { Count = x.Count + 1 }` is compiled and invoked against `Activator.CreateInstance(...)` (a default instance) → writes `0+1=1` on every document instead of incrementing. Silent corruption. | `MongoDb/UpdateDefinitionBuilder.cs:38-43` |
+| P3 | 🟠 | **`EXEC` (T-SQL) copied to PG/MySQL**: `GetQueryProcedure` returns `$"EXEC {name}..."`; PostgreSQL/MySQL require `CALL` → `ExecuteProcedure` fails at runtime. Direct evidence of the copy-paste. | `PostgreSql/Repository/SqlExecutor.cs:367`; `MySql/…:367` |
+| P4 | 🟠 | **`FromSqlRaw` receives an `IEnumerable` as 1 parameter**: `FromSqlRaw(sql, configuration.Parameters.Select(p => p.Value))` — the `Select` becomes a single element of the `params object[]`. Missing `.ToArray()`. | `SqlExecutor.cs:219` (3 SQL providers) |
+| P5 | 🟠 | **Fragile `ExpressionConverter`**: `RewriteBinding` does not rebind the parameter → updates referencing the entity throw at runtime; `GetMethods().…Single(...)` breaks if EF adds a `SetProperty` overload; no cache. | `SqlServer/ExpressionConverter.cs:50-68,137-155` (3 SQL providers) |
+| P6 | 🟡 | **MongoDb: silent returns**: without an `IMongoClient` in DI, `GetCollection()` returns null and the bulk ops return `0` without throwing. `IsSimpleType` does not cover `Guid`/`DateTimeOffset`/collections → discarded updates or `TargetParameterCountException`. | `MongoDb/Repository/Set.cs:29-65`; `UpdateDefinitionBuilder.cs:45-73` |
+| P7 | 🟡 | **`SqlExecutor.Dispose` destroys the injected `DbContext`** (double-dispose in the DI scope). `IsMigrating` is a `static` shared across every context in the process. Unbounded `do/while` retry loop in `CommitAndRefreshChanges`. | `SqlExecutor.cs:483-497`; `UnitOfWork.cs:17,43-91` |
+| P8 | 🟡 | **Orphaned `GetEntityByIdSpecification`**: exists only in SqlServer, nothing in it is SQL Server-specific (it delegates to the base `DbContextExtensions`), zero uses in the repo. Should be in the base or deprecated. | `SqlServer/Specifications/GetEntityByIdSpecification.cs` |
 
-### 4. Duplicação estrutural
+### 4. Structural duplication
 
-| Arquivo | SqlServer | PostgreSql | MySql | MongoDb |
+| File | SqlServer | PostgreSql | MySql | MongoDb |
 |---|---|---|---|---|
-| `SqlExecutor.cs` | 498 linhas | **idêntico** | **idêntico** | — |
-| `UnitOfWork.cs` | 266 | **idêntico** | **idêntico** | ~180 iguais |
-| `ExpressionConverter.cs` | 175 | **idêntico** | **idêntico** | — |
-| `Set.cs` | 287 | 268 (= SqlServer sem blocos legados) | **idêntico ao PG** | ~50 iguais |
-| `SqlConfigurationExtensions.cs` | 14 | **idêntico** | **idêntico** | — |
+| `SqlExecutor.cs` | 498 lines | **identical** | **identical** | — |
+| `UnitOfWork.cs` | 266 | **identical** | **identical** | ~180 same |
+| `ExpressionConverter.cs` | 175 | **identical** | **identical** | — |
+| `Set.cs` | 287 | 268 (= SqlServer minus the legacy blocks) | **identical to PG** | ~50 same |
+| `SqlConfigurationExtensions.cs` | 14 | **identical** | **identical** | — |
 
-**~2.400–2.500 linhas redundantes.** As únicas diferenças genuínas de dialeto em `SqlExecutor` são 2 linhas
-(`GetQueryFunction`/`GetQueryProcedure`). Não é dívida só estética: o bug P3 (`EXEC`→`CALL`) existe
-justamente porque o arquivo foi copiado sem adaptar o dialeto.
+**~2,400–2,500 redundant lines.** The only genuine dialect differences in `SqlExecutor` are 2 lines
+(`GetQueryFunction`/`GetQueryProcedure`). It is not merely cosmetic debt: the P3 bug (`EXEC`→`CALL`) exists
+precisely because the file was copied without adapting the dialect.
 
-### 5. Packaging e versionamento
+### 5. Packaging and versioning
 
-| # | Sev. | Problema | Local |
+| # | Sev. | Problem | Location |
 |---|------|----------|-------|
-| PK1 | 🔴 | **Linhas de versão paralelas no mesmo `PackageId`**: 4.x multi-target + 6.x/7.x/8.x/9.x/10.x single-target. O NuGet vê uma linha do tempo única → `dotnet add package` puxa 10.0.2 (net10-only) e quebra restore em net6–net9; Dependabot sugere upgrade impossível; major deixa de significar breaking (significa TFM). | 21 csproj em `src/`; confirmado no nuget.org |
-| PK2 | 🔴 | **Bug de grafo de dependência**: `MySql.Net10.csproj` referencia o core **Net9** → o pacote MySql 10.0.2 declara dependência do core `>= 9.1.2` (net9-only). SqlServer/PG/MongoDb NetX referenciam o core multi-target 4.4.2 — famílias já cruzadas. | `MySql/…MySql.Net10.csproj:66-67` |
-| PK3 | 🔴 | **Pomelo 9 sobre EF Core 10**: MySql net10.0 usa `Pomelo.EntityFrameworkCore.MySql 9.0.0` (compilado p/ EF 9) com `Microsoft.EntityFrameworkCore 10.0.3`. Não há Pomelo 10 estável — risco de incompatibilidade binária. | `MySql/…MySql.csproj` (bloco net10) |
-| PK4 | 🟠 | **Diretórios `obj/`/`bin/` compartilhados**: vários csproj na mesma pasta sem `BaseIntermediateOutputPath` → `project.assets.json` sobrescrito a cada restore; builds paralelos (`dotnet build -m` da solution) são corrida declarada. | `src/*/` com múltiplos csproj |
-| PK5 | 🟠 | **MongoDb principal desalinhado**: `Version 8.1.2.0`, só `net8.0` — não há MongoDb na família 4.x nem multi-target; consumidor net9/net10 recebe o build net8. | `MongoDb/…MongoDb.csproj:7,9` |
-| PK6 | 🟠 | **`AssemblyVersion` rotativa** (muda a cada patch) → num diamante entre providers compilados contra linhas diferentes do core, risco de `MissingMethodException`/`FileLoadException`. | todos os csproj `:27` |
-| PK7 | 🟡 | **MSBump morto e quebrado**: `build/MSBump.props` importa a si mesmo (circular), `MSBump.targets` chama `BumpVersion` sem `UsingTask`, `Directory.Build.targets` está em `build/` (não é ancestral de `src/`, nunca é aplicado) e o próprio comentário diz que é obsoleto desde NuGet 4.6. Nada disso é importado hoje. Quando funcionava, gerava versões não determinísticas por build. | `build/*` |
+| PK1 | 🔴 | **Parallel version lines on the same `PackageId`**: 4.x multi-target + 6.x/7.x/8.x/9.x/10.x single-target. NuGet sees a single timeline → `dotnet add package` pulls 10.0.2 (net10-only) and breaks restore on net6–net9; Dependabot suggests an impossible upgrade; the major stops meaning "breaking" (it means TFM). | 21 csproj in `src/`; confirmed on nuget.org |
+| PK2 | 🔴 | **Dependency-graph bug**: `MySql.Net10.csproj` references the **Net9** core → the MySql 10.0.2 package declares a dependency on core `>= 9.1.2` (net9-only). SqlServer/PG/MongoDb NetX reference the multi-target core 4.4.2 — the families are already crossed. | `MySql/…MySql.Net10.csproj:66-67` |
+| PK3 | 🔴 | **Pomelo 9 over EF Core 10**: MySql net10.0 uses `Pomelo.EntityFrameworkCore.MySql 9.0.0` (built for EF 9) with `Microsoft.EntityFrameworkCore 10.0.3`. There is no stable Pomelo 10 — risk of binary incompatibility. | `MySql/…MySql.csproj` (net10 block) |
+| PK4 | 🟠 | **Shared `obj/`/`bin/` directories**: several csproj files in the same folder without `BaseIntermediateOutputPath` → `project.assets.json` overwritten on each restore; parallel builds (`dotnet build -m` of the solution) are a declared race. | `src/*/` with multiple csproj |
+| PK5 | 🟠 | **MongoDb main package misaligned**: `Version 8.1.2.0`, `net8.0` only — there is no MongoDb in the 4.x family or a multi-target one; a net9/net10 consumer gets the net8 build. | `MongoDb/…MongoDb.csproj:7,9` |
+| PK6 | 🟠 | **Rolling `AssemblyVersion`** (changes on each patch) → in a diamond between providers compiled against different core lines, risk of `MissingMethodException`/`FileLoadException`. | all csproj `:27` |
+| PK7 | 🟡 | **Dead and broken MSBump**: `build/MSBump.props` imports itself (circular), `MSBump.targets` calls `BumpVersion` with no `UsingTask`, `Directory.Build.targets` is in `build/` (not an ancestor of `src/`, never applied), and its own comment says it is obsolete since NuGet 4.6. None of it is imported today. When it worked, it produced non-deterministic per-build versions. | `build/*` |
 
-### 6. Contratos (`eQuantic.Core.Data`)
+### 6. Contracts (`eQuantic.Core.Data`)
 
-| # | Sev. | Problema | Local |
+| # | Sev. | Problem | Location |
 |---|------|----------|-------|
-| K1 | 🟠 | **Explosão combinatória**: `IAsyncReadRepository<TConfig,TEntity,TKey>` = **100 membros**; `IReadRepository<TConfig,…>` = 56; `ISqlUnitOfWork` ≈ 47 (inviável implementar à mão — anula o propósito de um contrato). `GetPagedAsync` = 18 overloads; `SumAsync` = 30. O commit mais recente *adicionou* 60 overloads de Sum — a tendência é piorar. | `Read/IAsyncReadRepository.cs`; `Sql/ISqlUnitOfWork.cs` |
-| K2 | 🟠 | **`TUnitOfWork` como type parameter** habilita um único membro (`UnitOfWork { get; }`) mas contamina toda a hierarquia (~24 interfaces para 1 conceito) e cria acoplamento circular UoW↔repositório. Variância inconsistente sync vs async. | `Repository/IRepository.cs:26,55`; `IAsyncRepository.cs:39` |
-| K3 | 🟠 | **Paginação sem metadados**: `GetPaged*` retorna `IEnumerable<T>` cru, sem total/página → consumidor faz `Count()` separado (2 round-trips não atômicas). Falta um `PagedResult<T>`. | `Read/IReadRepository.cs:267-314` |
-| K4 | 🟡 | **Vazamento de EF no contrato**: `ISqlUnitOfWork` declara `GetPendingMigrations`/`UpdateDatabase`/`Attach` — contradiz a "persistence ignorance" que os próprios XML docs reivindicam. `IdentityGenerator` e `MigrationAttribute` são implementação num pacote de contratos. | `Sql/ISqlUnitOfWork.cs:23-127`; `IdentityGenerator.cs`; `Migration/MigrationAttribute.cs` |
-| K5 | 🟡 | **`CancellationToken` ausente** em 30 `SumAsync`, `AddAsync`/`MergeAsync`/`ModifyAsync`/`RemoveAsync`, `LoadCollectionAsync`. NRT desabilitado (`Get*` retorna `Task<TEntity>` sem anotar null). Sem `IAsyncEnumerable`/streaming. | `Read/IAsyncReadRepository.cs`; `Write/IAsyncWriteRepository.cs` |
-| K6 | 🟡 | **Constraint `new()` em tudo** (hostil a DDD) e `IEntity`/`IEntity<TKey>` não ligam o `TKey` do repositório à chave real da entidade (`IRepository<Cliente, Guid>` compila mesmo se a chave for `int`). Deveria ser `where TEntity : IEntity<TKey>`. | `Repository/IRepository.cs:40` |
-| K7 | 🟢 | **Bug latente**: `IdentityGenerator.GuidRegex` contém 2 caracteres invisíveis de largura zero (U+200C e U+200B) dentro da classe `[0-9…a-fA-F]{12}` — artefato de copy-paste (confirmado por dump de bytes). Dependência morta `eQuantic.Core` (nenhum arquivo a importa). Typo `mintute` em `MigrationAttribute`. | `IdentityGenerator.cs:7`; `core-data.csproj` |
+| K1 | 🟠 | **Combinatorial explosion**: `IAsyncReadRepository<TConfig,TEntity,TKey>` = **100 members**; `IReadRepository<TConfig,…>` = 56; `ISqlUnitOfWork` ≈ 47 (impossible to implement by hand — defeats the purpose of a contract). `GetPagedAsync` = 18 overloads; `SumAsync` = 30. The most recent commit *added* 60 Sum overloads — the trend is worsening. | `Read/IAsyncReadRepository.cs`; `Sql/ISqlUnitOfWork.cs` |
+| K2 | 🟠 | **`TUnitOfWork` as a type parameter** enables a single member (`UnitOfWork { get; }`) but contaminates the whole hierarchy (~24 interfaces for 1 concept) and creates a circular UoW↔repository coupling. Inconsistent variance sync vs async. | `Repository/IRepository.cs:26,55`; `IAsyncRepository.cs:39` |
+| K3 | 🟠 | **Pagination without metadata**: `GetPaged*` returns raw `IEnumerable<T>`, with no total/page → the consumer does a separate `Count()` (2 non-atomic round-trips). A `PagedResult<T>` is missing. | `Read/IReadRepository.cs:267-314` |
+| K4 | 🟡 | **EF leaking into the contract**: `ISqlUnitOfWork` declares `GetPendingMigrations`/`UpdateDatabase`/`Attach` — contradicting the "persistence ignorance" its own XML docs claim. `IdentityGenerator` and `MigrationAttribute` are implementation in a contracts package. | `Sql/ISqlUnitOfWork.cs:23-127`; `IdentityGenerator.cs`; `Migration/MigrationAttribute.cs` |
+| K5 | 🟡 | **`CancellationToken` missing** on 30 `SumAsync`, `AddAsync`/`MergeAsync`/`ModifyAsync`/`RemoveAsync`, `LoadCollectionAsync`. NRT disabled (`Get*` returns `Task<TEntity>` with no null annotation). No `IAsyncEnumerable`/streaming. | `Read/IAsyncReadRepository.cs`; `Write/IAsyncWriteRepository.cs` |
+| K6 | 🟡 | **`new()` constraint everywhere** (hostile to DDD) and `IEntity`/`IEntity<TKey>` do not tie the repository's `TKey` to the entity's real key (`IRepository<Customer, Guid>` compiles even if the key is `int`). Should be `where TEntity : IEntity<TKey>`. | `Repository/IRepository.cs:40` |
+| K7 | 🟢 | **Latent bug**: `IdentityGenerator.GuidRegex` contains 2 invisible zero-width characters (U+200C and U+200B) inside the `[0-9…a-fA-F]{12}` class — a copy-paste artifact (confirmed by a byte dump). Dead `eQuantic.Core` dependency (no file imports it). Typo `mintute` in `MigrationAttribute`. | `IdentityGenerator.cs:7`; `core-data.csproj` |
 
-### 7. Processo, CI e testes
+### 7. Process, CI and tests
 
-| # | Sev. | Problema | Local |
+| # | Sev. | Problem | Location |
 |---|------|----------|-------|
-| Q1 | 🔴 | **CI publica em qualquer push, sem testes**: `on: [push]` → `dotnet nuget push` a cada push em qualquer branch, com a chave NuGet. **Nenhum `dotnet test`** roda antes de publicar. | `.github/workflows/dotnetcore.yml:3,66-67` |
-| Q2 | 🔴 | **Testes são placebo**: `UnitTest1.cs` é um `Assert.Pass()`. Não há cobertura de nenhum bug acima. | `tests/…Tests/UnitTest1.cs` |
-| Q3 | 🟡 | 21 `dotnet build` sequenciais em vez da solution; ações desatualizadas (`checkout@v3`, `setup-dotnet@v3`); `windows-latest` desnecessário; sem `dotnet test`, cache, `global.json`, pack determinístico (`ContinuousIntegrationBuild`), símbolos (snupkg) ou provenance. | `dotnetcore.yml` |
-| Q4 | 🟡 | Sem `Directory.Build.props`/`Directory.Packages.props` centrais: metadados e versões de pacote repetidos em 21 csproj (fonte real de PK2/PK3). Sem NRT/`GenerateDocumentationFile` consistentes (pacotes vão ao NuGet sem IntelliSense). README diz "Version 4.4.0" e não explica a matriz de versões; `Repository.md` usa `IContainer`/service-locator pré-DI. | raiz do repo |
+| Q1 | 🔴 | **CI publishes on any push, without tests**: `on: [push]` → `dotnet nuget push` on every push to any branch, with the NuGet key. **No `dotnet test`** runs before publishing. | `.github/workflows/dotnetcore.yml:3,66-67` |
+| Q2 | 🔴 | **Placebo tests**: `UnitTest1.cs` is an `Assert.Pass()`. There is no coverage of any bug above. | `tests/…Tests/UnitTest1.cs` |
+| Q3 | 🟡 | 21 sequential `dotnet build` steps instead of the solution; outdated actions (`checkout@v3`, `setup-dotnet@v3`); unnecessary `windows-latest`; no `dotnet test`, cache, `global.json`, deterministic pack (`ContinuousIntegrationBuild`), symbols (snupkg) or provenance. | `dotnetcore.yml` |
+| Q4 | 🟡 | No central `Directory.Build.props`/`Directory.Packages.props`: metadata and package versions repeated across 21 csproj (the real source of PK2/PK3). No consistent NRT/`GenerateDocumentationFile` (packages ship to NuGet with no IntelliSense). The README says "Version 4.4.0" and does not explain the version matrix; `Repository.md` uses `IContainer`/pre-DI service-locator. | repo root |
 
 ---
 
-## Parte II — Plano de execução em fases
+## Part II — Phased execution plan
 
-### Fase 0 — Blindar o pipeline (dias, sem tocar código de produção)
+### Phase 0 — Harden the pipeline (days, no production code) — **done**
 
-Pré-requisito de tudo: parar de publicar por acidente e ter uma rede de segurança.
+Prerequisite for everything: stop publishing by accident and have a safety net.
 
-1. **Separar CI de Release.** `ci.yml` em `push`/`pull_request`: `restore` → `build -warnaserror` → **`dotnet test`** → `dotnet pack` como artefato (sem push). `release.yml` só em `push: tags: ['v*']` (ou `release: published`), com a chave `nuget_key` num **GitHub Environment protegido**.
-2. **Trocar os 21 builds** por `dotnet build eQuantic.Core.Data.EntityFramework.sln -c Release` (ou `dotnet pack`); mudar para `ubuntu-latest`; atualizar ações para v4; adicionar cache NuGet e `global.json`.
-3. **Adotar MinVer** (versão derivada de tag git) e **deletar `build/`** (MSBump morto). Fixar `AssemblyVersion` por major.
+1. **Split CI from Release.** `ci.yml` on `push`/`pull_request`: `restore` → `build` → **`dotnet test`** →
+   `dotnet pack` as an artifact (no push). `release.yml` only on `push: tags: ['v*']`, with the
+   `nuget_key` in a **protected GitHub Environment**.
+2. Update the actions to v4; move to `ubuntu-latest`; add a NuGet cache and `global.json`.
+3. **Delete `build/`** (dead MSBump). MinVer adoption is deferred until the versioning decision (Part IV).
 
-### Fase 1 — Correções que não quebram contrato (linha atual, patch/minor)
+### Phase 1 — Non contract-breaking fixes (current line, patch/minor) — **done**
 
-Podem sair já, sem tocar o `eQuantic.Core.Data`. Cobrir cada uma com teste (Fase 0 garante que rodam).
+Ship now, without touching `eQuantic.Core.Data`. Each covered by a test. See the status table above.
 
-- **Segurança S1:** parametrizar `SqlExecutor` (usar a infra `SetCommand` já existente).
-- **Crash C3:** registrar `ISqlUnitOfWork` só se a impl o implementar; remover o registro duplicado.
-- **Disposal C1/C2/P7:** unificar o flag `_disposed`, não dispor o UoW injetado (ownership de quem cria), respeitar o escopo do DI.
-- **Correção de queries A1, A2, A4, A5, P4:** repassar `configuration` em `All`/`Any`; validar `id is null` em vez de `default`; parametrizar a chave; fallback de `OrderBy` pela PK; `.ToArray()` no `FromSqlRaw`.
-- **MongoDb P1/P2/P6:** corrigir o `GetDatabase`, rejeitar (ou traduzir para `$inc`) updates que referenciam a entidade, lançar em vez de retornar `0` silencioso.
-- **Dialeto P3:** `EXEC`→`CALL` em PG/MySql.
-- **Higiene M-core:** `ConfigureAwait(false)`, cache da expressão de chave em `ConcurrentDictionary`, `AddRepository` respeitando lifetime.
-- **PK2/PK3/PK5:** corrigir a referência do `MySql.Net10` para o core net10; alinhar MongoDb; documentar/pinar o risco Pomelo↔EF10.
-- **K7 (contrato, não-breaking):** remover os caracteres zero-width da regex, a dependência morta `eQuantic.Core`, adicionar `[AttributeUsage]`/`GenerateDocumentationFile`.
+### Phase 2 — Structural de-duplication (minor, internal refactor) — **done**
 
-### Fase 2 — De-duplicação estrutural (minor, refactor interno)
+Extracted the shared relational implementation into a new
+`eQuantic.Core.Data.EntityFramework.Relational` package (see the status section above for why a new package
+rather than the base package). Each provider becomes thin subclasses + a dialect override. Removes ~2,200
+lines and kills the P3 bug class at the root. **Consumer-facing types keep their namespaces**; only a few
+implementation-only types move.
 
-Criar no pacote base `eQuantic.Core.Data.EntityFramework`:
-- `SqlExecutorBase` com `GetQueryFunction`/`GetQueryProcedure` `protected abstract` (dialeto) — colapsa ~500×2 linhas.
-- `UnitOfWorkBase`/`UnitOfWorkBase<TDbContext>`, `ExpressionConverter<TEntity>` e o `GetQueryable`/`Load*` de `Set` no base.
-- Mover `GetEntityByIdSpecification` (P8) para o base.
+### Phase 3 — Contracts redesign v5.0.0 (deliberately breaking — see Part III)
 
-Cada provider passa a ser só o override de dialeto + o `csproj`. Remove ~2.400 linhas e mata a classe de bug do P3 na raiz. **Não muda API pública** — só reorganiza a implementação.
+Consolidate the surface via *options objects*, introduce `PagedResult<T>`, a uniform `CancellationToken`,
+annotated NRT, `where TEntity : IEntity<TKey>`, remove `TUnitOfWork` from the hierarchy and the EF-specific
+content from the contracts. Reimplement on the EF package (which becomes ~10× smaller).
 
-### Fase 3 — Redesenho dos contratos v5.0.0 (breaking deliberado — ver Parte III)
+### Phase 4 — Migration on nuget.org (see Part IV)
 
-Consolidar a superfície via *options objects*, introduzir `PagedResult<T>`, `CancellationToken` uniforme,
-NRT anotado, `where TEntity : IEntity<TKey>`, remover `TUnitOfWork` da hierarquia e o conteúdo
-EF-specific dos contratos. Reimplementar no pacote EF (que fica ~10× menor).
-
-### Fase 4 — Migração no nuget.org (ver Parte IV)
-
-Consolidar as linhas de versão, deprecar as antigas sem quebrar quem já depende delas, e publicar a matriz
-de compatibilidade.
+Consolidate the version lines, deprecate the old ones without breaking anyone who already depends on them,
+and publish the compatibility matrix.
 
 ---
 
-## Parte III — Mudanças que exigem quebra de contrato no `eQuantic.Core.Data`
+## Part III — Changes requiring a contract break in `eQuantic.Core.Data`
 
-Regra geral do pacote de contratos: **adicionar** membro a uma interface já quebra todo implementador
-externo (mocks, fakes, decorators, além da própria impl EF), e **mudar assinatura/remover** quebra também
-os callers. Quase toda melhoria de fundo é, portanto, uma v5.0.0. O que exige breaking:
+General rule for the contracts package: **adding** a member to an interface already breaks every external
+implementer (mocks, fakes, decorators, plus the EF impl itself), and **changing a signature/removing**
+breaks callers too. Almost every fundamental improvement is therefore a v5.0.0. What requires breaking:
 
-1. **`CancellationToken` nos membros que não têm** (30 `SumAsync`, `AddAsync`/`MergeAsync`/`ModifyAsync`/`RemoveAsync`, `LoadCollectionAsync`). Rota não-breaking parcial: *default interface methods* (DIM) delegando para a sobrecarga existente — viável porque todos os TFMs são ≥ net6.0, mas cristaliza a explosão de overloads.
-2. **Consolidar overloads em options objects** (`QueryOptions<T>` absorvendo filter/specification/config; `PageRequest`): remover os 18 `GetPagedAsync`, os 60 `Sum*` etc. Reduz `IAsyncReadRepository` de 100 para ~12 membros. É o coração da v5.
-3. **`PagedResult<T>` em vez de `IEnumerable<T>`** na paginação: mudança de tipo de retorno — breaking duro (nem DIM salva; exigiria método novo com outro nome, ex. `QueryPagedAsync`).
-4. **Remover `TUnitOfWork` da hierarquia** (colapsar `IRepository<TUoW,TEntity,TKey>` em `IRepository<TEntity,TKey>` + `IUnitOfWork UnitOfWork { get; }`): remove ~10 interfaces públicas; o pacote EF referencia essas aridades em `GetRepository<TUnitOfWork,…>`.
-5. **Constraint `where TEntity : IEntity<TKey>`** e/ou remover `new()`: muda constraints genéricas — source+binary breaking.
-6. **Separar sync/async de `IUnitOfWork`** e **remover `ExecuteTransactionAsync` de `ISqlExecutor`** (método async na interface "sync").
-7. **Mover `GetPendingMigrations`/`UpdateDatabase`/`MigrationAttribute`/`IdentityGenerator` para o pacote EF**: remove tipos/membros públicos do contrato — breaking real (a direção contrato→EF impede `[TypeForwardedTo]`).
-8. **NRT anotado** (`TEntity?` em `Get`/`GetFirst`/`GetSingle`): tecnicamente só gera warnings novos — o breaking mais barato; exige que os dois pacotes sejam anotados em conjunto para ficarem coerentes.
+1. **`CancellationToken` on the members that lack it** (30 `SumAsync`, `AddAsync`/`MergeAsync`/`ModifyAsync`/`RemoveAsync`, `LoadCollectionAsync`). Partial non-breaking route: *default interface methods* (DIM) delegating to the existing overload — viable because all TFMs are ≥ net6.0, but it crystallizes the overload explosion.
+2. **Consolidate overloads into options objects** (`QueryOptions<T>` absorbing filter/specification/config; `PageRequest`): remove the 18 `GetPagedAsync`, the 60 `Sum*` etc. Reduces `IAsyncReadRepository` from 100 to ~12 members. This is the heart of v5.
+3. **`PagedResult<T>` instead of `IEnumerable<T>`** for pagination: a return-type change — hard breaking (not even DIM saves it; would require a new method with a different name, e.g. `QueryPagedAsync`).
+4. **Remove `TUnitOfWork` from the hierarchy** (collapse `IRepository<TUoW,TEntity,TKey>` into `IRepository<TEntity,TKey>` + `IUnitOfWork UnitOfWork { get; }`): removes ~10 public interfaces; the EF package references those arities in `GetRepository<TUnitOfWork,…>`.
+5. **`where TEntity : IEntity<TKey>` constraint** and/or removing `new()`: changes generic constraints — source+binary breaking.
+6. **Split sync/async in `IUnitOfWork`** and **remove `ExecuteTransactionAsync` from `ISqlExecutor`** (an async method on the "sync" interface).
+7. **Move `GetPendingMigrations`/`UpdateDatabase`/`MigrationAttribute`/`IdentityGenerator` to the EF package**: removes public types/members from the contract — a real break (the contract→EF direction rules out `[TypeForwardedTo]`).
+8. **Annotated NRT** (`TEntity?` on `Get`/`GetFirst`/`GetSingle`): technically only produces new warnings — the cheapest break; requires both packages to be annotated together to stay consistent.
 
-**Recomendação:** tratar a próxima versão do contrato como **v5.0.0 deliberadamente breaking** e reimplementar
-o pacote EF sobre ela, em vez de empilhar DIMs sobre uma superfície de 100 membros. O custo de manutenção
-do pacote EF — que hoje implementa ~156 membros por provider × 4 providers — cai uma ordem de magnitude.
-
----
-
-## Parte IV — Estratégia de versionamento no nuget.org
-
-O problema PK1 tem duas saídas coerentes. A recomendada é a (A).
-
-**(A) Consolidar numa única linha multi-target por `PackageId` (recomendado).**
-Um `.csproj` multi-target por pacote (`net8.0;net9.0;net10.0` — net6/net7 estão EOL), uma única linha de
-versão, retomada **acima** da mais alta já publicada para a linha do tempo voltar a ser crescente e
-monotônica (ex.: **11.0.0**, ou 5.0.0 se aceitar que a "latest" numérica caia — o que confundiria quem já
-está em 10.x). O multi-target já entrega o binário certo por TFM dentro de um único `.nupkg` — é
-exatamente o que o esquema de linhas paralelas tenta emular à mão. Isso corrige PK1, PK2, PK4, PK5 e Q4 de
-uma vez.
-
-**(B) Manter famílias por .NET, mas com `PackageId` distintos.**
-Ex.: `eQuantic.Core.Data.EntityFramework.Net8`. É a única forma de o NuGet tratar as famílias como linhas
-independentes (a "latest" de cada id fica correta para seu TFM). Custo: fragmenta o ecossistema de
-consumidores e a descoberta no nuget.org, e multiplica os pacotes a manter. Só vale se houver uma razão
-forte para congelar cada TFM numa API própria.
-
-**Migração sem quebrar quem já depende das versões antigas** (vale para A e B):
-- **Nunca** despublicar (`unlist` mantém o restore de quem tem a versão fixada; `delete` quebra). Usar
-  **deprecação** no nuget.org (`Legacy`/`Other`) nas versões antigas, apontando para a nova.
-- Publicar a **matriz de compatibilidade** (TFM × pacote × versão) no README — hoje o README diz
-  "Version 4.4.0" e não explica nada disso.
-- Alinhar core + 4 providers para lançarem **sempre juntos, na mesma versão** (resolve os diamantes de
-  `AssemblyVersion`).
-- Só então retomar a numeração consolidada e apontar o CI de release para tags.
+**Recommendation:** treat the next contract version as a **deliberately breaking v5.0.0** and reimplement
+the EF package on top of it, rather than stacking DIMs over a 100-member surface. The EF package's
+maintenance cost — today implementing ~156 members per provider × 4 providers — drops by an order of
+magnitude.
 
 ---
 
-## Apêndice — Ordem sugerida (o que fazer primeiro)
+## Part IV — Versioning strategy on nuget.org
 
-1. **Fase 0** (pipeline) — desbloqueia tudo com segurança.
-2. **S1, C1, C2, C3, P1, P2** — os 6 achados 🔴 de segurança/runtime, com testes.
-3. **Fase 1 restante** (achados 🟠) na mesma linha atual.
-4. **Fase 2** (de-dup) — barato e alto retorno, sem breaking.
-5. **Fases 3–4** — planejar a v5.0.0 do contrato e a consolidação de versões como um marco à parte,
-   comunicado com antecedência aos consumidores.
+The PK1 problem has two coherent exits. The recommended one is (A).
+
+**(A) Consolidate into a single multi-target line per `PackageId` (recommended).**
+One multi-target `.csproj` per package (`net8.0;net9.0;net10.0` — net6/net7 are EOL), a single version line,
+resumed **above** the highest already published so the timeline becomes increasing and monotonic again
+(e.g. **11.0.0**, or 5.0.0 if you accept the numeric "latest" dropping — which would confuse anyone already
+on 10.x). Multi-target already delivers the right binary per TFM inside a single `.nupkg` — exactly what the
+parallel-lines scheme tries to emulate by hand. This fixes PK1, PK2, PK4, PK5 and Q4 at once.
+
+**(B) Keep per-.NET families, but with distinct `PackageId`s.**
+E.g. `eQuantic.Core.Data.EntityFramework.Net8`. It is the only way NuGet treats the families as independent
+lines (each id's "latest" is correct for its TFM). Cost: it fragments the consumer ecosystem and discovery
+on nuget.org, and multiplies the packages to maintain. Only worth it if there is a strong reason to freeze
+each TFM to its own API.
+
+**Migration without breaking anyone already on the old versions** (applies to A and B):
+- **Never** unpublish (`unlist` keeps restore working for pinned versions; `delete` breaks it). Use
+  **deprecation** on nuget.org (`Legacy`/`Other`) on the old versions, pointing to the new one.
+- Publish the **compatibility matrix** (TFM × package × version) in the README — today the README says
+  "Version 4.4.0" and explains none of it.
+- Align the core + 4 providers to release **always together, at the same version** (resolves the
+  `AssemblyVersion` diamonds).
+- Only then resume the consolidated numbering and point the release CI at tags.
+
+Note: the new `eQuantic.Core.Data.EntityFramework.Relational` package introduced in Phase 2 must join
+whichever scheme is chosen here.
+
+---
+
+## Appendix — Suggested order (what to do first)
+
+1. **Phase 0** (pipeline) — unblocks everything safely. ✅ done
+2. **S1, C1, C2, C3, P1, P2** — the 6 🔴 security/runtime findings, with tests. ✅ done
+3. **Rest of Phase 1** (🟠 findings) on the current line. ✅ done
+4. **Phase 2** (de-dup) — cheap, high return, no break. ✅ done
+5. **Phases 3–4** — plan the contract v5.0.0 and the version consolidation as a separate milestone,
+   communicated to consumers in advance.
