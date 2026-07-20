@@ -227,8 +227,8 @@ await orders.RemoveAsync(order);                    // stage a delete
 int affected = await unitOfWork.CommitAsync();      // one round-trip, returns affected rows
 ```
 
-Set-based writes run directly in the database (EF `ExecuteUpdate`/`ExecuteDelete`) and do not need a
-commit:
+On the relational providers, set-based writes run as a single server-side statement (EF
+`ExecuteUpdate`/`ExecuteDelete`) and do not need a commit:
 
 ```csharp
 long cancelled = await orders.UpdateManyAsync(
@@ -239,6 +239,10 @@ long removed = await orders.DeleteManyAsync(o => o.Total == 0m);
 ```
 
 `DeleteManyAsync`/`UpdateManyAsync` also accept an `ISpecification<T>` in place of the predicate.
+
+> The document providers implement these two methods differently — **MongoDB** through its native driver,
+> **Azure Cosmos DB** by loading the matching documents and modifying them through the context (Cosmos has no
+> server-side `ExecuteUpdate`/`ExecuteDelete`). The contract is identical; only the execution differs.
 
 ## 8. Custom repositories
 

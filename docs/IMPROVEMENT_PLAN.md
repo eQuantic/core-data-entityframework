@@ -1,5 +1,11 @@
 # Improvement Plan — eQuantic.Core.Data.EntityFramework
 
+> **📜 Historical — completed.** This is the original pre-migration analysis. Its recommendations have been
+> delivered: the security/correctness/CI phases in PR #1, and the **v5 contract migration** (per-major
+> `8.x`/`10.x` + multi-framework `4.x` packages, targets trimmed to net8/net10) shipped on top of it. It is
+> kept for the record and describes the **old** state (net6–net10, v4 contracts) — it does **not** reflect
+> the current codebase; see the [README](../README.md) and [walkthrough](../Repository.md) instead.
+
 > Deep analysis performed on 2026-07-16 of this repository (v4.4.2 / published 6.x–10.x lines) and of the
 > contracts repository [`eQuantic/core-data`](https://github.com/eQuantic/core-data) (v4.3.2).
 > Every finding cites `file:line` and was verified against the source code, not inferred.

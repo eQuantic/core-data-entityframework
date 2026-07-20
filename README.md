@@ -2,7 +2,7 @@
 
 **The Entity Framework Core implementation of [eQuantic.Core.Data](https://github.com/eQuantic/core-data).**
 You code against the provider-agnostic `IRepository<TEntity, TKey>` / `IUnitOfWork` contracts; this package
-supplies the EF Core engine for **SQL Server, PostgreSQL, MySQL and MongoDB**.
+supplies the EF Core engine for **SQL Server, PostgreSQL, MySQL, MongoDB and Azure Cosmos DB**.
 
 ```csharp
 // A repository over any IEntity<TKey>, obtained from your DbContext-backed unit of work:
@@ -20,6 +20,67 @@ var page = await repo.GetPagedAsync(
 
 // page is a PagedResult<OrderData>: Items + TotalCount + PageIndex/PageSize/PageCount + Has*Page
 ```
+
+## Why
+
+The Repository pattern keeps your domain ignorant of the persistence engine — you code against
+`IRepository<TEntity, TKey>` and can swap SQL Server for PostgreSQL, MongoDB or Cosmos DB without touching a
+line of domain code. What usually rots is the *query surface*: a sprawl of `GetPaged`/`GetFiltered`
+overloads and `Action<Configuration>` callbacks, with filters passed as magic strings.
+
+On the `eQuantic.Core.Data` **v5** contracts, this provider collapses that into **one `QueryOptions<TEntity>`
+per read** — authored typed and fluent, checked at compile time, and translated to EF Core server-side.
+
+## Getting started
+
+Install the provider for your database — pick the major that matches your runtime (see
+[Versioning](#versioning) below):
+
+```bash
+dotnet add package eQuantic.Core.Data.EntityFramework.SqlServer --version 8.*
+```
+
+Give your entities a key via `IEntity<TKey>`, keep your usual `DbContext`, and derive the provider's unit of
+work:
+
+```csharp
+using eQuantic.Core.Data.Repository;
+using eQuantic.Core.Data.EntityFramework.SqlServer.Repository;
+using Microsoft.EntityFrameworkCore;
+
+public class OrderData : IEntity<Guid>
+{
+    public Guid Id { get; set; }
+    public decimal Total { get; set; }
+    public Guid GetKey() => Id;
+    public void SetKey(Guid key) => Id = key;
+}
+
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+{
+    public DbSet<OrderData> Orders => Set<OrderData>();
+}
+
+public interface IAppUnitOfWork : IQueryableUnitOfWork { }
+
+public class AppUnitOfWork(IServiceProvider sp, AppDbContext ctx)
+    : UnitOfWork<AppDbContext>(sp, ctx), IAppUnitOfWork;
+```
+
+Register the context and repositories — `AddRelationalRepositories` for the SQL providers,
+`AddQueryableRepositories` for the document providers (MongoDB, Cosmos DB):
+
+```csharp
+services.AddDbContext<AppDbContext>(o => o.UseSqlServer(connectionString));
+services.AddRelationalRepositories<IAppUnitOfWork, AppUnitOfWork>();
+```
+
+Then inject `IAppUnitOfWork`, ask it for a repository, and query with a `QueryOptions` (the snippet above).
+The full slice — specifications, custom repositories, a domain service — is in the
+[walkthrough](Repository.md).
+
+> Swap the suffix (`PostgreSql`, `MySql`, `MongoDb`, `CosmosDb`) and the `UseXxx` call to target another
+> database.
 
 ## What this package gives you
 
@@ -63,16 +124,31 @@ end up as one predicate the provider translates. The full query-string grammar i
 | `eQuantic.Core.Data.EntityFramework.PostgreSql` | PostgreSQL |
 | `eQuantic.Core.Data.EntityFramework.MySql` | MySQL (Pomelo) |
 | `eQuantic.Core.Data.EntityFramework.MongoDb` | MongoDB (EF Core provider) |
+| `eQuantic.Core.Data.EntityFramework.CosmosDb` | Azure Cosmos DB (EF Core provider) |
 
-The three relational providers share `eQuantic.Core.Data.EntityFramework.Relational`; every provider builds
-on the base `eQuantic.Core.Data.EntityFramework`. Register your `DbContext`-backed unit of work and the
-open-generic repositories through `AddRelationalRepositories<TUnitOfWorkInterface, TUnitOfWorkImpl>()` — the
-full wiring is in the [walkthrough](Repository.md).
+The three relational providers share `eQuantic.Core.Data.EntityFramework.Relational`; the document providers
+(`MongoDb`, `CosmosDb`) are non-relational and build directly on the base
+`eQuantic.Core.Data.EntityFramework`. Register your `DbContext`-backed unit of work and the open-generic
+repositories through `AddRelationalRepositories<TUnitOfWorkInterface, TUnitOfWorkImpl>()` (relational) or the
+base `AddQueryableRepositories<TUnitOfWork>()` (document) — the full wiring is in the
+[walkthrough](Repository.md).
 
-## Versioning — pick the package major that matches your runtime
+**Azure Cosmos DB:** scope a read to one logical partition with the Cosmos-specific `WithPartitionKey`
+extension so it doesn't fan out into a cross-partition scan:
 
-This library targets **.NET 8** and **.NET 10**, and each runtime is published as its **own package major**
-so the EF Core lines never mix:
+```csharp
+new QueryOptions<OrderData>()
+    .WithPartitionKey(tenantId)
+    .Where(o => o.Status, FilterOperator.Equal, OrderStatus.Paid);
+```
+
+Cosmos has no server-side set-based delete/update (`ExecuteDelete`/`ExecuteUpdate` are relational-only), so
+`DeleteMany`/`UpdateMany` load the matching documents and modify them through the context.
+
+## Versioning
+
+Pick the package major that matches your runtime — this library targets **.NET 8** and **.NET 10**, and each
+runtime is published as its **own package major** so the EF Core lines never mix:
 
 | Your app | Install | Targets |
 |---|---|---|
@@ -83,18 +159,6 @@ so the EF Core lines never mix:
 > `eQuantic.Core.Data.EntityFramework.Relational`) stay in the **4.x** line on purpose — a neutral lane that
 > must not be read as a .NET version. You normally consume only the provider package for your runtime
 > (8.x / 10.x), which pulls the right shared assemblies transitively.
-
-## Install
-
-```bash
-# .NET 8 app + SQL Server
-dotnet add package eQuantic.Core.Data.EntityFramework.SqlServer --version 8.*
-
-# .NET 10 app + PostgreSQL
-dotnet add package eQuantic.Core.Data.EntityFramework.PostgreSql --version 10.*
-```
-
-Swap the suffix for `PostgreSql`, `MySql` or `MongoDb` as needed.
 
 ## Learn more
 
