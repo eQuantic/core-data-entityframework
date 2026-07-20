@@ -12,13 +12,12 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
-permissions:
-  contents: read
-
 jobs:
   build:
     name: Build ${{ matrix.project }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -60,6 +59,8 @@ jobs:
   test:
     name: Test ${{ matrix.project }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -85,6 +86,8 @@ jobs:
   publish:
     name: Publish to NuGet.org
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: [build, test]
     # This environment gates the publish behind whatever protection rules are configured for it in
     # the repo's Settings -> Environments (e.g. required reviewers). GitHub auto-creates an environment
