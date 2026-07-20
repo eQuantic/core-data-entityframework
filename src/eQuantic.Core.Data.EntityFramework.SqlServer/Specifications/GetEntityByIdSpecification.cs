@@ -8,7 +8,7 @@ using eQuantic.Linq.Specification;
 namespace eQuantic.Core.Data.EntityFramework.SqlServer.Specifications;
 
 public class GetEntityByIdSpecification<TEntity, TKey> : Specification<TEntity>
-    where TEntity : class, IEntity<TKey>, new()
+    where TEntity : class, IEntity<TKey>
 {
     private readonly TKey _id;
     private readonly RelationalUnitOfWork _unitOfWork;

@@ -8,7 +8,7 @@ namespace eQuantic.Core.Data.EntityFramework.PostgreSql.Repository;
 ///     PostgreSQL entity set. The implementation lives in <see cref="RelationalSet{TEntity}" />; this
 ///     type is preserved for source compatibility.
 /// </summary>
-public class Set<TEntity> : RelationalSet<TEntity> where TEntity : class, IEntity, new()
+public class Set<TEntity> : RelationalSet<TEntity> where TEntity : class, IEntity
 {
     public Set(DbContext context) : base(context)
     {
