@@ -8,8 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using eQuantic.Core.Data.EntityFramework.Relational.Repository.Extensions;
-using eQuantic.Core.Data.Repository.Config;
-using eQuantic.Core.Data.Repository.Sql;
+using eQuantic.Core.Data.EntityFramework.Relational.Sql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using eQuantic.Core.Data.EntityFramework.Relational.Sql;
 using eQuantic.Core.Data.Repository;
 using eQuantic.Core.Data.Repository.Options;
-using eQuantic.Core.Data.Repository.Sql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -119,14 +119,15 @@ public abstract class RelationalUnitOfWork<TDbContext> : RelationalUnitOfWork, I
         return CommitAsync(cancellationToken);
     }
 
-    Data.Repository.ISet<TEntity> IQueryableUnitOfWork.CreateSet<TEntity>() => InternalCreateSet<TEntity>();
+    public Data.Repository.ISet<TEntity> CreateSet<TEntity>() where TEntity : class, IEntity =>
+        InternalCreateSet<TEntity>();
 
-    public void ApplyCurrentValues<TEntity>(TEntity original, TEntity current) where TEntity : class, IEntity, new()
+    public void ApplyCurrentValues<TEntity>(TEntity original, TEntity current) where TEntity : class, IEntity
     {
         ((RelationalSet<TEntity>)InternalCreateSet<TEntity>()).ApplyCurrentValues(original, current);
     }
 
-    public void Attach<TEntity>(TEntity item) where TEntity : class, IEntity, new()
+    public void Attach<TEntity>(TEntity item) where TEntity : class, IEntity
     {
         ((RelationalSet<TEntity>)InternalCreateSet<TEntity>()).Attach(item);
     }
@@ -137,27 +138,27 @@ public abstract class RelationalUnitOfWork<TDbContext> : RelationalUnitOfWork, I
     }
 
     public void LoadProperty<TEntity, TComplexProperty>(TEntity item, Expression<Func<TEntity, TComplexProperty>> selector)
-        where TEntity : class, IEntity, new()
+        where TEntity : class, IEntity
         where TComplexProperty : class
     {
         ((RelationalSet<TEntity>)InternalCreateSet<TEntity>()).LoadProperty(item, selector);
     }
 
     public void LoadProperty<TEntity>(TEntity item, string propertyName)
-        where TEntity : class, IEntity, new()
+        where TEntity : class, IEntity
     {
         ((RelationalSet<TEntity>)InternalCreateSet<TEntity>()).LoadProperty(item, propertyName);
     }
 
     public Task LoadPropertyAsync<TEntity, TComplexProperty>(TEntity item, Expression<Func<TEntity, TComplexProperty>> selector, CancellationToken cancellationToken = default)
-        where TEntity : class, IEntity, new()
+        where TEntity : class, IEntity
         where TComplexProperty : class
     {
         return ((RelationalSet<TEntity>)InternalCreateSet<TEntity>()).LoadPropertyAsync(item, selector, cancellationToken);
     }
 
     public Task LoadPropertyAsync<TEntity>(TEntity item, string propertyName, CancellationToken cancellationToken = default)
-        where TEntity : class, IEntity, new()
+        where TEntity : class, IEntity
     {
         return ((RelationalSet<TEntity>)InternalCreateSet<TEntity>()).LoadPropertyAsync(item, propertyName, cancellationToken);
     }
@@ -229,42 +230,35 @@ public abstract class RelationalUnitOfWork<TDbContext> : RelationalUnitOfWork, I
         }
     }
 
-    public virtual Data.Repository.ISet<TEntity> CreateSet<TEntity>() where TEntity : class, IEntity, new() =>
-        InternalCreateSet<TEntity>();
-
     public virtual SaveOptions GetSaveOptions()
     {
         return new SaveOptions();
     }
 
-    public virtual IRepository<TUnitOfWork, TEntity, TKey> GetRepository<TUnitOfWork, TEntity, TKey>()
-        where TEntity : class, IEntity, new() where TUnitOfWork : IUnitOfWork
+    public virtual IRepository<TEntity, TKey> GetRepository<TEntity, TKey>()
+        where TEntity : class, IEntity<TKey>
     {
-        var repo = _serviceProvider.GetRequiredService<IRepository<TUnitOfWork, TEntity, TKey>>();
-        return repo;
+        return _serviceProvider.GetRequiredService<IRepository<TEntity, TKey>>();
     }
 
-    public IAsyncRepository<TUnitOfWork, TEntity, TKey> GetAsyncRepository<TUnitOfWork, TEntity, TKey>()
-        where TEntity : class, IEntity, new()
-        where TUnitOfWork : IUnitOfWork
+    public IAsyncRepository<TEntity, TKey> GetAsyncRepository<TEntity, TKey>()
+        where TEntity : class, IEntity<TKey>
     {
-        return _serviceProvider.GetRequiredService<IAsyncRepository<TUnitOfWork, TEntity, TKey>>();
+        return _serviceProvider.GetRequiredService<IAsyncRepository<TEntity, TKey>>();
     }
 
-    public IQueryableRepository<TUnitOfWork, TEntity, TKey> GetQueryableRepository<TUnitOfWork, TEntity, TKey>()
-        where TEntity : class, IEntity, new()
-        where TUnitOfWork : IQueryableUnitOfWork
+    public IQueryableRepository<TEntity, TKey> GetQueryableRepository<TEntity, TKey>()
+        where TEntity : class, IEntity<TKey>
     {
-        return _serviceProvider.GetRequiredService<IQueryableRepository<TUnitOfWork, TEntity, TKey>>();
+        return _serviceProvider.GetRequiredService<IQueryableRepository<TEntity, TKey>>();
     }
 
-    public IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey> GetAsyncQueryableRepository<TUnitOfWork, TEntity, TKey>()
-        where TEntity : class, IEntity, new()
-        where TUnitOfWork : IQueryableUnitOfWork
+    public IAsyncQueryableRepository<TEntity, TKey> GetAsyncQueryableRepository<TEntity, TKey>()
+        where TEntity : class, IEntity<TKey>
     {
-        return _serviceProvider.GetRequiredService<IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey>>();
+        return _serviceProvider.GetRequiredService<IAsyncQueryableRepository<TEntity, TKey>>();
     }
 
-    private Data.Repository.ISet<TEntity> InternalCreateSet<TEntity>() where TEntity : class, IEntity, new() =>
+    private Data.Repository.ISet<TEntity> InternalCreateSet<TEntity>() where TEntity : class, IEntity =>
         new RelationalSet<TEntity>(_context);
 }

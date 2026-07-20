@@ -1,4 +1,4 @@
-using eQuantic.Core.Data.Repository.Config;
+using eQuantic.Core.Data.EntityFramework.Relational.Sql;
 using Microsoft.EntityFrameworkCore;
 
 namespace eQuantic.Core.Data.EntityFramework.Relational.Repository.Extensions;
