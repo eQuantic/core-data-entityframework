@@ -7,13 +7,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using eQuantic.Core.Data.EntityFramework.Repository.Extensions;
 using eQuantic.Core.Data.Repository;
-using eQuantic.Core.Data.Repository.Config;
+using eQuantic.Core.Data.Repository.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace eQuantic.Core.Data.EntityFramework.Repository;
 
-public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEntity : class, IEntity, new()
+public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEntity : class, IEntity
 {
     internal readonly DbContext DbContext;
 
@@ -38,7 +38,7 @@ public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEn
     {
         InternalDbSet.AddRange(entities);
     }
-    
+
     public virtual Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
     {
         return InternalDbSet.AddRangeAsync(entities, cancellationToken);
@@ -48,7 +48,7 @@ public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEn
     {
         return InternalDbSet.AddRangeAsync(entities);
     }
-    
+
     public virtual void ApplyCurrentValues(TEntity original, TEntity current)
     {
         //if it is not attached, attach original and set current values
@@ -84,7 +84,7 @@ public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEn
     {
         return InternalDbSet.Equals(obj);
     }
-    
+
     public virtual IEnumerable<TEntity> Execute()
     {
         return InternalDbSet.ToList();
@@ -97,17 +97,17 @@ public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEn
 
     public virtual async Task<TEntity> FindAsync(object[] keyValues, CancellationToken cancellationToken)
     {
-        return await InternalDbSet.FindAsync(keyValues, cancellationToken);
+        return await InternalDbSet.FindAsync(keyValues, cancellationToken).ConfigureAwait(false);
     }
 
     public virtual async Task<TEntity> FindAsync(params object[] keyValues)
     {
-        return await InternalDbSet.FindAsync(keyValues);
+        return await InternalDbSet.FindAsync(keyValues).ConfigureAwait(false);
     }
 
     public virtual async Task<TEntity> FindAsync<TKey>(TKey key, CancellationToken cancellationToken = default)
     {
-        return await InternalDbSet.FindAsync(new object[] { key }, cancellationToken);
+        return await InternalDbSet.FindAsync(new object[] { key }, cancellationToken).ConfigureAwait(false);
     }
 
     public virtual IEnumerator<TEntity> GetEnumerator()
@@ -132,7 +132,7 @@ public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEn
 
     public virtual async Task InsertAsync(TEntity item, CancellationToken cancellationToken = default)
     {
-        await InternalDbSet.AddAsync(item, cancellationToken);
+        await InternalDbSet.AddAsync(item, cancellationToken).ConfigureAwait(false);
     }
 
     public virtual EntityEntry<TEntity> Remove(TEntity entity)
@@ -158,7 +158,7 @@ public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEn
         {
             return;
         }
-        
+
         //this operation also attach item in object state manager
         entry.State = EntityState.Modified;
     }
@@ -187,21 +187,28 @@ public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEn
     {
         InternalDbSet.UpdateRange(entities);
     }
-    
+
     internal Expression<Func<TEntity, bool>> GetExpression<TKey>(TKey id)
     {
         return DbContext.GetFindByKeyExpression<TEntity, TKey>(id);
     }
-    
-    protected static TConfig GetConfig<TConfig>(Action<TConfig> configuration)
-        where TConfig : Configuration<TEntity>, new()
-    {
-        var config = new TConfig();
-        configuration?.Invoke(config);
-        return config;
-    }
 
-    public abstract IQueryable<TEntity> GetQueryable<TConfig>(Action<TConfig> configuration,
-        Func<IQueryable<TEntity>, IQueryable<TEntity>> internalQueryAction)
-        where TConfig : Configuration<TEntity>, new();
+    /// <summary>
+    ///     Shapes a query from this set using the supplied <see cref="QueryOptions{TEntity}" />. The
+    ///     translation (before-customization → specification/filter → the per-call
+    ///     <paramref name="internalQueryAction" /> → includes → sortings → no-tracking → ignore
+    ///     query-filters → tag → after-customization) lives in
+    ///     <see cref="QueryableExtensions.ApplyOptions{TEntity}" /> so relational and document providers
+    ///     share it. The query starts from the underlying <see cref="DbSet{TEntity}" /> (not the set
+    ///     wrapper) so it is a real EF queryable and the async materialization operators work even when no
+    ///     shaping is applied.
+    /// </summary>
+    /// <param name="options">The query options, or <c>null</c> for no shaping.</param>
+    /// <param name="internalQueryAction">An optional per-call transformation (e.g. an explicit filter).</param>
+    /// <returns>The shaped query.</returns>
+    internal IQueryable<TEntity> GetQueryable(QueryOptions<TEntity> options,
+        Func<IQueryable<TEntity>, IQueryable<TEntity>> internalQueryAction = null)
+    {
+        return InternalDbSet.ApplyOptions(options, internalQueryAction);
+    }
 }

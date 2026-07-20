@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using eQuantic.Core.Data.Repository;
 using eQuantic.Core.Data.Repository.Write;
@@ -6,20 +7,21 @@ using eQuantic.Linq.Specification;
 
 namespace eQuantic.Core.Data.EntityFramework.Repository.Write;
 
-public class WriteRepository<TUnitOfWork, TEntity> : IWriteRepository<TUnitOfWork, TEntity>
-    where TUnitOfWork : IQueryableUnitOfWork
-    where TEntity : class, IEntity, new()
+public class WriteRepository<TEntity> : IWriteRepository<TEntity>
+    where TEntity : class, IEntity
 {
     internal SetBase<TEntity> _dbSet;
     private bool _disposed;
-    internal bool OwnUnitOfWork { get; set; } = true;
 
-    public WriteRepository(TUnitOfWork unitOfWork)
+    public WriteRepository(IQueryableUnitOfWork unitOfWork)
     {
         UnitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 
-    public TUnitOfWork UnitOfWork { get; private set; }
+    /// <summary>
+    /// The associated queryable unit of work.
+    /// </summary>
+    public IQueryableUnitOfWork UnitOfWork { get; private set; }
 
     public void Add(TEntity item)
     {
@@ -29,6 +31,16 @@ public class WriteRepository<TUnitOfWork, TEntity> : IWriteRepository<TUnitOfWor
         }
 
         GetSet().Insert(item);
+    }
+
+    public void AddRange(IEnumerable<TEntity> items)
+    {
+        if (items == null)
+        {
+            throw new ArgumentNullException(nameof(items));
+        }
+
+        GetSet().AddRange(items);
     }
 
     public long DeleteMany(Expression<Func<TEntity, bool>> filter)
@@ -49,12 +61,6 @@ public class WriteRepository<TUnitOfWork, TEntity> : IWriteRepository<TUnitOfWor
         }
 
         return DeleteMany(specification.SatisfiedBy());
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
     }
 
     public void Merge(TEntity persisted, TEntity current)
@@ -121,6 +127,12 @@ public class WriteRepository<TUnitOfWork, TEntity> : IWriteRepository<TUnitOfWor
         return UpdateMany(specification.SatisfiedBy(), updateFactory);
     }
 
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
     protected virtual void Dispose(bool disposing)
     {
         if (_disposed)
@@ -128,11 +140,8 @@ public class WriteRepository<TUnitOfWork, TEntity> : IWriteRepository<TUnitOfWor
             return;
         }
 
-        if (disposing && OwnUnitOfWork)
-        {
-            UnitOfWork?.Dispose();
-        }
-
+        // The UnitOfWork is injected, not created here, so its creator owns its lifetime. Disposing it
+        // here would tear down the shared DbContext out from under the other repositories in the scope.
         _disposed = true;
     }
 

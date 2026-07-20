@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,23 +9,32 @@ using eQuantic.Linq.Specification;
 
 namespace eQuantic.Core.Data.EntityFramework.Repository.Write;
 
-public class AsyncWriteRepository<TUnitOfWork, TEntity> : WriteRepository<TUnitOfWork, TEntity>,
-    IAsyncWriteRepository<TUnitOfWork, TEntity>
-    where TUnitOfWork : IQueryableUnitOfWork
-    where TEntity : class, IEntity, new()
+public class AsyncWriteRepository<TEntity> : WriteRepository<TEntity>,
+    IAsyncWriteRepository<TEntity>
+    where TEntity : class, IEntity
 {
-    public AsyncWriteRepository(TUnitOfWork unitOfWork) : base(unitOfWork)
+    public AsyncWriteRepository(IQueryableUnitOfWork unitOfWork) : base(unitOfWork)
     {
     }
 
-    public Task AddAsync(TEntity item)
+    public Task AddAsync(TEntity item, CancellationToken cancellationToken = default)
     {
         if (item == null)
         {
             throw new ArgumentNullException(nameof(item));
         }
 
-        return GetSet().InsertAsync(item);
+        return GetSet().InsertAsync(item, cancellationToken);
+    }
+
+    public Task AddRangeAsync(IEnumerable<TEntity> items, CancellationToken cancellationToken = default)
+    {
+        if (items == null)
+        {
+            throw new ArgumentNullException(nameof(items));
+        }
+
+        return GetSet().AddRangeAsync(items, cancellationToken);
     }
 
     public Task<long> DeleteManyAsync(Expression<Func<TEntity, bool>> filter,
@@ -93,5 +103,4 @@ public class AsyncWriteRepository<TUnitOfWork, TEntity> : WriteRepository<TUnitO
 
         return this.UpdateManyAsync(specification.SatisfiedBy(), updateFactory, cancellationToken);
     }
-
 }

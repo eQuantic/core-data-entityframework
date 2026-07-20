@@ -18,7 +18,7 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
     ///     The context
     /// </summary>
     protected readonly DbContext Context;
-    
+
     /// <summary>
     ///     The disposed
     /// </summary>
@@ -34,7 +34,7 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
         ServiceProvider = serviceProvider;
         Context = context;
     }
-    
+
     public int Commit()
     {
         return Context.SaveChanges();
@@ -74,7 +74,7 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
         {
             try
             {
-                changes = await Context.SaveChangesAsync(cancellationToken);
+                changes = await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                 saveFailed = false;
             }
@@ -92,7 +92,7 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
 
     public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {
-        return await Context.SaveChangesAsync(cancellationToken);
+        return await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public int Commit(Action<SaveOptions> options)
@@ -115,16 +115,16 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
         return CommitAsync(cancellationToken);
     }
 
-    public void ApplyCurrentValues<TEntity>(TEntity original, TEntity current) where TEntity : class, IEntity, new()
+    public void ApplyCurrentValues<TEntity>(TEntity original, TEntity current) where TEntity : class, IEntity
     {
         ((Set<TEntity>)InternalCreateSet<TEntity>()).ApplyCurrentValues(original, current);
     }
 
-    public void Attach<TEntity>(TEntity item) where TEntity : class, IEntity, new()
+    public void Attach<TEntity>(TEntity item) where TEntity : class, IEntity
     {
         ((Set<TEntity>)InternalCreateSet<TEntity>()).Attach(item);
     }
-    
+
     public void LoadCollection<TEntity, TElement>(TEntity item,
         Expression<Func<TEntity, IEnumerable<TElement>>> navigationProperty,
         Expression<Func<TElement, bool>>? filter = null) where TEntity : class where TElement : class
@@ -145,11 +145,11 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
     {
         if (filter != null)
         {
-            await Context.Entry<TEntity>(item).Collection(navigationProperty).Query().Where(filter).LoadAsync();
+            await Context.Entry<TEntity>(item).Collection(navigationProperty).Query().Where(filter).LoadAsync().ConfigureAwait(false);
         }
         else
         {
-            await Context.Entry<TEntity>(item).Collection(navigationProperty).LoadAsync();
+            await Context.Entry<TEntity>(item).Collection(navigationProperty).LoadAsync().ConfigureAwait(false);
         }
     }
 
@@ -179,42 +179,38 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
     {
         return new SaveOptions();
     }
-    
-    public virtual IRepository<TUnitOfWork, TEntity, TKey> GetRepository<TUnitOfWork, TEntity, TKey>()
-        where TEntity : class, IEntity, new() where TUnitOfWork : IUnitOfWork
+
+    public virtual IRepository<TEntity, TKey> GetRepository<TEntity, TKey>()
+        where TEntity : class, IEntity<TKey>
     {
-        var repo = ServiceProvider.GetRequiredService<IRepository<TUnitOfWork, TEntity, TKey>>();
-        return repo;
+        return ServiceProvider.GetRequiredService<IRepository<TEntity, TKey>>();
     }
 
-    public IAsyncRepository<TUnitOfWork, TEntity, TKey> GetAsyncRepository<TUnitOfWork, TEntity, TKey>()
-        where TEntity : class, IEntity, new() 
-        where TUnitOfWork : IUnitOfWork
+    public IAsyncRepository<TEntity, TKey> GetAsyncRepository<TEntity, TKey>()
+        where TEntity : class, IEntity<TKey>
     {
-        return ServiceProvider.GetRequiredService<IAsyncRepository<TUnitOfWork, TEntity, TKey>>();
+        return ServiceProvider.GetRequiredService<IAsyncRepository<TEntity, TKey>>();
     }
 
-    public Data.Repository.ISet<TEntity> CreateSet<TEntity>() where TEntity : class, IEntity, new() => InternalCreateSet<TEntity>();
+    public Data.Repository.ISet<TEntity> CreateSet<TEntity>() where TEntity : class, IEntity => InternalCreateSet<TEntity>();
 
-    public IQueryableRepository<TUnitOfWork, TEntity, TKey> GetQueryableRepository<TUnitOfWork, TEntity, TKey>()
-        where TEntity : class, IEntity, new() 
-        where TUnitOfWork : IQueryableUnitOfWork
+    public IQueryableRepository<TEntity, TKey> GetQueryableRepository<TEntity, TKey>()
+        where TEntity : class, IEntity<TKey>
     {
-        return ServiceProvider.GetRequiredService<IQueryableRepository<TUnitOfWork, TEntity, TKey>>();
+        return ServiceProvider.GetRequiredService<IQueryableRepository<TEntity, TKey>>();
     }
 
-    public IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey> GetAsyncQueryableRepository<TUnitOfWork, TEntity, TKey>()
-        where TEntity : class, IEntity, new() 
-        where TUnitOfWork : IQueryableUnitOfWork
+    public IAsyncQueryableRepository<TEntity, TKey> GetAsyncQueryableRepository<TEntity, TKey>()
+        where TEntity : class, IEntity<TKey>
     {
-        return ServiceProvider.GetRequiredService<IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey>>();
+        return ServiceProvider.GetRequiredService<IAsyncQueryableRepository<TEntity, TKey>>();
     }
-    
+
     internal DbContext GetDbContext() => Context;
-    
-    internal Data.Repository.ISet<TEntity> InternalCreateSet<TEntity>() where TEntity : class, IEntity, new() =>
+
+    internal Data.Repository.ISet<TEntity> InternalCreateSet<TEntity>() where TEntity : class, IEntity =>
         new Set<TEntity>(ServiceProvider, Context);
-    
+
     /// <summary>
     ///     Disposes this instance
     /// </summary>
@@ -223,7 +219,7 @@ public abstract class UnitOfWork : IQueryableUnitOfWork
         Dispose(true);
         GC.SuppressFinalize(this);
     }
-    
+
     /// <summary>
     ///     Disposes the disposing
     /// </summary>

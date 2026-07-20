@@ -10,6 +10,8 @@
 
     <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="6.0.4"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.10"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0"/>
         <PackageReference Include="NUnit" Version="4.5.0" />
         <PackageReference Include="NUnit.Analyzers" Version="4.7.0"/>
@@ -21,7 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\eQuantic.Core.Data.EntityFramework.SqlServer\eQuantic.Core.Data.EntityFramework.SqlServer.csproj" />
+      <ProjectReference Include="..\..\src\eQuantic.Core.Data.EntityFramework.SqlServer\eQuantic.Core.Data.EntityFramework.SqlServer.Net10.csproj" />
     </ItemGroup>
 
 </Project>

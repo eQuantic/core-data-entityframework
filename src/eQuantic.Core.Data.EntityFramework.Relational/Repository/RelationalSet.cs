@@ -1,0 +1,229 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
+using eQuantic.Core.Data.EntityFramework.Repository;
+using eQuantic.Core.Data.Repository;
+using Microsoft.EntityFrameworkCore;
+#if NET6_0 || NETSTANDARD2_1
+using Z.EntityFramework.Plus;
+#endif
+
+namespace eQuantic.Core.Data.EntityFramework.Relational.Repository;
+
+/// <summary>
+///     The shared relational entity set used by the SqlServer, PostgreSql and MySql providers.
+/// </summary>
+public class RelationalSet<TEntity> : SetBase<TEntity> where TEntity : class, IEntity
+{
+    public RelationalSet(DbContext context) : base(context)
+    {
+    }
+
+    public override long DeleteMany(Expression<Func<TEntity, bool>> filter)
+    {
+#if NET6_0 || NETSTANDARD2_1
+        return InternalDbSet.Where(filter).Delete();
+#else
+        return InternalDbSet.Where(filter).ExecuteDelete();
+#endif
+    }
+
+    public override async Task<long> DeleteManyAsync(Expression<Func<TEntity, bool>> filter,
+        CancellationToken cancellationToken = default)
+    {
+#if NET6_0 || NETSTANDARD2_1
+        return await InternalDbSet.Where(filter).DeleteAsync(cancellationToken).ConfigureAwait(false);
+#else
+        return await InternalDbSet.Where(filter).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+#endif
+    }
+
+    public void LoadCollection<TChildEntity, TComplexProperty>(TChildEntity item,
+        Expression<Func<TChildEntity, IEnumerable<TComplexProperty>>> selector)
+        where TChildEntity : class
+        where TComplexProperty : class
+    {
+        DbContext.Entry(item).Collection(selector).Load();
+    }
+
+    public void LoadCollection<TChildEntity>(TChildEntity item, string propertyName)
+        where TChildEntity : class
+    {
+        DbContext.Entry(item).Collection(propertyName).Load();
+    }
+
+    public async Task LoadCollectionAsync<TChildEntity, TComplexProperty>(TChildEntity item,
+        Expression<Func<TChildEntity, IEnumerable<TComplexProperty>>> selector)
+        where TChildEntity : class where TComplexProperty : class
+    {
+        await DbContext.Entry(item).Collection(selector).LoadAsync().ConfigureAwait(false);
+    }
+
+    public async Task LoadCollectionAsync<TChildEntity>(TChildEntity item, string propertyName)
+        where TChildEntity : class
+    {
+        await DbContext.Entry(item).Collection(propertyName).LoadAsync().ConfigureAwait(false);
+    }
+
+    public void LoadProperties(TEntity entity, params string[] properties)
+    {
+        if (properties is not { Length: > 0 })
+        {
+            return;
+        }
+
+        foreach (var property in properties)
+        {
+            if (string.IsNullOrEmpty(property))
+            {
+                continue;
+            }
+
+            var props = property.Split('.');
+
+            if (props.Length == 1)
+            {
+                LoadProperty(entity, property);
+            }
+            else
+            {
+                LoadCascade(props, entity);
+            }
+        }
+    }
+
+    public async Task LoadPropertiesAsync(TEntity entity, params string[] properties)
+    {
+        if (properties is { Length: > 0 })
+        {
+            foreach (var property in properties)
+            {
+                if (string.IsNullOrEmpty(property))
+                {
+                    continue;
+                }
+
+                var props = property.Split('.');
+
+                if (props.Length == 1)
+                {
+                    await LoadPropertyAsync(entity, property).ConfigureAwait(false);
+                }
+                else
+                {
+                    await LoadCascadeAsync(props, entity).ConfigureAwait(false);
+                }
+            }
+        }
+    }
+
+    public void LoadProperty<TChildEntity, TComplexProperty>(TChildEntity item,
+        Expression<Func<TChildEntity, TComplexProperty>> selector)
+        where TChildEntity : class
+        where TComplexProperty : class
+    {
+        DbContext.Entry(item).Reference(selector).Load();
+    }
+
+    public void LoadProperty<TChildEntity>(TChildEntity item, string propertyName)
+        where TChildEntity : class
+    {
+        if (typeof(IEnumerable).IsAssignableFrom(typeof(TChildEntity).GetProperty(propertyName)!.PropertyType))
+        {
+            DbContext.Entry(item).Collection(propertyName).Load();
+        }
+        else
+        {
+            DbContext.Entry(item).Reference(propertyName).Load();
+        }
+    }
+
+    public async Task LoadPropertyAsync<TChildEntity, TComplexProperty>(TChildEntity item,
+        Expression<Func<TChildEntity, TComplexProperty>> selector, CancellationToken cancellationToken = default)
+        where TChildEntity : class where TComplexProperty : class
+    {
+        await DbContext.Entry(item).Reference(selector).LoadAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task LoadPropertyAsync<TChildEntity>(TChildEntity item, string propertyName,
+        CancellationToken cancellationToken = default)
+        where TChildEntity : class
+    {
+        if (typeof(IEnumerable).IsAssignableFrom(typeof(TChildEntity).GetProperty(propertyName)!.PropertyType))
+        {
+            await DbContext.Entry(item).Collection(propertyName).LoadAsync(cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await DbContext.Entry(item).Reference(propertyName).LoadAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    public override long UpdateMany(Expression<Func<TEntity, bool>> filter,
+        Expression<Func<TEntity, TEntity>> updateExpression)
+    {
+#if NET6_0 || NETSTANDARD2_1
+        return InternalDbSet.Where(filter).Update(updateExpression);
+#else
+        var convertedExpression = ExpressionConverter<TEntity>.ConvertExpression(updateExpression);
+        return InternalDbSet.Where(filter).ExecuteUpdate(convertedExpression);
+#endif
+    }
+
+    public override async Task<long> UpdateManyAsync(Expression<Func<TEntity, bool>> filter,
+        Expression<Func<TEntity, TEntity>> updateExpression, CancellationToken cancellationToken = default)
+    {
+#if NET6_0 || NETSTANDARD2_1
+        return await InternalDbSet.Where(filter).UpdateAsync(updateExpression, cancellationToken).ConfigureAwait(false);
+#else
+        var convertedExpression = ExpressionConverter<TEntity>.ConvertExpression(updateExpression);
+        return await InternalDbSet.Where(filter).ExecuteUpdateAsync(convertedExpression, cancellationToken).ConfigureAwait(false);
+#endif
+    }
+
+    private void LoadCascade(string[] props, object obj, int index = 0)
+    {
+        if (obj == null)
+        {
+            return;
+        }
+
+        var prop = obj.GetType().GetProperty(props[index]);
+        var nextObj = prop?.GetValue(obj);
+        if (nextObj == null)
+        {
+            LoadProperty(obj, props[index]);
+            nextObj = prop?.GetValue(obj);
+        }
+
+        if (props.Length > index + 1)
+        {
+            LoadCascade(props, nextObj, index + 1);
+        }
+    }
+
+    private async Task LoadCascadeAsync(string[] props, object obj, int index = 0)
+    {
+        if (obj == null)
+        {
+            return;
+        }
+
+        var prop = obj.GetType().GetProperty(props[index]);
+        var nextObj = prop?.GetValue(obj);
+        if (nextObj == null)
+        {
+            await LoadPropertyAsync(obj, props[index]).ConfigureAwait(false);
+            nextObj = prop?.GetValue(obj);
+        }
+
+        if (props.Length > index + 1)
+        {
+            await LoadCascadeAsync(props, nextObj, index + 1).ConfigureAwait(false);
+        }
+    }
+}

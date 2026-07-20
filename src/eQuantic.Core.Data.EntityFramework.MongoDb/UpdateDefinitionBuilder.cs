@@ -37,9 +37,51 @@ internal static class UpdateDefinitionBuilder
 
     private static object? GetValueFromExpression(Expression expression, IReadOnlyList<ParameterExpression> parameters)
     {
+        // The value is evaluated against a fresh default instance of the entity. Any assignment that
+        // reads the entity (e.g. x => x.Count + 1) would therefore be evaluated against Count == 0 and
+        // silently write the constant 1 to every matched document instead of incrementing it. Reject
+        // such expressions loudly rather than corrupting data; only constant/closure values are safe.
+        if (ReferencesParameter(expression, parameters))
+        {
+            throw new NotSupportedException(
+                "The MongoDB update builder does not support update expressions that reference the " +
+                "entity being updated (e.g. x => x.Count + 1). Such an expression would be evaluated " +
+                "against a default instance and would overwrite documents with a constant value. Use a " +
+                "constant or captured value instead.");
+        }
+
         var lambda = Expression.Lambda(expression, parameters);
         var compiledLambda = lambda.Compile();
         return compiledLambda.DynamicInvoke(Activator.CreateInstance(parameters[0].Type));
+    }
+
+    private static bool ReferencesParameter(Expression expression, IReadOnlyList<ParameterExpression> parameters)
+    {
+        var detector = new ParameterReferenceDetector(parameters);
+        detector.Visit(expression);
+        return detector.Found;
+    }
+
+    private sealed class ParameterReferenceDetector : ExpressionVisitor
+    {
+        private readonly IReadOnlyList<ParameterExpression> _parameters;
+
+        public ParameterReferenceDetector(IReadOnlyList<ParameterExpression> parameters)
+        {
+            _parameters = parameters;
+        }
+
+        public bool Found { get; private set; }
+
+        protected override Expression VisitParameter(ParameterExpression node)
+        {
+            if (_parameters.Contains(node))
+            {
+                Found = true;
+            }
+
+            return base.VisitParameter(node);
+        }
     }
 
     private static bool IsSimpleType(Type type)

@@ -1,8 +1,9 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using eQuantic.Core.Data.EntityFramework.Repository.Options;
 using eQuantic.Core.Data.Repository;
-using eQuantic.Core.Data.Repository.Sql;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -31,7 +32,7 @@ public static class ServiceCollectionExtensions
     {
         var repoOptions = GetOptions(options);
         var lifetime = repoOptions.GetLifetime();
-        
+
         AddUnitOfWork<TUnitOfWorkInterface, TUnitOfWorkImpl>(services, lifetime);
         AddGenericRepositories(services, lifetime);
 
@@ -44,7 +45,7 @@ public static class ServiceCollectionExtensions
     {
         var repoOptions = GetOptions(options);
         var lifetime = repoOptions.GetLifetime();
-        
+
         AddUnitOfWork<IQueryableUnitOfWork, TQueryableUnitOfWork>(services, lifetime);
         AddGenericRepositories(services, lifetime);
 
@@ -57,7 +58,7 @@ public static class ServiceCollectionExtensions
     {
         var repoOptions = GetOptions(options);
         var lifetime = repoOptions.GetLifetime();
-        
+
         AddUnitOfWork<IQueryableUnitOfWork, TQueryableUnitOfWork>(services, lifetime);
         AddRepositories(services, repoOptions);
 
@@ -70,33 +71,33 @@ public static class ServiceCollectionExtensions
     {
         services.TryAdd(new ServiceDescriptor(typeof(TUnitOfWorkInterface), typeof(TUnitOfWorkImpl), lifetime));
         services.TryAdd(new ServiceDescriptor(typeof(IQueryableUnitOfWork), sp => sp.GetRequiredService<TUnitOfWorkInterface>(), lifetime));
-
-        services.TryAdd(new ServiceDescriptor(typeof(ISqlUnitOfWork), sp => sp.GetRequiredService<TUnitOfWorkInterface>(), lifetime));
-        services.TryAdd(new ServiceDescriptor(typeof(IQueryableUnitOfWork), sp => sp.GetRequiredService<TUnitOfWorkInterface>(), lifetime));
     }
 
     private static void AddGenericRepositories(IServiceCollection services, ServiceLifetime lifetime)
     {
-        services.TryAdd(new ServiceDescriptor(typeof(IQueryableRepository<,,>), typeof(QueryableRepository<,,>), lifetime));
-        services.TryAdd(new ServiceDescriptor(typeof(IAsyncQueryableRepository<,,>), typeof(AsyncQueryableRepository<,,>), lifetime));
+        services.TryAdd(new ServiceDescriptor(typeof(IRepository<,>), typeof(QueryableRepository<,>), lifetime));
+        services.TryAdd(new ServiceDescriptor(typeof(IQueryableRepository<,>), typeof(QueryableRepository<,>), lifetime));
+        services.TryAdd(new ServiceDescriptor(typeof(IAsyncRepository<,>), typeof(AsyncQueryableRepository<,>), lifetime));
+        services.TryAdd(new ServiceDescriptor(typeof(IAsyncQueryableRepository<,>), typeof(AsyncQueryableRepository<,>), lifetime));
     }
-    
+
     private static void AddRepositories(IServiceCollection services, RepositoryOptions repoOptions)
     {
+        var lifetime = repoOptions.GetLifetime();
         var types = repoOptions.GetAssemblies()
-            .SelectMany(o => o.GetTypes())
+            .SelectMany(GetLoadableTypes)
             .Where(o => o is { IsAbstract: false, IsInterface: false } &&
                         o.GetInterfaces().Any(i => i == typeof(IRepository)));
         foreach (var type in types)
         {
-            AddRepository(typeof(IRepository<,,>), type, services);
-            AddRepository(typeof(IAsyncRepository<,,>), type, services);
-            AddRepository(typeof(IQueryableRepository<,,>), type, services);
-            AddRepository(typeof(IAsyncQueryableRepository<,,>), type, services);
+            AddRepository(typeof(IRepository<,>), type, services, lifetime);
+            AddRepository(typeof(IAsyncRepository<,>), type, services, lifetime);
+            AddRepository(typeof(IQueryableRepository<,>), type, services, lifetime);
+            AddRepository(typeof(IAsyncQueryableRepository<,>), type, services, lifetime);
         }
     }
 
-    private static void AddRepository(Type interfaceType, Type type, IServiceCollection services)
+    private static void AddRepository(Type interfaceType, Type type, IServiceCollection services, ServiceLifetime lifetime)
     {
         var interfaces = type.GetInterfaces();
         var repoInterface = interfaces.FirstOrDefault(o =>
@@ -107,11 +108,27 @@ public static class ServiceCollectionExtensions
             return;
         }
 
-        var uowType = repoInterface.GenericTypeArguments[0];
-        var entityType = repoInterface.GenericTypeArguments[1];
-        var keyType = repoInterface.GenericTypeArguments[2];
+        var entityType = repoInterface.GenericTypeArguments[0];
+        var keyType = repoInterface.GenericTypeArguments[1];
 
-        services.AddTransient(interfaceType.MakeGenericType(uowType, entityType, keyType), type);
+        // Honour the configured lifetime instead of forcing Transient, and use TryAdd so calling the
+        // registration twice does not produce duplicate descriptors.
+        services.TryAdd(new ServiceDescriptor(
+            interfaceType.MakeGenericType(entityType, keyType), type, lifetime));
+    }
+
+    private static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
+    {
+        // Assembly.GetTypes() throws ReflectionTypeLoadException when a dependency cannot be loaded;
+        // fall back to the types that did load instead of failing the whole registration at startup.
+        try
+        {
+            return assembly.GetTypes();
+        }
+        catch (ReflectionTypeLoadException ex)
+        {
+            return ex.Types.Where(t => t != null)!;
+        }
     }
 
     private static RepositoryOptions GetOptions(Action<RepositoryOptions> options)

@@ -1,0 +1,111 @@
+name: Release
+
+# Only a pushed version tag (e.g. v10.0.3) triggers a release. A plain push to any branch — including
+# master — no longer publishes anything; that was the previous, unintentional behavior (see
+# docs/IMPROVEMENT_PLAN.md, finding Q1). To release: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build ${{ matrix.project }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.csproj
+          - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net8.csproj
+          - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net10.csproj
+          - src/eQuantic.Core.Data.EntityFramework.Relational/eQuantic.Core.Data.EntityFramework.Relational.csproj
+          - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net8.csproj
+          - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net10.csproj
+          - src/eQuantic.Core.Data.EntityFramework.MySql/eQuantic.Core.Data.EntityFramework.MySql.Net8.csproj
+          - src/eQuantic.Core.Data.EntityFramework.MySql/eQuantic.Core.Data.EntityFramework.MySql.Net10.csproj
+          - src/eQuantic.Core.Data.EntityFramework.PostgreSql/eQuantic.Core.Data.EntityFramework.PostgreSql.Net8.csproj
+          - src/eQuantic.Core.Data.EntityFramework.PostgreSql/eQuantic.Core.Data.EntityFramework.PostgreSql.Net10.csproj
+          - src/eQuantic.Core.Data.EntityFramework.MongoDb/eQuantic.Core.Data.EntityFramework.MongoDb.Net8.csproj
+          - src/eQuantic.Core.Data.EntityFramework.MongoDb/eQuantic.Core.Data.EntityFramework.MongoDb.Net10.csproj
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+      - name: Build & pack
+        run: dotnet build ${{ matrix.project }} --configuration Release -p:ContinuousIntegrationBuild=true
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg-${{ strategy.job-index }}
+          path: artifacts/*.nupkg
+          if-no-files-found: error
+          retention-days: 7
+
+  test:
+    name: Test ${{ matrix.project }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - tests/eQuantic.Core.Data.EntityFramework.Tests/eQuantic.Core.Data.EntityFramework.Tests.csproj
+          - tests/eQuantic.Core.Data.EntityFramework.SqlServer.Tests/eQuantic.Core.Data.EntityFramework.SqlServer.Tests.csproj
+          - tests/eQuantic.Core.Data.EntityFramework.MongoDb.Tests/eQuantic.Core.Data.EntityFramework.MongoDb.Tests.csproj
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+      - name: Test
+        run: dotnet test ${{ matrix.project }} --configuration Release
+
+  publish:
+    name: Publish to NuGet.org
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [build, test]
+    # This environment gates the publish behind whatever protection rules are configured for it in
+    # the repo's Settings -> Environments (e.g. required reviewers). GitHub auto-creates an environment
+    # on first use with NO protection rules, so a repo admin must add them for the gate to be effective.
+    environment:
+      name: nuget-release
+      url: https://www.nuget.org/profiles/eQuantic
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Download all package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: nupkg-*
+          path: artifacts
+          merge-multiple: true
+      - name: Push to NuGet.org
+        env:
+          NUGET_KEY: ${{ secrets.nuget_key }}
+        run: dotnet nuget push "artifacts/*.nupkg" --skip-duplicate -k "$NUGET_KEY" -s https://api.nuget.org/v3/index.json

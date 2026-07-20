@@ -4,8 +4,7 @@
 	<PropertyGroup>
 		<Description>Core Data library for Entity Framework</Description>
 		<AssemblyTitle>eQuantic.Core.Data.EntityFramework</AssemblyTitle>
-		<Version>8.1.2.0</Version>
-		<Authors>eQuantic Systems</Authors>
+		<Version>8.2.0.0</Version>
 		<TargetFramework>net8.0</TargetFramework>
 		<AssemblyName>eQuantic.Core.Data.EntityFramework</AssemblyName>
 		<PackageId>eQuantic.Core.Data.EntityFramework</PackageId>
@@ -13,32 +12,19 @@
 		<PackageReleaseNotes>Entity ignorant persistance with Repository Pattern for Entity
 			Framework</PackageReleaseNotes>
 
-		<PackageProjectUrl>https://github.com/eQuantic/core-data-entityframework</PackageProjectUrl>
-		<PackageOutputPath>../../artifacts/</PackageOutputPath>
-		<GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-		<GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-		<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<RepositoryUrl>https://github.com/eQuantic/core-data-entityframework</RepositoryUrl>
-		<RepositoryType>Git</RepositoryType>
-		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<Copyright>Copyright © 2016</Copyright>
-		<AssemblyVersion>8.1.2.0</AssemblyVersion>
-		<FileVersion>8.1.2.0</FileVersion>
-		<PackageIcon>Icon.png</PackageIcon>
-		<LangVersion>latest</LangVersion>
+		<AssemblyVersion>8.2.0.0</AssemblyVersion>
+		<FileVersion>8.2.0.0</FileVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="eQuantic.Core" Version="1.8.4" />
-		<PackageReference Include="eQuantic.Core.Data" Version="4.3.2" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.24" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.24">
+		<PackageReference Include="eQuantic.Core.Data" Version="5.1.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.29" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.29">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.24">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.29">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
@@ -49,8 +35,6 @@
 		<None Include="Icon_details.png" Pack="true" PackagePath="Icon_details.png" />
 		<None Include="Icon_dialog.png" Pack="true" PackagePath="Icon_dialog.png" />
 		<None Include="Icon_list.png" Pack="true" PackagePath="Icon_list.png" />
-		<None Include="../../LICENSE" Pack="true" PackagePath="" />
-		<None Include="../../README.md" Pack="true" PackagePath="" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -68,6 +52,9 @@
 		</AssemblyAttribute>
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
 			<_Parameter1>$(AssemblyName).MongoDb</_Parameter1>
+		</AssemblyAttribute>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>$(AssemblyName).Relational</_Parameter1>
 		</AssemblyAttribute>
 	</ItemGroup>
 </Project>
