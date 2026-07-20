@@ -34,6 +34,8 @@ jobs:
           - src/eQuantic.Core.Data.EntityFramework.PostgreSql/eQuantic.Core.Data.EntityFramework.PostgreSql.Net10.csproj
           - src/eQuantic.Core.Data.EntityFramework.MongoDb/eQuantic.Core.Data.EntityFramework.MongoDb.Net8.csproj
           - src/eQuantic.Core.Data.EntityFramework.MongoDb/eQuantic.Core.Data.EntityFramework.MongoDb.Net10.csproj
+          - src/eQuantic.Core.Data.EntityFramework.CosmosDb/eQuantic.Core.Data.EntityFramework.CosmosDb.Net8.csproj
+          - src/eQuantic.Core.Data.EntityFramework.CosmosDb/eQuantic.Core.Data.EntityFramework.CosmosDb.Net10.csproj
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -68,6 +70,7 @@ jobs:
           - tests/eQuantic.Core.Data.EntityFramework.Tests/eQuantic.Core.Data.EntityFramework.Tests.csproj
           - tests/eQuantic.Core.Data.EntityFramework.SqlServer.Tests/eQuantic.Core.Data.EntityFramework.SqlServer.Tests.csproj
           - tests/eQuantic.Core.Data.EntityFramework.MongoDb.Tests/eQuantic.Core.Data.EntityFramework.MongoDb.Tests.csproj
+          - tests/eQuantic.Core.Data.EntityFramework.CosmosDb.Tests/eQuantic.Core.Data.EntityFramework.CosmosDb.Tests.csproj
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4

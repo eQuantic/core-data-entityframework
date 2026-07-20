@@ -63,11 +63,26 @@ end up as one predicate the provider translates. The full query-string grammar i
 | `eQuantic.Core.Data.EntityFramework.PostgreSql` | PostgreSQL |
 | `eQuantic.Core.Data.EntityFramework.MySql` | MySQL (Pomelo) |
 | `eQuantic.Core.Data.EntityFramework.MongoDb` | MongoDB (EF Core provider) |
+| `eQuantic.Core.Data.EntityFramework.CosmosDb` | Azure Cosmos DB (EF Core provider) |
 
-The three relational providers share `eQuantic.Core.Data.EntityFramework.Relational`; every provider builds
-on the base `eQuantic.Core.Data.EntityFramework`. Register your `DbContext`-backed unit of work and the
-open-generic repositories through `AddRelationalRepositories<TUnitOfWorkInterface, TUnitOfWorkImpl>()` — the
-full wiring is in the [walkthrough](Repository.md).
+The three relational providers share `eQuantic.Core.Data.EntityFramework.Relational`; the document providers
+(`MongoDb`, `CosmosDb`) are non-relational and build directly on the base
+`eQuantic.Core.Data.EntityFramework`. Register your `DbContext`-backed unit of work and the open-generic
+repositories through `AddRelationalRepositories<TUnitOfWorkInterface, TUnitOfWorkImpl>()` (relational) or the
+base `AddQueryableRepositories<TUnitOfWork>()` (document) — the full wiring is in the
+[walkthrough](Repository.md).
+
+**Azure Cosmos DB:** scope a read to one logical partition with the Cosmos-specific `WithPartitionKey`
+extension so it doesn't fan out into a cross-partition scan:
+
+```csharp
+new QueryOptions<OrderData>()
+    .WithPartitionKey(tenantId)
+    .Where(o => o.Status, FilterOperator.Equal, OrderStatus.Paid);
+```
+
+Cosmos has no server-side set-based delete/update (`ExecuteDelete`/`ExecuteUpdate` are relational-only), so
+`DeleteMany`/`UpdateMany` load the matching documents and modify them through the context.
 
 ## Versioning — pick the package major that matches your runtime
 
@@ -94,7 +109,7 @@ dotnet add package eQuantic.Core.Data.EntityFramework.SqlServer --version 8.*
 dotnet add package eQuantic.Core.Data.EntityFramework.PostgreSql --version 10.*
 ```
 
-Swap the suffix for `PostgreSql`, `MySql` or `MongoDb` as needed.
+Swap the suffix for `PostgreSql`, `MySql`, `MongoDb` or `CosmosDb` as needed.
 
 ## Learn more
 

@@ -54,6 +54,9 @@
 			<_Parameter1>$(AssemblyName).MongoDb</_Parameter1>
 		</AssemblyAttribute>
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>$(AssemblyName).CosmosDb</_Parameter1>
+		</AssemblyAttribute>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
 			<_Parameter1>$(AssemblyName).Relational</_Parameter1>
 		</AssemblyAttribute>
 	</ItemGroup>
