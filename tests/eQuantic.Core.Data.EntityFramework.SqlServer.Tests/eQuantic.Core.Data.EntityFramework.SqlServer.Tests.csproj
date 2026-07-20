@@ -23,7 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\eQuantic.Core.Data.EntityFramework.SqlServer\eQuantic.Core.Data.EntityFramework.SqlServer.csproj" />
+      <ProjectReference Include="..\..\src\eQuantic.Core.Data.EntityFramework.SqlServer\eQuantic.Core.Data.EntityFramework.SqlServer.Net10.csproj" />
     </ItemGroup>
 
 </Project>

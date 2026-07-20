@@ -7,10 +7,10 @@ using eQuantic.Core.Data.Repository.Options;
 namespace eQuantic.Core.Data.EntityFramework.Tests.Fakes;
 
 /// <summary>
-///     A non-relational unit of work: it implements <see cref="IQueryableUnitOfWork" /> but NOT
-///     <see cref="eQuantic.Core.Data.Repository.Sql.ISqlUnitOfWork" /> — mirroring the MongoDb provider.
-///     Members throw because the DI-registration tests only inspect the service collection; the fake is
-///     never instantiated or resolved.
+///     A non-relational unit of work: it implements <see cref="IQueryableUnitOfWork" /> but not the
+///     relational SQL unit-of-work contract — mirroring the MongoDb provider. Members throw because the
+///     DI-registration tests only inspect the service collection; the fake is never instantiated or
+///     resolved.
 /// </summary>
 internal sealed class FakeQueryableUnitOfWork : IQueryableUnitOfWork
 {
@@ -36,26 +36,22 @@ internal sealed class FakeQueryableUnitOfWork : IQueryableUnitOfWork
 
     public void RollbackChanges() => throw new NotSupportedException();
 
-    public IRepository<TUnitOfWork, TEntity, TKey> GetRepository<TUnitOfWork, TEntity, TKey>()
-        where TEntity : class, IEntity, new()
-        where TUnitOfWork : IUnitOfWork
+    public IRepository<TEntity, TKey> GetRepository<TEntity, TKey>()
+        where TEntity : class, IEntity<TKey>
         => throw new NotSupportedException();
 
-    public IAsyncRepository<TUnitOfWork, TEntity, TKey> GetAsyncRepository<TUnitOfWork, TEntity, TKey>()
-        where TEntity : class, IEntity, new()
-        where TUnitOfWork : IUnitOfWork
+    public IAsyncRepository<TEntity, TKey> GetAsyncRepository<TEntity, TKey>()
+        where TEntity : class, IEntity<TKey>
         => throw new NotSupportedException();
 
-    public eQuantic.Core.Data.Repository.ISet<TEntity> CreateSet<TEntity>() where TEntity : class, IEntity, new()
+    public eQuantic.Core.Data.Repository.ISet<TEntity> CreateSet<TEntity>() where TEntity : class, IEntity
         => throw new NotSupportedException();
 
-    public IQueryableRepository<TUnitOfWork, TEntity, TKey> GetQueryableRepository<TUnitOfWork, TEntity, TKey>()
-        where TEntity : class, IEntity, new()
-        where TUnitOfWork : IQueryableUnitOfWork
+    public IQueryableRepository<TEntity, TKey> GetQueryableRepository<TEntity, TKey>()
+        where TEntity : class, IEntity<TKey>
         => throw new NotSupportedException();
 
-    public IAsyncQueryableRepository<TUnitOfWork, TEntity, TKey> GetAsyncQueryableRepository<TUnitOfWork, TEntity, TKey>()
-        where TEntity : class, IEntity, new()
-        where TUnitOfWork : IQueryableUnitOfWork
+    public IAsyncQueryableRepository<TEntity, TKey> GetAsyncQueryableRepository<TEntity, TKey>()
+        where TEntity : class, IEntity<TKey>
         => throw new NotSupportedException();
 }

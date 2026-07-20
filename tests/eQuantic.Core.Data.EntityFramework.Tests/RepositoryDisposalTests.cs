@@ -14,7 +14,7 @@ public class RepositoryDisposalTests
     public void Dispose_AsyncQueryableRepository_DoesNotDisposeInjectedUnitOfWork()
     {
         var unitOfWork = new FakeQueryableUnitOfWork();
-        var repository = new AsyncQueryableRepository<FakeQueryableUnitOfWork, FakeEntity, int>(unitOfWork);
+        var repository = new AsyncQueryableRepository<FakeEntity, int>(unitOfWork);
 
         repository.Dispose();
 
@@ -26,7 +26,7 @@ public class RepositoryDisposalTests
     public void Dispose_AsyncQueryableRepository_IsIdempotent()
     {
         var unitOfWork = new FakeQueryableUnitOfWork();
-        var repository = new AsyncQueryableRepository<FakeQueryableUnitOfWork, FakeEntity, int>(unitOfWork);
+        var repository = new AsyncQueryableRepository<FakeEntity, int>(unitOfWork);
 
         repository.Dispose();
         repository.Dispose();
@@ -39,7 +39,7 @@ public class RepositoryDisposalTests
     {
         var unitOfWork = new FakeQueryableUnitOfWork();
         var repository = new eQuantic.Core.Data.EntityFramework.Repository.Read
-            .QueryableReadRepository<FakeQueryableUnitOfWork, FakeEntity, int>(unitOfWork);
+            .QueryableReadRepository<FakeEntity, int>(unitOfWork);
 
         repository.Dispose();
 

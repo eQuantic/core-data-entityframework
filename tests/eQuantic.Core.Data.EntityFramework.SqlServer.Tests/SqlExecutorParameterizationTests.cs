@@ -1,8 +1,7 @@
 using System;
 using eQuantic.Core.Data.EntityFramework.Relational.Repository;
+using eQuantic.Core.Data.EntityFramework.Relational.Sql;
 using eQuantic.Core.Data.EntityFramework.SqlServer.Repository;
-using eQuantic.Core.Data.Repository.Config;
-using eQuantic.Core.Data.Repository.Sql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 

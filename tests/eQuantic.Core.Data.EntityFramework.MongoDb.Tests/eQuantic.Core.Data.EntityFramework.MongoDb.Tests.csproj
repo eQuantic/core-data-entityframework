@@ -21,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\eQuantic.Core.Data.EntityFramework.MongoDb\eQuantic.Core.Data.EntityFramework.MongoDb.csproj" />
+      <ProjectReference Include="..\..\src\eQuantic.Core.Data.EntityFramework.MongoDb\eQuantic.Core.Data.EntityFramework.MongoDb.Net8.csproj" />
     </ItemGroup>
 
 </Project>

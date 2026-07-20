@@ -4,7 +4,8 @@ using System.Linq.Expressions;
 using eQuantic.Core.Data.EntityFramework.Repository.Extensions;
 using eQuantic.Core.Data.EntityFramework.Repository.Read;
 using eQuantic.Core.Data.EntityFramework.SqlServer.Repository;
-using eQuantic.Core.Data.Repository.Config;
+using eQuantic.Core.Data.Repository;
+using eQuantic.Core.Data.Repository.Options;
 using eQuantic.Linq.Specification;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,16 +13,21 @@ using Microsoft.Extensions.DependencyInjection;
 namespace eQuantic.Core.Data.EntityFramework.SqlServer.Tests;
 
 /// <summary>
-///     Integration coverage (EF Core InMemory) for the read-repository query fixes:
-///     A1 — <c>All</c>/<c>Any</c> with a specification must honour the caller's configuration.
+///     Integration coverage (EF Core InMemory) for the read-repository query fixes, ported to the v5
+///     <see cref="QueryOptions{TEntity}" />-based read surface:
+///     A1 — <c>All</c>/<c>Any</c> must honour the caller's query options.
 ///     A2 — <c>Get</c> must not reject a default-valued key (e.g. <c>0</c>) as a null argument.
 /// </summary>
 public class ReadRepositoryQueryTests
 {
-    private sealed class Product : eQuantic.Core.Data.Repository.IEntity
+    private sealed class Product : IEntity<int>
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
+
+        public int GetKey() => Id;
+
+        public void SetKey(int key) => Id = key;
     }
 
     private sealed class TestDbContext(DbContextOptions options) : DbContext(options)
@@ -43,14 +49,14 @@ public class ReadRepositoryQueryTests
         return new DefaultUnitOfWork(new ServiceCollection().BuildServiceProvider(), context);
     }
 
-    private static QueryableReadRepository<DefaultUnitOfWork, Product, int> NewRepository(out TestDbContext context)
+    private static QueryableReadRepository<Product, int> NewRepository(out TestDbContext context)
         => new(NewUnitOfWork(out context));
 
-    private static AsyncQueryableReadRepository<DefaultUnitOfWork, Product, int> NewAsyncRepository(out TestDbContext context)
+    private static AsyncQueryableReadRepository<Product, int> NewAsyncRepository(out TestDbContext context)
         => new(NewUnitOfWork(out context));
 
     [Test]
-    public void All_WithSpecification_HonoursConfiguration()
+    public void All_WithOptions_HonoursConfiguration()
     {
         var repository = NewRepository(out var context);
         context.Products.AddRange(
@@ -58,27 +64,29 @@ public class ReadRepositoryQueryTests
             new Product { Id = 2, Name = "inactive" });
         context.SaveChanges();
 
-        // The "inactive" row does not satisfy the specification, so without the configuration being
-        // applied All() would evaluate over both rows and return false. The configuration narrows the
-        // query to the "active" row, so the fixed code returns true.
+        // The "inactive" row does not satisfy the predicate, so without the options being applied All()
+        // would evaluate over both rows and return false. The options narrow the query to the "active"
+        // row, so the fixed code returns true.
+        var spec = new NameSpecification("active");
         var result = repository.All(
-            new NameSpecification("active"),
-            cfg => cfg.WithAfterCustomization(q => q.Where(p => p.Name == "active")));
+            spec.SatisfiedBy(),
+            new QueryOptions<Product>().WithAfterCustomization(q => q.Where(p => p.Name == "active")));
 
         Assert.That(result, Is.True);
     }
 
     [Test]
-    public void Any_WithSpecification_HonoursConfiguration()
+    public void Any_WithOptions_HonoursConfiguration()
     {
         var repository = NewRepository(out var context);
         context.Products.Add(new Product { Id = 1, Name = "active" });
         context.SaveChanges();
 
-        // The configuration filters out every row, so Any() must return false once it is applied.
+        // The options filter out every row, so Any() must return false once they are applied.
         var result = repository.Any(
-            new NameSpecification("active"),
-            cfg => cfg.WithAfterCustomization(q => q.Where(_ => false)));
+            new QueryOptions<Product>()
+                .Where(new NameSpecification("active"))
+                .WithAfterCustomization(q => q.Where(_ => false)));
 
         Assert.That(result, Is.False);
     }
@@ -110,14 +118,14 @@ public class ReadRepositoryQueryTests
     }
 
     [Test]
-    public void Get_WithConfiguration_UsesKeyExpression_ReturnsEntity()
+    public void Get_WithOptions_UsesKeyExpression_ReturnsEntity()
     {
         var repository = NewRepository(out var context);
         context.Products.Add(new Product { Id = 7, Name = "seven" });
         context.SaveChanges();
 
-        // A non-null configuration routes Get through GetFindByKeyExpression instead of DbSet.Find.
-        var found = repository.Get(7, _ => { });
+        // Non-null options route Get through GetFindByKeyExpression instead of DbSet.Find.
+        var found = repository.Get(7, new QueryOptions<Product>());
 
         Assert.That(found, Is.Not.Null);
         Assert.That(found!.Name, Is.EqualTo("seven"));
@@ -147,7 +155,7 @@ public class ReadRepositoryQueryTests
             new Product { Id = 3, Name = "c" });
         context.SaveChanges();
 
-        var all = await repository.GetAllAsync(System.Threading.CancellationToken.None);
+        var all = await repository.GetAllAsync();
 
         Assert.That(all.Count(), Is.EqualTo(3));
     }
@@ -163,7 +171,7 @@ public class ReadRepositoryQueryTests
             new Product { Id = 2, Name = "b" });
         context.SaveChanges();
 
-        var firstPage = repository.GetPaged(p => true, 1, 2, null).ToList();
+        var firstPage = repository.GetPaged(PageRequest.Of(1, 2)).Items;
 
         Assert.That(firstPage.Select(p => p.Id), Is.EqualTo(new[] { 1, 2 }));
     }
@@ -180,8 +188,10 @@ public class ReadRepositoryQueryTests
 
         // Caller orders descending; the primary-key fallback must NOT override it.
         var firstPage = repository
-            .GetPaged(p => true, 1, 2, cfg => cfg.WithAfterCustomization(q => q.OrderByDescending(p => p.Id)))
-            .ToList();
+            .GetPaged(
+                PageRequest.Of(1, 2),
+                new QueryOptions<Product>().WithAfterCustomization(q => q.OrderByDescending(p => p.Id)))
+            .Items;
 
         Assert.That(firstPage.Select(p => p.Id), Is.EqualTo(new[] { 3, 2 }));
     }
