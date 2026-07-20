@@ -4,15 +4,15 @@
 	<PropertyGroup>
 		<Description>Core Data library for Entity Framework</Description>
 		<AssemblyTitle>eQuantic.Core.Data.EntityFramework</AssemblyTitle>
-		<Version>4.5.0.0</Version>
+		<Version>4.6.0.0</Version>
 		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
 		<AssemblyName>eQuantic.Core.Data.EntityFramework</AssemblyName>
 		<PackageId>eQuantic.Core.Data.EntityFramework</PackageId>
 		<PackageTags>eQuantic;Core;Data;Library;Repository;Pattern</PackageTags>
 		<PackageReleaseNotes>Entity ignorant persistance with Repository Pattern for Entity Framework</PackageReleaseNotes>
 
-		<AssemblyVersion>4.5.0.0</AssemblyVersion>
-		<FileVersion>4.5.0.0</FileVersion>
+		<AssemblyVersion>4.6.0.0</AssemblyVersion>
+		<FileVersion>4.6.0.0</FileVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
