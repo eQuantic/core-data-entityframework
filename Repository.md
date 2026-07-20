@@ -105,16 +105,18 @@ generic repositories registered above:
 
 ```csharp
 // asynchronous read + write:
-IAsyncQueryableRepository<OrderData, Guid> orders =
-    unitOfWork.GetAsyncQueryableRepository<OrderData, Guid>();
+IAsyncRepository<OrderData, Guid> orders =
+    unitOfWork.GetAsyncRepository<OrderData, Guid>();
 
 // synchronous sibling:
-IQueryableRepository<OrderData, Guid> ordersSync =
-    unitOfWork.GetQueryableRepository<OrderData, Guid>();
+IRepository<OrderData, Guid> ordersSync =
+    unitOfWork.GetRepository<OrderData, Guid>();
 ```
 
-`GetAsyncRepository<TEntity, TKey>()` / `GetRepository<TEntity, TKey>()` return the `IAsyncRepository`/
-`IRepository` shapes and are served by **custom** repositories (§8).
+All four accessors resolve from the generic registration above — the plain
+`GetAsyncRepository`/`GetRepository` shown here and the richer
+`GetAsyncQueryableRepository`/`GetQueryableRepository` variants (which add the `IQueryable`/`ISet` surface).
+Custom repositories (§8) layer your own named interface on top of the same wiring.
 
 ## 5. Reading — one `QueryOptions`
 
@@ -295,12 +297,12 @@ public class OrderService
     public OrderService(IAppUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
     public Task<OrderData?> GetAsync(Guid id, CancellationToken ct = default) =>
-        _unitOfWork.GetAsyncQueryableRepository<OrderData, Guid>()
+        _unitOfWork.GetAsyncRepository<OrderData, Guid>()
             .GetAsync(id, new QueryOptions<OrderData>().Include(nameof(OrderData.Customer)), ct);
 
     public async Task<Guid> CreateAsync(OrderData order, CancellationToken ct = default)
     {
-        var repo = _unitOfWork.GetAsyncQueryableRepository<OrderData, Guid>();
+        var repo = _unitOfWork.GetAsyncRepository<OrderData, Guid>();
         await repo.AddAsync(order, ct);
         await _unitOfWork.CommitAsync(ct);
         return order.Id;
@@ -308,7 +310,7 @@ public class OrderService
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        var repo = _unitOfWork.GetAsyncQueryableRepository<OrderData, Guid>();
+        var repo = _unitOfWork.GetAsyncRepository<OrderData, Guid>();
         var order = await repo.GetAsync(id, cancellationToken: ct);
         if (order is null) return false;
 
@@ -317,7 +319,7 @@ public class OrderService
     }
 
     public Task<PagedResult<OrderData>> FindAsync(decimal minTotal, int pageIndex, int pageSize, CancellationToken ct = default) =>
-        _unitOfWork.GetAsyncQueryableRepository<OrderData, Guid>()
+        _unitOfWork.GetAsyncRepository<OrderData, Guid>()
             .GetPagedAsync(
                 PageRequest.Of(pageIndex, pageSize),
                 new QueryOptions<OrderData>()
@@ -328,7 +330,7 @@ public class OrderService
                 ct);
 
     public Task<decimal> RevenueAsync(CancellationToken ct = default) =>
-        _unitOfWork.GetAsyncQueryableRepository<OrderData, Guid>()
+        _unitOfWork.GetAsyncRepository<OrderData, Guid>()
             .SumAsync(o => o.Total, new QueryOptions<OrderData>().Where(o => o.Status, FilterOperator.Equal, OrderStatus.Paid), ct);
 }
 ```

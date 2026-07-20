@@ -15,7 +15,9 @@ namespace eQuantic.Core.Data.EntityFramework.Repository;
 public class AsyncQueryableRepository<TEntity, TKey> :
     AsyncQueryableReadRepository<TEntity, TKey>,
     IAsyncQueryableRepository<TEntity, TKey>,
-    IQueryableRepository<TEntity, TKey>
+    IQueryableRepository<TEntity, TKey>,
+    IAsyncRepository<TEntity, TKey>,
+    IRepository<TEntity, TKey>
     where TEntity : class, IEntity<TKey>
 {
     private readonly AsyncWriteRepository<TEntity> _asyncWriteRepository;

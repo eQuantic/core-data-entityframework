@@ -13,7 +13,8 @@ namespace eQuantic.Core.Data.EntityFramework.Repository;
 [ExcludeFromCodeCoverage]
 public class QueryableRepository<TEntity, TKey> :
     QueryableReadRepository<TEntity, TKey>,
-    IQueryableRepository<TEntity, TKey>
+    IQueryableRepository<TEntity, TKey>,
+    IRepository<TEntity, TKey>
     where TEntity : class, IEntity<TKey>
 {
     private readonly IWriteRepository<TEntity> _writeRepository;

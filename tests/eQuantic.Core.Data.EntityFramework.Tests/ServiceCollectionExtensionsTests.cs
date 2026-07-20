@@ -27,6 +27,23 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Test]
+    public void AddQueryableRepositories_WiresPlainRepositories_SoGetRepositoryResolves()
+    {
+        var services = new ServiceCollection();
+
+        services.AddQueryableRepositories<FakeQueryableUnitOfWork>();
+
+        // IUnitOfWork.GetRepository / GetAsyncRepository return IRepository<,> / IAsyncRepository<,>
+        // (the plain siblings of the queryable interfaces). The generic registration must also serve
+        // these — the concrete queryable repositories implement the plain interfaces too — otherwise the
+        // contract's headline accessors throw at runtime.
+        Assert.That(services.Any(d => d.ServiceType == typeof(IRepository<,>)), Is.True,
+            "The open-generic IRepository must be registered so GetRepository resolves.");
+        Assert.That(services.Any(d => d.ServiceType == typeof(IAsyncRepository<,>)), Is.True,
+            "The open-generic IAsyncRepository must be registered so GetAsyncRepository resolves.");
+    }
+
+    [Test]
     public void AddQueryableRepositories_IsSqlAgnostic_DoesNotRegisterSqlUnitOfWork()
     {
         var services = new ServiceCollection();
