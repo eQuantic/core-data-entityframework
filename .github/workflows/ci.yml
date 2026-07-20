@@ -17,28 +17,16 @@ jobs:
       matrix:
         project:
           - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.csproj
-          - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net6.csproj
-          - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net7.csproj
           - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net8.csproj
-          - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net9.csproj
           - src/eQuantic.Core.Data.EntityFramework/eQuantic.Core.Data.EntityFramework.Net10.csproj
           - src/eQuantic.Core.Data.EntityFramework.Relational/eQuantic.Core.Data.EntityFramework.Relational.csproj
-          - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.csproj
-          - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net6.csproj
-          - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net7.csproj
           - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net8.csproj
-          - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net9.csproj
           - src/eQuantic.Core.Data.EntityFramework.SqlServer/eQuantic.Core.Data.EntityFramework.SqlServer.Net10.csproj
-          - src/eQuantic.Core.Data.EntityFramework.MySql/eQuantic.Core.Data.EntityFramework.MySql.csproj
           - src/eQuantic.Core.Data.EntityFramework.MySql/eQuantic.Core.Data.EntityFramework.MySql.Net8.csproj
-          - src/eQuantic.Core.Data.EntityFramework.MySql/eQuantic.Core.Data.EntityFramework.MySql.Net9.csproj
           - src/eQuantic.Core.Data.EntityFramework.MySql/eQuantic.Core.Data.EntityFramework.MySql.Net10.csproj
-          - src/eQuantic.Core.Data.EntityFramework.PostgreSql/eQuantic.Core.Data.EntityFramework.PostgreSql.csproj
           - src/eQuantic.Core.Data.EntityFramework.PostgreSql/eQuantic.Core.Data.EntityFramework.PostgreSql.Net8.csproj
-          - src/eQuantic.Core.Data.EntityFramework.PostgreSql/eQuantic.Core.Data.EntityFramework.PostgreSql.Net9.csproj
           - src/eQuantic.Core.Data.EntityFramework.PostgreSql/eQuantic.Core.Data.EntityFramework.PostgreSql.Net10.csproj
-          - src/eQuantic.Core.Data.EntityFramework.MongoDb/eQuantic.Core.Data.EntityFramework.MongoDb.csproj
-          - src/eQuantic.Core.Data.EntityFramework.MongoDb/eQuantic.Core.Data.EntityFramework.MongoDb.Net9.csproj
+          - src/eQuantic.Core.Data.EntityFramework.MongoDb/eQuantic.Core.Data.EntityFramework.MongoDb.Net8.csproj
           - src/eQuantic.Core.Data.EntityFramework.MongoDb/eQuantic.Core.Data.EntityFramework.MongoDb.Net10.csproj
     steps:
       - uses: actions/checkout@v4
