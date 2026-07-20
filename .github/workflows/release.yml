@@ -12,6 +12,9 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build ${{ matrix.project }}
@@ -100,4 +103,6 @@ jobs:
           path: artifacts
           merge-multiple: true
       - name: Push to NuGet.org
-        run: dotnet nuget push "artifacts/*.nupkg" --skip-duplicate -k ${{ secrets.nuget_key }} -s https://api.nuget.org/v3/index.json
+        env:
+          NUGET_KEY: ${{ secrets.nuget_key }}
+        run: dotnet nuget push "artifacts/*.nupkg" --skip-duplicate -k "$NUGET_KEY" -s https://api.nuget.org/v3/index.json
