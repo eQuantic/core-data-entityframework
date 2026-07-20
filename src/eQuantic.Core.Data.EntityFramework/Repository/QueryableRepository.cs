@@ -1,388 +1,89 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using eQuantic.Core.Data.EntityFramework.Repository.Read;
 using eQuantic.Core.Data.EntityFramework.Repository.Write;
 using eQuantic.Core.Data.Repository;
-using eQuantic.Core.Data.Repository.Config;
-using eQuantic.Core.Data.Repository.Read;
 using eQuantic.Core.Data.Repository.Write;
 using eQuantic.Linq.Specification;
 
 namespace eQuantic.Core.Data.EntityFramework.Repository;
 
 [ExcludeFromCodeCoverage]
-public class QueryableRepository<TUnitOfWork, TEntity, TKey> :
-    IRepository<TUnitOfWork, QueryableConfiguration<TEntity>, TEntity, TKey>,
-    IQueryableRepository<TUnitOfWork, TEntity, TKey>
-    where TUnitOfWork : IQueryableUnitOfWork
-    where TEntity : class, IEntity, new()
+public class QueryableRepository<TEntity, TKey> :
+    QueryableReadRepository<TEntity, TKey>,
+    IQueryableRepository<TEntity, TKey>
+    where TEntity : class, IEntity<TKey>
 {
-    private readonly IQueryableReadRepository<TUnitOfWork, TEntity, TKey> _readRepository;
-    private readonly IWriteRepository<TUnitOfWork, TEntity> _writeRepository;
-
-    /// <summary>
-    ///     Shared disposal flag. Kept <c>protected</c> so derived repositories observe the same state
-    ///     instead of shadowing it — shadowing let both levels run their disposal block and dispose the
-    ///     unit of work twice.
-    /// </summary>
-    protected bool Disposed;
+    private readonly IWriteRepository<TEntity> _writeRepository;
 
     /// <summary>
     /// Create a new instance of repository
     /// </summary>
     /// <param name="unitOfWork">Associated Unit Of Work</param>
-    public QueryableRepository(TUnitOfWork unitOfWork)
+    public QueryableRepository(IQueryableUnitOfWork unitOfWork) : base(unitOfWork)
     {
-        this.UnitOfWork = unitOfWork;
-        var readRepository = new QueryableReadRepository<TUnitOfWork, TEntity, TKey>(unitOfWork);
-        readRepository.OwnUnitOfWork = false;
-        this._readRepository = readRepository;
-        
-        var writeRepository = new WriteRepository<TUnitOfWork, TEntity>(unitOfWork);
-        writeRepository.OwnUnitOfWork = false;
-        this._writeRepository = writeRepository;
+        _writeRepository = new WriteRepository<TEntity>(unitOfWork);
     }
-
-    public TUnitOfWork UnitOfWork { get; private set; }
 
     public void Add(TEntity item)
     {
-        this._writeRepository.Add(item);
+        _writeRepository.Add(item);
     }
 
-    public IEnumerable<TEntity> AllMatching(ISpecification<TEntity> specification,
-        Action<QueryableConfiguration<TEntity>> configuration = default)
+    public void AddRange(IEnumerable<TEntity> items)
     {
-        return this._readRepository.AllMatching(specification, configuration);
-    }
-
-    public long Count()
-    {
-        return this._readRepository.Count();
-    }
-
-    public long Count(ISpecification<TEntity> specification)
-    {
-        return this._readRepository.Count(specification);
-    }
-
-    public long Count(Expression<Func<TEntity, bool>> filter)
-    {
-        return this._readRepository.Count(filter);
-    }
-    
-    public int Sum(Expression<Func<TEntity, int>> source)
-    {
-        return _readRepository.Sum(source);
-    }
-    public int Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, int>> source)
-    {
-        return _readRepository.Sum(specification, source);
-    }
-    public int Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, int>> source)
-    {
-        return _readRepository.Sum(filter, source);
-    }
-
-    public int? Sum(Expression<Func<TEntity, int?>> source)
-    {
-        return _readRepository.Sum(source);
-    }
-    public int? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, int?>> source)
-    {
-        return _readRepository.Sum(specification, source);
-    }
-    public int? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, int?>> source)
-    {
-        return _readRepository.Sum(filter, source);
-    }
-
-    public long Sum(Expression<Func<TEntity, long>> source)
-    {
-        return _readRepository.Sum(source);
-    }
-    public long Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, long>> source)
-    {
-        return _readRepository.Sum(specification, source);
-    }
-    public long Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, long>> source)
-    {
-        return _readRepository.Sum(filter, source);
-    }
-
-    public long? Sum(Expression<Func<TEntity, long?>> source)
-    {
-        return _readRepository.Sum(source);
-    }
-    public long? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, long?>> source)
-    {
-        return _readRepository.Sum(specification, source);
-    }
-    public long? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, long?>> source)
-    {
-        return _readRepository.Sum(filter, source);
-    }
-
-    public double Sum(Expression<Func<TEntity, double>> source)
-    {
-        return _readRepository.Sum(source);
-    }
-    public double Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, double>> source)
-    {
-        return _readRepository.Sum(specification, source);
-    }
-    public double Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, double>> source)
-    {
-        return _readRepository.Sum(filter, source);
-    }
-
-    public double? Sum(Expression<Func<TEntity, double?>> source)
-    {
-        return _readRepository.Sum(source);
-    }
-    public double? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, double?>> source)
-    {
-        return _readRepository.Sum(specification, source);
-    }
-    public double? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, double?>> source)
-    {
-        return _readRepository.Sum(filter, source);
-    }
-
-    public float Sum(Expression<Func<TEntity, float>> source)
-    {
-        return _readRepository.Sum(source);
-    }
-    public float Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, float>> source)
-    {
-        return _readRepository.Sum(specification, source);
-    }
-    public float Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, float>> source)
-    {
-        return _readRepository.Sum(filter, source);
-    }
-
-    public float? Sum(Expression<Func<TEntity, float?>> source)
-    {
-        return _readRepository.Sum(source);
-    }
-    public float? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, float?>> source)
-    {
-        return _readRepository.Sum(specification, source);
-    }
-    public float? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, float?>> source)
-    {
-        return _readRepository.Sum(filter, source);
-    }
-
-    public decimal Sum(Expression<Func<TEntity, decimal>> source)
-    {
-        return _readRepository.Sum(source);
-    }
-    public decimal Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, decimal>> source)
-    {
-        return _readRepository.Sum(specification, source);
-    }
-    public decimal Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, decimal>> source)
-    {
-        return _readRepository.Sum(filter, source);
-    }
-
-    public decimal? Sum(Expression<Func<TEntity, decimal?>> source)
-    {
-        return _readRepository.Sum(source);
-    }
-    public decimal? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, decimal?>> source)
-    {
-        return _readRepository.Sum(specification, source);
-    }
-    public decimal? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, decimal?>> source)
-    {
-        return _readRepository.Sum(filter, source);
-    }
-
-    public bool All(ISpecification<TEntity> specification, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.All(specification, configuration);
-    }
-
-    public bool All(Expression<Func<TEntity, bool>> filter, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.All(filter, configuration);
-    }
-
-    public bool Any(Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.Any(configuration);
-    }
-
-    public bool Any(ISpecification<TEntity> specification, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.Any(specification, configuration);
-    }
-
-    public bool Any(Expression<Func<TEntity, bool>> filter, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.Any(filter, configuration);
+        _writeRepository.AddRange(items);
     }
 
     public long DeleteMany(Expression<Func<TEntity, bool>> filter)
     {
-        return this._writeRepository.DeleteMany(filter);
+        return _writeRepository.DeleteMany(filter);
     }
 
     public long DeleteMany(ISpecification<TEntity> specification)
     {
-        return this._writeRepository.DeleteMany(specification);
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    public TEntity Get(TKey id, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.Get(id, configuration);
-    }
-
-    public IEnumerable<TEntity> GetAll(Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetAll(configuration);
-    }
-
-    public IEnumerable<TResult> GetMapped<TResult>(Expression<Func<TEntity, bool>> filter,
-        Expression<Func<TEntity, TResult>> map, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetMapped(filter, map, configuration);
-    }
-
-    public IEnumerable<TResult> GetMapped<TResult>(ISpecification<TEntity> specification,
-        Expression<Func<TEntity, TResult>> map, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetMapped(specification, map, configuration);
-    }
-
-    public IEnumerable<TEntity> GetFiltered(Expression<Func<TEntity, bool>> filter,
-        Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetFiltered(filter, configuration);
-    }
-
-    public TEntity GetFirst(Expression<Func<TEntity, bool>> filter, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetFirst(filter, configuration);
-    }
-
-    public TEntity GetFirst(ISpecification<TEntity> specification, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetFirst(specification, configuration);
-    }
-
-    public TResult GetFirstMapped<TResult>(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, TResult>> map, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetFirstMapped(filter, map, configuration);
-    }
-
-    public TResult GetFirstMapped<TResult>(ISpecification<TEntity> specification, Expression<Func<TEntity, TResult>> map, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetFirstMapped(specification, map, configuration);
-    }
-
-    public IEnumerable<TEntity> GetPaged(int limit, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetPaged(limit, configuration);
-    }
-
-    public IEnumerable<TEntity> GetPaged(ISpecification<TEntity> specification, int limit,
-        Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetPaged(specification, limit, configuration);
-    }
-
-    public IEnumerable<TEntity> GetPaged(Expression<Func<TEntity, bool>> filter, int limit,
-        Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetPaged(filter, limit, configuration);
-    }
-
-    public IEnumerable<TEntity> GetPaged(int pageIndex, int pageSize, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetPaged(pageIndex, pageSize, configuration);
-    }
-
-    public IEnumerable<TEntity> GetPaged(ISpecification<TEntity> specification, int pageIndex, int pageSize,
-        Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetPaged(specification, pageIndex, pageSize, configuration);
-    }
-
-    public IEnumerable<TEntity> GetPaged(Expression<Func<TEntity, bool>> filter, int pageIndex, int pageSize,
-        Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetPaged(filter, pageIndex, pageSize, configuration);
-    }
-
-    public TEntity GetSingle(Expression<Func<TEntity, bool>> filter, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetSingle(filter, configuration);
-    }
-
-    public TEntity GetSingle(ISpecification<TEntity> specification, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return this._readRepository.GetSingle(specification, configuration);
+        return _writeRepository.DeleteMany(specification);
     }
 
     public void Merge(TEntity persisted, TEntity current)
     {
-        this._writeRepository.Merge(persisted, current);
+        _writeRepository.Merge(persisted, current);
     }
 
     public void Modify(TEntity item)
     {
-        this._writeRepository.Modify(item);
+        _writeRepository.Modify(item);
     }
 
     public void Remove(TEntity item)
     {
-        this._writeRepository.Remove(item);
+        _writeRepository.Remove(item);
     }
 
     public void TrackItem(TEntity item)
     {
-        this._writeRepository.TrackItem(item);
+        _writeRepository.TrackItem(item);
     }
 
     public long UpdateMany(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, TEntity>> updateFactory)
     {
-        return this._writeRepository.UpdateMany(filter, updateFactory);
+        return _writeRepository.UpdateMany(filter, updateFactory);
     }
 
     public long UpdateMany(ISpecification<TEntity> specification, Expression<Func<TEntity, TEntity>> updateFactory)
     {
-        return this._writeRepository.UpdateMany(specification, updateFactory);
+        return _writeRepository.UpdateMany(specification, updateFactory);
     }
 
-    protected virtual void Dispose(bool disposing)
+    protected override void Dispose(bool disposing)
     {
-        if (Disposed)
-        {
-            return;
-        }
-
         if (disposing)
         {
-            this._readRepository?.Dispose();
-            this._writeRepository?.Dispose();
-            // The UnitOfWork is injected, not created here, so its creator owns its lifetime — the DI
-            // container (which registers the UoW and the repository together) or the caller that built
-            // it. Disposing it here disposed the shared DbContext out from under the other repositories
-            // in the same scope and double-disposed it alongside the container.
+            _writeRepository?.Dispose();
         }
 
-        Disposed = true;
+        base.Dispose(disposing);
     }
 }

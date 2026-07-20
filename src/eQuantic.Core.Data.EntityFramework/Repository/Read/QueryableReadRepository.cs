@@ -1,436 +1,229 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using eQuantic.Core.Data.EntityFramework.Repository.Extensions;
 using eQuantic.Core.Data.Repository;
-using eQuantic.Core.Data.Repository.Config;
+using eQuantic.Core.Data.Repository.Options;
 using eQuantic.Core.Data.Repository.Read;
 using eQuantic.Linq.Specification;
 
 namespace eQuantic.Core.Data.EntityFramework.Repository.Read;
 
 [ExcludeFromCodeCoverage]
-public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> :
-    IQueryableReadRepository<TUnitOfWork, TEntity, TKey>,
-    IReadRepository<TUnitOfWork, QueryableConfiguration<TEntity>, TEntity, TKey>
-    where TUnitOfWork : IQueryableUnitOfWork
-    where TEntity : class, IEntity, new()
+public class QueryableReadRepository<TEntity, TKey> :
+    IQueryableReadRepository<TEntity, TKey>
+    where TEntity : class, IEntity<TKey>
 {
     internal SetBase<TEntity> _dbSet;
     private bool _disposed;
 
-    /// <summary>
-    ///     Whether this repository owns the injected <see cref="UnitOfWork" />'s lifetime. Defaults to
-    ///     <c>false</c>: the UnitOfWork is provided by its creator (the DI container or the caller), and
-    ///     disposing the repository must not dispose a UnitOfWork it did not create.
-    /// </summary>
-    internal bool OwnUnitOfWork { get; set; } = false;
-    private const string SpecificationCannotBeNull = "Specification cannot be null";
     private const string FilterExpressionCannotBeNull = "Filter expression cannot be null";
+    private const string SpecificationCannotBeNull = "Specification cannot be null";
+
     /// <summary>
     /// Creates a new instance of the read repository
     /// </summary>
     /// <param name="unitOfWork">Associated Unit Of Work</param>
-    public QueryableReadRepository(TUnitOfWork unitOfWork)
+    public QueryableReadRepository(IQueryableUnitOfWork unitOfWork)
     {
         UnitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 
     /// <summary>
-    /// <see cref="IReadRepository{TUnitOfWork, TEntity, TKey}"/>
+    /// The associated queryable unit of work.
     /// </summary>
-    public TUnitOfWork UnitOfWork { get; private set; }
+    public IQueryableUnitOfWork UnitOfWork { get; private set; }
 
-    public IEnumerable<TEntity> AllMatching(ISpecification<TEntity> specification,
-        Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        if (specification == null)
-        {
-            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
-        }
-
-        return GetQueryable(configuration, query => query.Where(specification.SatisfiedBy()));
-    }
-
-    public long Count()
-    {
-        return GetSet().LongCount();
-    }
-
-    public long Count(ISpecification<TEntity> specification)
-    {
-        if (specification == null)
-        {
-            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
-        }
-
-        return this.Count(specification.SatisfiedBy());
-    }
-
-    public long Count(Expression<Func<TEntity, bool>> filter)
-    {
-        return filter == null ? throw new ArgumentNullException(nameof(filter), FilterExpressionCannotBeNull) : GetSet().LongCount(filter);
-    }
-    
-    
-    public int Sum(Expression<Func<TEntity, int>> source)
-    {
-        return GetSet().Sum(source);
-    }
-    public int Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, int>> source)
-    {
-        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
-    }
-    public int Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, int>> source)
-    {
-        return GetQueryable(null, query => query.Where(filter)).Sum(source);
-    }
-    
-    public int? Sum(Expression<Func<TEntity, int?>> source)
-    {
-        return GetSet().Sum(source);
-    }
-    public int? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, int?>> source)
-    {
-        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
-    }
-    public int? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, int?>> source)
-    {
-        return GetQueryable(null, query => query.Where(filter)).Sum(source);
-    }
-
-    public long Sum(Expression<Func<TEntity, long>> source)
-    {
-        return GetSet().Sum(source);
-    }
-    public long Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, long>> source)
-    {
-        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
-    }
-    public long Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, long>> source)
-    {
-        return GetQueryable(null, query => query.Where(filter)).Sum(source);
-    }
-
-    public long? Sum(Expression<Func<TEntity, long?>> source)
-    {
-        return GetSet().Sum(source);
-    }
-    public long? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, long?>> source)
-    {
-        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
-    }
-    public long? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, long?>> source)
-    {
-        return GetQueryable(null, query => query.Where(filter)).Sum(source);
-    }
-
-    public double Sum(Expression<Func<TEntity, double>> source)
-    {
-        return GetSet().Sum(source);
-    }
-    public double Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, double>> source)
-    {
-        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
-    }
-    public double Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, double>> source)
-    {
-        return GetQueryable(null, query => query.Where(filter)).Sum(source);
-    }
-
-    public double? Sum(Expression<Func<TEntity, double?>> source)
-    {
-        return GetSet().Sum(source);
-    }
-    public double? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, double?>> source)
-    {
-        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
-    }
-    public double? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, double?>> source)
-    {
-        return GetQueryable(null, query => query.Where(filter)).Sum(source);
-    }
-
-    public float Sum(Expression<Func<TEntity, float>> source)
-    {
-        return GetSet().Sum(source);
-    }
-    public float Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, float>> source)
-    {
-        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
-    }
-    public float Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, float>> source)
-    {
-        return GetQueryable(null, query => query.Where(filter)).Sum(source);
-    }
-
-    public float? Sum(Expression<Func<TEntity, float?>> source)
-    {
-        return GetSet().Sum(source);
-    }
-    public float? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, float?>> source)
-    {
-        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
-    }
-    public float? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, float?>> source)
-    {
-        return GetQueryable(null, query => query.Where(filter)).Sum(source);
-    }
-
-    public decimal Sum(Expression<Func<TEntity, decimal>> source)
-    {
-        return GetSet().Sum(source);
-    }
-    public decimal Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, decimal>> source)
-    {
-        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
-    }
-    public decimal Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, decimal>> source)
-    {
-        return GetQueryable(null, query => query.Where(filter)).Sum(source);
-    }
-
-    public decimal? Sum(Expression<Func<TEntity, decimal?>> source)
-    {
-        return GetSet().Sum(source);
-    }
-    public decimal? Sum(ISpecification<TEntity> specification, Expression<Func<TEntity, decimal?>> source)
-    {
-        return GetQueryable(null, query => query.Where(specification.SatisfiedBy())).Sum(source);
-    }
-    public decimal? Sum(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, decimal?>> source)
-    {
-        return GetQueryable(null, query => query.Where(filter)).Sum(source);
-    }
-    
-    public bool All(ISpecification<TEntity> specification, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        if (specification == null)
-        {
-            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
-        }
-
-        return this.All(specification.SatisfiedBy(), configuration);
-    }
-
-    public bool All(Expression<Func<TEntity, bool>> filter, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        if (filter == null)
-        {
-            throw new ArgumentNullException(nameof(filter), FilterExpressionCannotBeNull);
-        }
-
-        return GetQueryable(configuration, _ => _).All(filter);
-    }
-
-    public bool Any(Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        return GetQueryable(configuration, _ => _).Any();
-    }
-
-    public bool Any(ISpecification<TEntity> specification, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        if (specification == null)
-        {
-            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
-        }
-
-        return this.Any(specification.SatisfiedBy(), configuration);
-    }
-
-    public bool Any(Expression<Func<TEntity, bool>> filter, Action<QueryableConfiguration<TEntity>> configuration = default)
-    {
-        if (filter == null)
-        {
-            throw new ArgumentNullException(nameof(filter), FilterExpressionCannotBeNull);
-        }
-
-        return GetQueryable(configuration, query => query.Where(filter)).Any();
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    public TEntity Get(TKey id, Action<QueryableConfiguration<TEntity>> configuration = default)
+    public TEntity Get(TKey id, QueryOptions<TEntity> options = null)
     {
         if (id is null)
         {
             throw new ArgumentNullException(nameof(id));
         }
 
-        if (configuration == null)
+        if (options == null)
         {
             return GetSet().Find(id);
         }
 
         var idExpression = GetSet().GetExpression(id);
-        return GetQueryable(configuration, query => query.Where(idExpression))
-            .SingleOrDefault();
+        return GetSet().GetQueryable(options, query => query.Where(idExpression)).SingleOrDefault();
     }
 
-    public IEnumerable<TEntity> GetAll(Action<QueryableConfiguration<TEntity>> configuration = default)
+    public IEnumerable<TEntity> GetAll(QueryOptions<TEntity> options = null)
     {
-        return GetQueryable(configuration, query => query);
+        return GetSet().GetQueryable(options);
     }
 
-    public IEnumerable<TResult> GetMapped<TResult>(Expression<Func<TEntity, bool>> filter,
-        Expression<Func<TEntity, TResult>> map, Action<QueryableConfiguration<TEntity>> configuration = default)
+    public IEnumerable<TEntity> GetFiltered(Expression<Func<TEntity, bool>> filter, QueryOptions<TEntity> options = null)
     {
-        return GetQueryable(configuration, query => query.Where(filter)).Select(map);
+        if (filter == null)
+        {
+            throw new ArgumentNullException(nameof(filter), FilterExpressionCannotBeNull);
+        }
+
+        return GetSet().GetQueryable(options, query => query.Where(filter));
     }
 
-    public IEnumerable<TResult> GetMapped<TResult>(ISpecification<TEntity> specification,
-        Expression<Func<TEntity, TResult>> map, Action<QueryableConfiguration<TEntity>> configuration = default)
+    public IEnumerable<TEntity> AllMatching(ISpecification<TEntity> specification, QueryOptions<TEntity> options = null)
     {
         if (specification == null)
         {
             throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
         }
 
-        return this.GetMapped(specification.SatisfiedBy(), map, configuration);
+        return GetSet().GetQueryable(options, query => query.Where(specification.SatisfiedBy()));
     }
 
-    public IEnumerable<TEntity> GetFiltered(Expression<Func<TEntity, bool>> filter,
-        Action<QueryableConfiguration<TEntity>> configuration = default)
+    public IEnumerable<TResult> GetMapped<TResult>(Expression<Func<TEntity, TResult>> map, QueryOptions<TEntity> options = null)
     {
-        if (filter == null)
+        if (map == null)
         {
-            throw new ArgumentNullException(nameof(filter), FilterExpressionCannotBeNull);
+            throw new ArgumentNullException(nameof(map));
         }
 
-        return GetQueryable(configuration, query => query.Where(filter));
+        return GetSet().GetQueryable(options).Select(map);
     }
 
-    public TEntity GetFirst(Expression<Func<TEntity, bool>> filter, Action<QueryableConfiguration<TEntity>> configuration = default)
+    public TEntity GetFirst(QueryOptions<TEntity> options)
     {
-        if (filter == null)
-        {
-            throw new ArgumentNullException(nameof(filter), FilterExpressionCannotBeNull);
-        }
-
-        return GetQueryable(configuration, query => query.Where(filter)).FirstOrDefault();
+        return GetSet().GetQueryable(options).FirstOrDefault();
     }
 
-    public TEntity GetFirst(ISpecification<TEntity> specification, Action<QueryableConfiguration<TEntity>> configuration = default)
+    public TResult GetFirstMapped<TResult>(Expression<Func<TEntity, TResult>> map, QueryOptions<TEntity> options)
     {
-        if (specification == null)
+        if (map == null)
         {
-            throw new ArgumentNullException(nameof(specification),SpecificationCannotBeNull);
+            throw new ArgumentNullException(nameof(map));
         }
 
-        return GetQueryable(configuration, query => query.Where(specification.SatisfiedBy())).FirstOrDefault();
+        return GetSet().GetQueryable(options).Select(map).FirstOrDefault();
     }
 
-    public TResult GetFirstMapped<TResult>(Expression<Func<TEntity, bool>> filter,
-        Expression<Func<TEntity, TResult>> map, Action<QueryableConfiguration<TEntity>> configuration = default)
+    public TEntity GetSingle(QueryOptions<TEntity> options)
     {
-        if (filter == null)
+        return GetSet().GetQueryable(options).SingleOrDefault();
+    }
+
+    public PagedResult<TEntity> GetPaged(PageRequest page, QueryOptions<TEntity> options = null)
+    {
+        if (page == null)
         {
-            throw new ArgumentNullException(nameof(filter), FilterExpressionCannotBeNull);
+            throw new ArgumentNullException(nameof(page));
         }
-        return GetQueryable(configuration, query => query.Where(filter))
+
+        var query = GetSet().GetQueryable(options);
+        var totalCount = query.LongCount();
+        var items = query
+            .OrderByPrimaryKeyIfUnordered(GetSet().DbContext)
+            .Skip(page.Skip)
+            .Take(page.Take)
+            .ToList();
+
+        return new PagedResult<TEntity>(items, totalCount, page.PageIndex, page.PageSize);
+    }
+
+    public PagedResult<TResult> GetPaged<TResult>(PageRequest page, Expression<Func<TEntity, TResult>> map,
+        QueryOptions<TEntity> options = null)
+    {
+        if (page == null)
+        {
+            throw new ArgumentNullException(nameof(page));
+        }
+
+        if (map == null)
+        {
+            throw new ArgumentNullException(nameof(map));
+        }
+
+        var query = GetSet().GetQueryable(options);
+        var totalCount = query.LongCount();
+        var items = query
+            .OrderByPrimaryKeyIfUnordered(GetSet().DbContext)
+            .Skip(page.Skip)
+            .Take(page.Take)
             .Select(map)
-            .FirstOrDefault();
+            .ToList();
+
+        return new PagedResult<TResult>(items, totalCount, page.PageIndex, page.PageSize);
     }
 
-    public TResult GetFirstMapped<TResult>(ISpecification<TEntity> specification,
-        Expression<Func<TEntity, TResult>> map, Action<QueryableConfiguration<TEntity>> configuration = default)
+    public long Count(QueryOptions<TEntity> options = null)
     {
-        if (specification == null)
+        return GetSet().GetQueryable(options).LongCount();
+    }
+
+    public bool Any(QueryOptions<TEntity> options = null)
+    {
+        return GetSet().GetQueryable(options).Any();
+    }
+
+    public bool All(Expression<Func<TEntity, bool>> predicate, QueryOptions<TEntity> options = null)
+    {
+        if (predicate == null)
         {
-            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
+            throw new ArgumentNullException(nameof(predicate), FilterExpressionCannotBeNull);
         }
 
-        return this.GetFirstMapped(specification.SatisfiedBy(), map, configuration);
+        return GetSet().GetQueryable(options).All(predicate);
     }
 
-    public IEnumerable<TEntity> GetPaged(int limit, Action<QueryableConfiguration<TEntity>> configuration = default)
+    public int Sum(Expression<Func<TEntity, int>> selector, QueryOptions<TEntity> options = null)
     {
-        return GetPaged((Expression<Func<TEntity, bool>>)null, 1, limit, configuration);
+        return GetSet().GetQueryable(options).Sum(selector);
     }
 
-    public IEnumerable<TEntity> GetPaged(ISpecification<TEntity> specification, int limit,
-        Action<QueryableConfiguration<TEntity>> configuration = default)
+    public int? Sum(Expression<Func<TEntity, int?>> selector, QueryOptions<TEntity> options = null)
     {
-        if (specification == null)
-        {
-            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
-        }
-
-        return GetPaged(specification.SatisfiedBy(), 1, limit, configuration);
+        return GetSet().GetQueryable(options).Sum(selector);
     }
 
-    public IEnumerable<TEntity> GetPaged(Expression<Func<TEntity, bool>> filter, int limit,
-        Action<QueryableConfiguration<TEntity>> configuration = default)
+    public long Sum(Expression<Func<TEntity, long>> selector, QueryOptions<TEntity> options = null)
     {
-        return GetPaged(filter, 1, limit, configuration);
+        return GetSet().GetQueryable(options).Sum(selector);
     }
 
-    public IEnumerable<TEntity> GetPaged(int pageIndex, int pageSize, Action<QueryableConfiguration<TEntity>> configuration = default)
+    public long? Sum(Expression<Func<TEntity, long?>> selector, QueryOptions<TEntity> options = null)
     {
-        return GetPaged((Expression<Func<TEntity, bool>>)null, pageIndex, pageSize, configuration);
+        return GetSet().GetQueryable(options).Sum(selector);
     }
 
-    public IEnumerable<TEntity> GetPaged(ISpecification<TEntity> specification, int pageIndex, int pageSize,
-        Action<QueryableConfiguration<TEntity>> configuration = default)
+    public double Sum(Expression<Func<TEntity, double>> selector, QueryOptions<TEntity> options = null)
     {
-        if (specification == null)
-        {
-            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
-        }
-
-        return GetPaged(specification.SatisfiedBy(), pageIndex, pageSize, configuration);
+        return GetSet().GetQueryable(options).Sum(selector);
     }
 
-    public IEnumerable<TEntity> GetPaged(Expression<Func<TEntity, bool>> filter, int pageIndex, int pageSize,
-        Action<QueryableConfiguration<TEntity>> configuration = default)
+    public double? Sum(Expression<Func<TEntity, double?>> selector, QueryOptions<TEntity> options = null)
     {
-        var query = GetQueryable(configuration, internalQuery =>
-        {
-            if (filter != null)
-            {
-                internalQuery = internalQuery.Where(filter);
-            }
-
-            return internalQuery;
-        });
-        if (pageIndex < 1) pageIndex = 1;
-        if (pageSize <= 0)
-        {
-            return query;
-        }
-
-        query = query.OrderByPrimaryKeyIfUnordered(GetSet().DbContext);
-        return query.Skip((pageIndex - 1) * pageSize).Take(pageSize);
+        return GetSet().GetQueryable(options).Sum(selector);
     }
 
-    public TEntity GetSingle(Expression<Func<TEntity, bool>> filter, Action<QueryableConfiguration<TEntity>> configuration = default)
+    public float Sum(Expression<Func<TEntity, float>> selector, QueryOptions<TEntity> options = null)
     {
-        if (filter == null)
-        {
-            throw new ArgumentNullException(nameof(filter), FilterExpressionCannotBeNull);
-        }
-
-        return GetQueryable(configuration, query => query.Where(filter))
-            .SingleOrDefault();
+        return GetSet().GetQueryable(options).Sum(selector);
     }
 
-    public TEntity GetSingle(ISpecification<TEntity> specification, Action<QueryableConfiguration<TEntity>> configuration = default)
+    public float? Sum(Expression<Func<TEntity, float?>> selector, QueryOptions<TEntity> options = null)
     {
-        if (specification == null)
-        {
-            throw new ArgumentNullException(nameof(specification), SpecificationCannotBeNull);
-        }
+        return GetSet().GetQueryable(options).Sum(selector);
+    }
 
-        return GetQueryable(configuration, query =>
-                query
-                    .Where(specification.SatisfiedBy()))
-            .SingleOrDefault();
+    public decimal Sum(Expression<Func<TEntity, decimal>> selector, QueryOptions<TEntity> options = null)
+    {
+        return GetSet().GetQueryable(options).Sum(selector);
+    }
+
+    public decimal? Sum(Expression<Func<TEntity, decimal?>> selector, QueryOptions<TEntity> options = null)
+    {
+        return GetSet().GetQueryable(options).Sum(selector);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     protected virtual void Dispose(bool disposing)
@@ -440,18 +233,10 @@ public class QueryableReadRepository<TUnitOfWork, TEntity, TKey> :
             return;
         }
 
-        if (disposing && OwnUnitOfWork)
-        {
-            UnitOfWork?.Dispose();
-        }
-
+        // The UnitOfWork is injected, not created here, so its creator (the DI container or the caller)
+        // owns its lifetime. Disposing it here would tear down the shared DbContext out from under the
+        // other repositories in the same scope.
         _disposed = true;
-    }
-
-    private IQueryable<TEntity> GetQueryable(Action<QueryableConfiguration<TEntity>> configuration,
-        Func<IQueryable<TEntity>, IQueryable<TEntity>> internalQueryAction)
-    {
-        return GetSet().GetQueryable(configuration, internalQueryAction);
     }
 
     internal virtual SetBase<TEntity> GetSet()
