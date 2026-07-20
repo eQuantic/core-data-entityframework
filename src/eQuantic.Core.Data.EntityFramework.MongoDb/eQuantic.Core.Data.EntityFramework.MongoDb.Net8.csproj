@@ -4,16 +4,16 @@
     <PropertyGroup>
         <Description>Core Data library for Entity Framework and Mongo DB</Description>
         <AssemblyTitle>eQuantic.Core.Data.EntityFramework.MongoDb</AssemblyTitle>
-        <Version>9.1.2.0</Version>
-        <TargetFramework>net9.0</TargetFramework>
+        <Version>8.2.0.0</Version>
+        <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>eQuantic.Core.Data.EntityFramework.MongoDb</AssemblyName>
         <PackageId>eQuantic.Core.Data.EntityFramework.MongoDb</PackageId>
         <PackageTags>eQuantic;Core;Data;Library;Repository;Pattern;MongoDB</PackageTags>
         <PackageReleaseNotes>Entity ignorant persistance with Repository Pattern for Entity
             Framework</PackageReleaseNotes>
 
-        <AssemblyVersion>9.1.2.0</AssemblyVersion>
-        <FileVersion>9.1.2.0</FileVersion>
+        <AssemblyVersion>8.2.0.0</AssemblyVersion>
+        <FileVersion>8.2.0.0</FileVersion>
 
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -21,17 +21,17 @@
 
     <ItemGroup>
         <PackageReference Include="eQuantic.Core" Version="1.8.4" />
-        <PackageReference Include="eQuantic.Core.Data" Version="4.3.2" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.13" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.13">
+        <PackageReference Include="eQuantic.Core.Data" Version="5.1.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.24" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.24">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.13">
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.24">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="MongoDB.EntityFrameworkCore" Version="9.1.0" />
+        <PackageReference Include="MongoDB.EntityFrameworkCore" Version="8.4.0" />
     </ItemGroup>
 
     <ItemGroup>

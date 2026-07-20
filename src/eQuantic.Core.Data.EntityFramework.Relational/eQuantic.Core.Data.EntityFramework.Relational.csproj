@@ -4,37 +4,24 @@
     <PropertyGroup>
         <Description>Shared relational implementation for eQuantic Core Data Entity Framework providers</Description>
         <AssemblyTitle>eQuantic.Core.Data.EntityFramework.Relational</AssemblyTitle>
-        <Version>1.0.0.0</Version>
-        <TargetFrameworks>net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
+        <Version>4.0.0.0</Version>
+        <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
         <AssemblyName>eQuantic.Core.Data.EntityFramework.Relational</AssemblyName>
         <PackageId>eQuantic.Core.Data.EntityFramework.Relational</PackageId>
         <PackageTags>eQuantic;Core;Data;Library;Repository;Pattern;SQL;Relational</PackageTags>
         <PackageReleaseNotes>Shared relational base used by the SqlServer, PostgreSql and MySql providers</PackageReleaseNotes>
 
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <FileVersion>1.0.0.0</FileVersion>
+        <AssemblyVersion>4.0.0.0</AssemblyVersion>
+        <FileVersion>4.0.0.0</FileVersion>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="eQuantic.Core" Version="1.8.4" />
-        <PackageReference Include="eQuantic.Core.Data" Version="4.3.2" />
-    </ItemGroup>
-
-    <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.36" />
-        <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="6.105.2" />
-    </ItemGroup>
-
-    <ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' ">
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.20" />
+        <PackageReference Include="eQuantic.Core.Data" Version="5.1.0" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.24" />
-    </ItemGroup>
-
-    <ItemGroup Condition=" '$(TargetFramework)' == 'net9.0' ">
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.13" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
@@ -60,8 +47,8 @@
         </AssemblyAttribute>
     </ItemGroup>
 
+
     <ItemGroup>
-        <ProjectReference
-            Include="..\eQuantic.Core.Data.EntityFramework\eQuantic.Core.Data.EntityFramework.csproj" />
+        <ProjectReference Include="..\eQuantic.Core.Data.EntityFramework\eQuantic.Core.Data.EntityFramework.csproj" />
     </ItemGroup>
 </Project>

@@ -1,48 +1,23 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<Description>Core Data library for Entity Framework</Description>
 		<AssemblyTitle>eQuantic.Core.Data.EntityFramework</AssemblyTitle>
-		<Version>4.4.2.0</Version>
-		<TargetFrameworks>net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
+		<Version>4.5.0.0</Version>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
 		<AssemblyName>eQuantic.Core.Data.EntityFramework</AssemblyName>
 		<PackageId>eQuantic.Core.Data.EntityFramework</PackageId>
 		<PackageTags>eQuantic;Core;Data;Library;Repository;Pattern</PackageTags>
-		<PackageReleaseNotes>Entity ignorant persistance with Repository Pattern for Entity
-			Framework</PackageReleaseNotes>
+		<PackageReleaseNotes>Entity ignorant persistance with Repository Pattern for Entity Framework</PackageReleaseNotes>
 
-		<AssemblyVersion>4.4.2.0</AssemblyVersion>
-		<FileVersion>4.4.2.0</FileVersion>
+		<AssemblyVersion>4.5.0.0</AssemblyVersion>
+		<FileVersion>4.5.0.0</FileVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="eQuantic.Core" Version="1.8.4" />
-		<PackageReference Include="eQuantic.Core.Data" Version="4.3.2" />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.36" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.36">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.36">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' ">
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.20" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.20">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.20">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
+		<PackageReference Include="eQuantic.Core.Data" Version="5.1.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
@@ -52,18 +27,6 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.24">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net9.0' ">
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.13" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.13">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.13">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

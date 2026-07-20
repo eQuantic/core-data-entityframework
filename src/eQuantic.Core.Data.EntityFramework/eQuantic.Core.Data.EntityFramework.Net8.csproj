@@ -4,7 +4,7 @@
 	<PropertyGroup>
 		<Description>Core Data library for Entity Framework</Description>
 		<AssemblyTitle>eQuantic.Core.Data.EntityFramework</AssemblyTitle>
-		<Version>8.1.2.0</Version>
+		<Version>8.2.0.0</Version>
 		<TargetFramework>net8.0</TargetFramework>
 		<AssemblyName>eQuantic.Core.Data.EntityFramework</AssemblyName>
 		<PackageId>eQuantic.Core.Data.EntityFramework</PackageId>
@@ -12,13 +12,13 @@
 		<PackageReleaseNotes>Entity ignorant persistance with Repository Pattern for Entity
 			Framework</PackageReleaseNotes>
 
-		<AssemblyVersion>8.1.2.0</AssemblyVersion>
-		<FileVersion>8.1.2.0</FileVersion>
+		<AssemblyVersion>8.2.0.0</AssemblyVersion>
+		<FileVersion>8.2.0.0</FileVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="eQuantic.Core" Version="1.8.4" />
-		<PackageReference Include="eQuantic.Core.Data" Version="4.3.2" />
+		<PackageReference Include="eQuantic.Core.Data" Version="5.1.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.24" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.24">
 			<PrivateAssets>all</PrivateAssets>
@@ -52,6 +52,9 @@
 		</AssemblyAttribute>
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
 			<_Parameter1>$(AssemblyName).MongoDb</_Parameter1>
+		</AssemblyAttribute>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>$(AssemblyName).Relational</_Parameter1>
 		</AssemblyAttribute>
 	</ItemGroup>
 </Project>
