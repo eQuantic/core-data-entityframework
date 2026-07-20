@@ -21,24 +21,24 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.24" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.24">
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.29" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.29">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.24">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.29">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.3" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.3">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.10">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
