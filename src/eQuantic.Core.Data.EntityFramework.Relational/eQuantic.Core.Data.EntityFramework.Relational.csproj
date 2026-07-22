@@ -4,7 +4,7 @@
     <PropertyGroup>
         <Description>Shared relational implementation for eQuantic Core Data Entity Framework providers</Description>
         <AssemblyTitle>eQuantic.Core.Data.EntityFramework.Relational</AssemblyTitle>
-        <Version>4.0.0.0</Version>
+        <Version>4.1.0.0</Version>
         <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
         <AssemblyName>eQuantic.Core.Data.EntityFramework.Relational</AssemblyName>
         <PackageId>eQuantic.Core.Data.EntityFramework.Relational</PackageId>
@@ -17,7 +17,7 @@
 
     <ItemGroup>
         <PackageReference Include="eQuantic.Core" Version="1.8.4" />
-        <PackageReference Include="eQuantic.Core.Data" Version="5.1.0" />
+        <PackageReference Include="eQuantic.Core.Data" Version="6.0.0" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">

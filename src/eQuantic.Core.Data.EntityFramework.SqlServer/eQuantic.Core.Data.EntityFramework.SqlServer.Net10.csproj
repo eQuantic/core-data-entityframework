@@ -4,7 +4,7 @@
     <PropertyGroup>
         <Description>Core Data library for Entity Framework and SQL Server</Description>
         <AssemblyTitle>eQuantic.Core.Data.EntityFramework.SqlServer</AssemblyTitle>
-        <Version>10.1.0.0</Version>
+        <Version>10.2.0.0</Version>
         <TargetFramework>net10.0</TargetFramework>
         <AssemblyName>eQuantic.Core.Data.EntityFramework.SqlServer</AssemblyName>
         <PackageId>eQuantic.Core.Data.EntityFramework.SqlServer</PackageId>
@@ -18,7 +18,7 @@
 
     <ItemGroup>
         <PackageReference Include="eQuantic.Core" Version="1.8.4" />
-        <PackageReference Include="eQuantic.Core.Data" Version="5.1.0" />
+        <PackageReference Include="eQuantic.Core.Data" Version="6.0.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
             <PrivateAssets>all</PrivateAssets>
