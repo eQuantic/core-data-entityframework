@@ -28,7 +28,7 @@ The Repository pattern keeps your domain ignorant of the persistence engine — 
 line of domain code. What usually rots is the *query surface*: a sprawl of `GetPaged`/`GetFiltered`
 overloads and `Action<Configuration>` callbacks, with filters passed as magic strings.
 
-On the `eQuantic.Core.Data` **v5** contracts, this provider collapses that into **one `QueryOptions<TEntity>`
+On the `eQuantic.Core.Data.Abstractions` contracts, this provider collapses that into **one `QueryOptions<TEntity>`
 per read** — authored typed and fluent, checked at compile time, and translated to EF Core server-side.
 
 ## Getting started
@@ -84,9 +84,14 @@ The full slice — specifications, custom repositories, a domain service — is 
 
 ## What this package gives you
 
-`eQuantic.Core.Data` defines the **contracts** — `IRepository`, `IUnitOfWork`, `QueryOptions`,
-`PageRequest`, `PagedResult`, specifications — with the persistence engine kept out of the type signatures
-(`IRepository<TEntity, TKey>`, not `IRepository<TUnitOfWork, TEntity, TKey>`).
+`eQuantic.Core.Data.Abstractions` defines the **contracts** — `IRepository`, `IUnitOfWork`,
+`QueryOptions`, `PageRequest`, `PagedResult`, specifications — with the persistence engine kept out of the
+type signatures (`IRepository<TEntity, TKey>`, not `IRepository<TUnitOfWork, TEntity, TKey>`).
+
+That is the only eQuantic package this one depends on. It carries no engine: installing an EF Core
+provider from here brings the vocabulary and Entity Framework, and nothing of the native
+`eQuantic.Core.Data` engine — no SQL renderer, no expression interpreters, no analyzers. If you want the
+native engine as well, reference it yourself; the two implement the same contracts side by side.
 
 This package is the **Entity Framework Core implementation** of those contracts. It translates a single
 `QueryOptions<TEntity>` into an EF `IQueryable` — applying, in order, custom *before* hooks, the
@@ -164,8 +169,10 @@ runtime is published as its **own package major** so the EF Core lines never mix
 
 - [Repository Pattern walkthrough](Repository.md) — data entities, unit of work, repository and
   specifications, end to end.
-- [eQuantic.Core.Data](https://github.com/eQuantic/core-data) — the contracts and the `QueryOptions` /
-  `PagedResult` / `PageRequest` query surface, backed by the
-  [eQuantic.Linq](https://github.com/eQuantic/core-linq) query engine.
+- [eQuantic.Core.Data.Abstractions](https://github.com/eQuantic/core-data) — the contracts and the
+  `QueryOptions` / `PagedResult` / `PageRequest` query surface, backed by the
+  [eQuantic.Linq](https://github.com/eQuantic/core-linq) query engine. This is what this package depends on.
+- [eQuantic.Core.Data](https://github.com/eQuantic/core-data) — the native engine over the same contracts,
+  for the six stores it drives without Entity Framework.
 
 MIT © eQuantic Tech
