@@ -5,13 +5,12 @@ VisualStudioVersion = 15.0.26430.6
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0CA2F610-6D57-4D1F-92E3-EDCCEDAD8297}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F72DED29-7BF7-4870-81B4-7AFE91270530}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{F72DED29-7BF7-4870-81B4-7AFE91270530}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 		LICENSE = LICENSE
 		README.md = README.md
 		Repository.md = Repository.md
-		.github\workflows\dotnetcore.yml = .github\workflows\dotnetcore.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SqlServer", "SqlServer", "{5B80C186-5E75-413B-B825-0B5B2FE9A3E4}"
@@ -65,6 +64,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.CosmosDb.Net10", "src\eQuantic.Core.Data.EntityFramework.CosmosDb\eQuantic.Core.Data.EntityFramework.CosmosDb.Net10.csproj", "{29C8E041-4A5E-4D97-B1F2-EF9C31A951EC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eQuantic.Core.Data.EntityFramework.CosmosDb.Tests", "tests\eQuantic.Core.Data.EntityFramework.CosmosDb.Tests\eQuantic.Core.Data.EntityFramework.CosmosDb.Tests.csproj", "{59E690D6-CE93-423B-9B56-4C28B1A5359D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{5518B209-EAD5-436D-85C4-215E29C0F4E6}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\release.yml = .github\workflows\release.yml
+		.github\workflows\ci.yml = .github\workflows\ci.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -322,6 +327,7 @@ Global
 		{709CD1F1-48C2-40C3-8470-9111FB2E0C86} = {0CA2F610-6D57-4D1F-92E3-EDCCEDAD8297}
 		{29C8E041-4A5E-4D97-B1F2-EF9C31A951EC} = {9B074A5E-5D97-BD47-3CDB-A58654D0504C}
 		{59E690D6-CE93-423B-9B56-4C28B1A5359D} = {EE71F02F-413D-4BC0-832F-726B6D8C0AD7}
+		{5518B209-EAD5-436D-85C4-215E29C0F4E6} = {F72DED29-7BF7-4870-81B4-7AFE91270530}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {83FECDD1-8A97-40B1-8529-3D5216E674C3}

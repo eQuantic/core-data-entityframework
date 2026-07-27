@@ -60,6 +60,7 @@ jobs:
           - tests/eQuantic.Core.Data.EntityFramework.SqlServer.Tests/eQuantic.Core.Data.EntityFramework.SqlServer.Tests.csproj
           - tests/eQuantic.Core.Data.EntityFramework.MongoDb.Tests/eQuantic.Core.Data.EntityFramework.MongoDb.Tests.csproj
           - tests/eQuantic.Core.Data.EntityFramework.CosmosDb.Tests/eQuantic.Core.Data.EntityFramework.CosmosDb.Tests.csproj
+          - tests/eQuantic.Core.Data.EntityFramework.PostgreSql.Tests/eQuantic.Core.Data.EntityFramework.PostgreSql.Tests.csproj
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4

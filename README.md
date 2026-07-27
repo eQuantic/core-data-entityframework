@@ -165,6 +165,43 @@ runtime is published as its **own package major** so the EF Core lines never mix
 > must not be read as a .NET version. You normally consume only the provider package for your runtime
 > (8.x / 10.x), which pulls the right shared assemblies transitively.
 
+## Checking the database against your model
+
+Entity Framework records which migrations *ran*, and `has-pending-model-changes` compares the model to
+the migrations. Neither looks at the schema — so neither can tell you that a column was altered by hand
+on staging, that a migration stopped halfway, or that an environment was restored from a backup older
+than the last release. **Only looking answers those.**
+
+```csharp
+services.AddDbContext<ShopContext>(options => options.UseNpgsql(connectionString));
+services.AddDriftCheck<ShopContext>();
+```
+
+That registers `IDatabaseSnapshotSource`, which describes both sides of the comparison — what the model
+says the tables should be, and what the database actually has — in the provider's own store-type
+vocabulary, so a healthy schema compares silently:
+
+```csharp
+var source = provider.GetRequiredService<IDatabaseSnapshotSource>();
+var report = DriftComparer.Compare(source.Expect(), await source.ObserveAsync());
+
+if (report.Breaks)
+{
+    // something the application reads on every query is not there, or not as it expects
+}
+```
+
+`report.Breaks` separates the differences that stop the application from the ones that do not: a column
+the model does not map belongs to somebody else — databases get shared — and tables you do not map are
+not read at all. The command-line tool [`eqdata drift`](https://github.com/eQuantic/core-data/blob/master/docs/guides/migrations/tooling.md)
+runs the same check and exits non-zero on the first kind, which makes it a deployment gate.
+
+Reading the catalogue is provider-specific: PostgreSQL, MySQL and SQL Server are covered. Any other
+provider says it cannot answer rather than answering wrongly.
+
+**Generating migrations is deliberately absent.** Entity Framework already does that, from the same
+model, and better than a second generator could. What this adds is the part it leaves out.
+
 ## Learn more
 
 - [Repository Pattern walkthrough](Repository.md) — data entities, unit of work, repository and
