@@ -219,7 +219,14 @@ public static class QueryableExtensions
 
         if (body.Type.IsValueType && Nullable.GetUnderlyingType(body.Type) is null)
         {
-            return null;
+            // A value read through an optional navigation (x.Team.Rank) is null when the navigation is: the store
+            // joins it and reads NULL. Only a value reached without one cannot be null.
+            if (!ReadThroughNavigation(body))
+            {
+                return null;
+            }
+
+            body = Expression.Convert(body, typeof(Nullable<>).MakeGenericType(body.Type));
         }
 
         if (placement != NullsPlacement.AnyExpression && nulls == (descending ? NullsOrder.Last : NullsOrder.First))
@@ -240,6 +247,25 @@ public static class QueryableExtensions
         return Expression.Lambda(
             Expression.Condition(isNull, Expression.Constant(first ? 0 : 1), Expression.Constant(first ? 1 : 0)),
             key.Parameters);
+    }
+
+    /// <summary>
+    ///     Whether a member chain reads through a reference other than the entity itself (<c>x.Team.Rank</c>), which
+    ///     the store reaches through a join and can find missing.
+    /// </summary>
+    private static bool ReadThroughNavigation(Expression body)
+    {
+        while (body is MemberExpression { Expression: { } owner })
+        {
+            if (owner is not ParameterExpression && !owner.Type.IsValueType)
+            {
+                return true;
+            }
+
+            body = owner;
+        }
+
+        return false;
     }
 
     /// <summary>

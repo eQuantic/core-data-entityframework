@@ -26,9 +26,20 @@ public class ReadShapesTests
 
         public List<Step> Steps { get; set; } = [];
 
+        public int? TeamId { get; set; }
+
+        public Team? Team { get; set; }
+
         public int GetKey() => Id;
 
         public void SetKey(int key) => Id = key;
+    }
+
+    public sealed class Team
+    {
+        public int Id { get; set; }
+
+        public int Rank { get; set; }
     }
 
     public sealed class Step
@@ -46,8 +57,11 @@ public class ReadShapesTests
     {
         public DbSet<Run> Runs => Set<Run>();
 
-        protected override void OnModelCreating(ModelBuilder builder) =>
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
             builder.Entity<Run>().HasMany(x => x.Steps).WithOne().HasForeignKey(x => x.RunId);
+            builder.Entity<Run>().HasOne(x => x.Team).WithMany().HasForeignKey(x => x.TeamId);
+        }
     }
 
     private static AsyncQueryableReadRepository<Run, int> NewRepository(out RunsContext context)
@@ -203,5 +217,31 @@ public class ReadShapesTests
 
         Assert.That(runs.Select(r => r.Steps.Select(s => s.Id).ToArray()),
             Is.EqualTo(new[] { new[] { 3, 1 }, new[] { 5 } }));
+    }
+
+    [TestCase(false, NullsOrder.First, new[] { 2, 3, 1 })]
+    [TestCase(false, NullsOrder.Last, new[] { 3, 1, 2 })]
+    [TestCase(true, NullsOrder.First, new[] { 2, 1, 3 })]
+    [TestCase(true, NullsOrder.Last, new[] { 1, 3, 2 })]
+    public async Task A_value_read_through_an_optional_navigation_places_its_nulls(bool descending, NullsOrder nulls,
+        int[] ids)
+    {
+        var repository = NewRepository(out var context);
+        var first = new Team { Id = 1, Rank = 1 };
+        var second = new Team { Id = 2, Rank = 2 };
+        context.Runs.AddRange(
+            new Run { Id = 1, Team = second },
+            new Run { Id = 2 },
+            new Run { Id = 3, Team = first });
+        await context.SaveChangesAsync();
+        context.ChangeTracker.Clear();
+
+        // Rank is an int, but the run without a team reads it as NULL through the join.
+        var options = descending
+            ? new QueryOptions<Run>().OrderByDescending(x => x.Team!.Rank, nulls)
+            : new QueryOptions<Run>().OrderBy(x => x.Team!.Rank, nulls);
+        var runs = await repository.GetAllAsync(options);
+
+        Assert.That(runs.Select(x => x.Id), Is.EqualTo(ids));
     }
 }
