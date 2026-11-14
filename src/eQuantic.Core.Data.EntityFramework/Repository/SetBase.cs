@@ -209,6 +209,28 @@ public abstract class SetBase<TEntity> : Data.Repository.ISet<TEntity> where TEn
     internal IQueryable<TEntity> GetQueryable(QueryOptions<TEntity> options,
         Func<IQueryable<TEntity>, IQueryable<TEntity>> internalQueryAction = null)
     {
-        return InternalDbSet.ApplyOptions(options, internalQueryAction);
+        return InternalDbSet.ApplyOptions(options, internalQueryAction, NullsPlacement);
     }
+
+    /// <summary>
+    ///     Shapes a query for a read that works over every matching row (a count, a sum, <c>All</c>) or that pages
+    ///     by itself, refusing <c>Skip</c>/<c>Take</c> first.
+    /// </summary>
+    /// <param name="options">The query options, or <c>null</c> for no shaping.</param>
+    /// <param name="read">The read, as a refusal names it.</param>
+    /// <returns>The shaped query.</returns>
+    internal IQueryable<TEntity> GetQueryableOverEveryRow(QueryOptions<TEntity> options, string read)
+    {
+        QueryableExtensions.RefuseRowWindow(options, read);
+        return GetQueryable(options);
+    }
+
+    // How this context's store lets a sort place nulls, told by its provider (the document providers live in
+    // their own packages, which this one does not reference).
+    private NullsPlacement NullsPlacement => DbContext.Database.ProviderName switch
+    {
+        "Microsoft.EntityFrameworkCore.Cosmos" => NullsPlacement.SmallestByPathOnly,
+        "MongoDB.EntityFrameworkCore" => NullsPlacement.Smallest,
+        _ => NullsPlacement.AnyExpression,
+    };
 }

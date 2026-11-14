@@ -114,7 +114,7 @@ public class QueryableReadRepository<TEntity, TKey> :
             throw new ArgumentNullException(nameof(page));
         }
 
-        var query = GetSet().GetQueryable(options);
+        var query = GetSet().GetQueryableOverEveryRow(options, "GetPaged");
         var totalCount = query.LongCount();
         var items = query
             .OrderByPrimaryKeyIfUnordered(GetSet().DbContext)
@@ -138,7 +138,7 @@ public class QueryableReadRepository<TEntity, TKey> :
             throw new ArgumentNullException(nameof(map));
         }
 
-        var query = GetSet().GetQueryable(options);
+        var query = GetSet().GetQueryableOverEveryRow(options, "GetPaged");
         var totalCount = query.LongCount();
         var items = query
             .OrderByPrimaryKeyIfUnordered(GetSet().DbContext)
@@ -152,12 +152,12 @@ public class QueryableReadRepository<TEntity, TKey> :
 
     public long Count(QueryOptions<TEntity> options = null)
     {
-        return GetSet().GetQueryable(options).LongCount();
+        return GetSet().GetQueryableOverEveryRow(options, "Count").LongCount();
     }
 
     public bool Any(QueryOptions<TEntity> options = null)
     {
-        return GetSet().GetQueryable(options).Any();
+        return GetSet().GetQueryableOverEveryRow(options, "Any").Any();
     }
 
     public bool All(Expression<Func<TEntity, bool>> predicate, QueryOptions<TEntity> options = null)
@@ -167,57 +167,57 @@ public class QueryableReadRepository<TEntity, TKey> :
             throw new ArgumentNullException(nameof(predicate), FilterExpressionCannotBeNull);
         }
 
-        return GetSet().GetQueryable(options).All(predicate);
+        return GetSet().GetQueryableOverEveryRow(options, "All").All(predicate);
     }
 
     public int Sum(Expression<Func<TEntity, int>> selector, QueryOptions<TEntity> options = null)
     {
-        return GetSet().GetQueryable(options).Sum(selector);
+        return GetSet().GetQueryableOverEveryRow(options, "Sum").Sum(selector);
     }
 
     public int? Sum(Expression<Func<TEntity, int?>> selector, QueryOptions<TEntity> options = null)
     {
-        return GetSet().GetQueryable(options).Sum(selector);
+        return GetSet().GetQueryableOverEveryRow(options, "Sum").Sum(selector);
     }
 
     public long Sum(Expression<Func<TEntity, long>> selector, QueryOptions<TEntity> options = null)
     {
-        return GetSet().GetQueryable(options).Sum(selector);
+        return GetSet().GetQueryableOverEveryRow(options, "Sum").Sum(selector);
     }
 
     public long? Sum(Expression<Func<TEntity, long?>> selector, QueryOptions<TEntity> options = null)
     {
-        return GetSet().GetQueryable(options).Sum(selector);
+        return GetSet().GetQueryableOverEveryRow(options, "Sum").Sum(selector);
     }
 
     public double Sum(Expression<Func<TEntity, double>> selector, QueryOptions<TEntity> options = null)
     {
-        return GetSet().GetQueryable(options).Sum(selector);
+        return GetSet().GetQueryableOverEveryRow(options, "Sum").Sum(selector);
     }
 
     public double? Sum(Expression<Func<TEntity, double?>> selector, QueryOptions<TEntity> options = null)
     {
-        return GetSet().GetQueryable(options).Sum(selector);
+        return GetSet().GetQueryableOverEveryRow(options, "Sum").Sum(selector);
     }
 
     public float Sum(Expression<Func<TEntity, float>> selector, QueryOptions<TEntity> options = null)
     {
-        return GetSet().GetQueryable(options).Sum(selector);
+        return GetSet().GetQueryableOverEveryRow(options, "Sum").Sum(selector);
     }
 
     public float? Sum(Expression<Func<TEntity, float?>> selector, QueryOptions<TEntity> options = null)
     {
-        return GetSet().GetQueryable(options).Sum(selector);
+        return GetSet().GetQueryableOverEveryRow(options, "Sum").Sum(selector);
     }
 
     public decimal Sum(Expression<Func<TEntity, decimal>> selector, QueryOptions<TEntity> options = null)
     {
-        return GetSet().GetQueryable(options).Sum(selector);
+        return GetSet().GetQueryableOverEveryRow(options, "Sum").Sum(selector);
     }
 
     public decimal? Sum(Expression<Func<TEntity, decimal?>> selector, QueryOptions<TEntity> options = null)
     {
-        return GetSet().GetQueryable(options).Sum(selector);
+        return GetSet().GetQueryableOverEveryRow(options, "Sum").Sum(selector);
     }
 
     public void Dispose()

@@ -95,8 +95,8 @@ native engine as well, reference it yourself; the two implement the same contrac
 
 This package is the **Entity Framework Core implementation** of those contracts. It translates a single
 `QueryOptions<TEntity>` into an EF `IQueryable` — applying, in order, custom *before* hooks, the
-specification and predicate filter, eager `Include`s, sortings (server-side / EF-translatable),
-`AsNoTracking`, `IgnoreQueryFilters`, query tags and custom *after* hooks — and returns `PagedResult<T>`
+specification and predicate filter, eager `Include`s (shaped ones through a filtered include), sortings
+(server-side / EF-translatable, nulls placed first or last on request), `Skip`/`Take`, `AsNoTracking`, `IgnoreQueryFilters`, query tags and custom *after* hooks — and returns `PagedResult<T>`
 from paged reads. The relational providers also carry a parameterized raw-SQL executor (functions and
 stored procedures, always via `DbParameter`).
 

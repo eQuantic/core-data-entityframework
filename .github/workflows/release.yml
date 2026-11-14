@@ -92,6 +92,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # NuGet Trusted Publishing: the job's OIDC token is exchanged for a short-lived API key.
+      id-token: write
     needs: [build, test]
     # This environment gates the publish behind whatever protection rules are configured for it in
     # the repo's Settings -> Environments (e.g. required reviewers). GitHub auto-creates an environment
@@ -109,7 +111,15 @@ jobs:
           pattern: nupkg-*
           path: artifacts
           merge-multiple: true
+      # nuget.org's trusted publishing policy for this repository names this workflow (release.yml) and
+      # the nuget-release environment, so renaming either one stops the login here, before any push.
+      # The key it returns lives one hour: the push right after it is the only step that uses it.
+      - name: Log in to nuget.org
+        id: nuget
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: ${{ secrets.NUGET_USER }}
       - name: Push to NuGet.org
         env:
-          NUGET_KEY: ${{ secrets.nuget_key }}
+          NUGET_KEY: ${{ steps.nuget.outputs.NUGET_API_KEY }}
         run: dotnet nuget push "artifacts/*.nupkg" --skip-duplicate -k "$NUGET_KEY" -s https://api.nuget.org/v3/index.json

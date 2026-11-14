@@ -117,7 +117,7 @@ public class AsyncQueryableReadRepository<TEntity, TKey> :
             throw new ArgumentNullException(nameof(page));
         }
 
-        var query = GetSet().GetQueryable(options);
+        var query = GetSet().GetQueryableOverEveryRow(options, "GetPagedAsync");
         var totalCount = await query.LongCountAsync(cancellationToken).ConfigureAwait(false);
         var items = await query
             .OrderByPrimaryKeyIfUnordered(GetSet().DbContext)
@@ -142,7 +142,7 @@ public class AsyncQueryableReadRepository<TEntity, TKey> :
             throw new ArgumentNullException(nameof(map), MapCannotBeNull);
         }
 
-        var query = GetSet().GetQueryable(options);
+        var query = GetSet().GetQueryableOverEveryRow(options, "GetPagedAsync");
         var totalCount = await query.LongCountAsync(cancellationToken).ConfigureAwait(false);
         var items = await query
             .OrderByPrimaryKeyIfUnordered(GetSet().DbContext)
@@ -156,12 +156,12 @@ public class AsyncQueryableReadRepository<TEntity, TKey> :
 
     public Task<long> CountAsync(QueryOptions<TEntity> options = null, CancellationToken cancellationToken = default)
     {
-        return GetSet().GetQueryable(options).LongCountAsync(cancellationToken);
+        return GetSet().GetQueryableOverEveryRow(options, "CountAsync").LongCountAsync(cancellationToken);
     }
 
     public Task<bool> AnyAsync(QueryOptions<TEntity> options = null, CancellationToken cancellationToken = default)
     {
-        return GetSet().GetQueryable(options).AnyAsync(cancellationToken);
+        return GetSet().GetQueryableOverEveryRow(options, "AnyAsync").AnyAsync(cancellationToken);
     }
 
     public Task<bool> AllAsync(Expression<Func<TEntity, bool>> predicate, QueryOptions<TEntity> options = null,
@@ -172,66 +172,66 @@ public class AsyncQueryableReadRepository<TEntity, TKey> :
             throw new ArgumentNullException(nameof(predicate), FilterExpressionCannotBeNull);
         }
 
-        return GetSet().GetQueryable(options).AllAsync(predicate, cancellationToken);
+        return GetSet().GetQueryableOverEveryRow(options, "AllAsync").AllAsync(predicate, cancellationToken);
     }
 
     public Task<int> SumAsync(Expression<Func<TEntity, int>> selector, QueryOptions<TEntity> options = null,
         CancellationToken cancellationToken = default)
     {
-        return GetSet().GetQueryable(options).SumAsync(selector, cancellationToken);
+        return GetSet().GetQueryableOverEveryRow(options, "SumAsync").SumAsync(selector, cancellationToken);
     }
 
     public Task<int?> SumAsync(Expression<Func<TEntity, int?>> selector, QueryOptions<TEntity> options = null,
         CancellationToken cancellationToken = default)
     {
-        return GetSet().GetQueryable(options).SumAsync(selector, cancellationToken);
+        return GetSet().GetQueryableOverEveryRow(options, "SumAsync").SumAsync(selector, cancellationToken);
     }
 
     public Task<long> SumAsync(Expression<Func<TEntity, long>> selector, QueryOptions<TEntity> options = null,
         CancellationToken cancellationToken = default)
     {
-        return GetSet().GetQueryable(options).SumAsync(selector, cancellationToken);
+        return GetSet().GetQueryableOverEveryRow(options, "SumAsync").SumAsync(selector, cancellationToken);
     }
 
     public Task<long?> SumAsync(Expression<Func<TEntity, long?>> selector, QueryOptions<TEntity> options = null,
         CancellationToken cancellationToken = default)
     {
-        return GetSet().GetQueryable(options).SumAsync(selector, cancellationToken);
+        return GetSet().GetQueryableOverEveryRow(options, "SumAsync").SumAsync(selector, cancellationToken);
     }
 
     public Task<double> SumAsync(Expression<Func<TEntity, double>> selector, QueryOptions<TEntity> options = null,
         CancellationToken cancellationToken = default)
     {
-        return GetSet().GetQueryable(options).SumAsync(selector, cancellationToken);
+        return GetSet().GetQueryableOverEveryRow(options, "SumAsync").SumAsync(selector, cancellationToken);
     }
 
     public Task<double?> SumAsync(Expression<Func<TEntity, double?>> selector, QueryOptions<TEntity> options = null,
         CancellationToken cancellationToken = default)
     {
-        return GetSet().GetQueryable(options).SumAsync(selector, cancellationToken);
+        return GetSet().GetQueryableOverEveryRow(options, "SumAsync").SumAsync(selector, cancellationToken);
     }
 
     public Task<float> SumAsync(Expression<Func<TEntity, float>> selector, QueryOptions<TEntity> options = null,
         CancellationToken cancellationToken = default)
     {
-        return GetSet().GetQueryable(options).SumAsync(selector, cancellationToken);
+        return GetSet().GetQueryableOverEveryRow(options, "SumAsync").SumAsync(selector, cancellationToken);
     }
 
     public Task<float?> SumAsync(Expression<Func<TEntity, float?>> selector, QueryOptions<TEntity> options = null,
         CancellationToken cancellationToken = default)
     {
-        return GetSet().GetQueryable(options).SumAsync(selector, cancellationToken);
+        return GetSet().GetQueryableOverEveryRow(options, "SumAsync").SumAsync(selector, cancellationToken);
     }
 
     public Task<decimal> SumAsync(Expression<Func<TEntity, decimal>> selector, QueryOptions<TEntity> options = null,
         CancellationToken cancellationToken = default)
     {
-        return GetSet().GetQueryable(options).SumAsync(selector, cancellationToken);
+        return GetSet().GetQueryableOverEveryRow(options, "SumAsync").SumAsync(selector, cancellationToken);
     }
 
     public Task<decimal?> SumAsync(Expression<Func<TEntity, decimal?>> selector, QueryOptions<TEntity> options = null,
         CancellationToken cancellationToken = default)
     {
-        return GetSet().GetQueryable(options).SumAsync(selector, cancellationToken);
+        return GetSet().GetQueryableOverEveryRow(options, "SumAsync").SumAsync(selector, cancellationToken);
     }
 }

@@ -14,6 +14,7 @@ An entity is a plain class that implements `IEntity<TKey>`. The key is exposed t
 
 ```csharp
 using System;
+using System.Collections.Generic;
 using eQuantic.Core.Data.Repository;
 
 public enum OrderStatus { Pending, Paid, Cancelled }
@@ -34,12 +35,23 @@ public class OrderData : IEntity<Guid>
     public decimal Total { get; set; }
     public OrderStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? ShippedAt { get; set; }
 
     public Guid CustomerId { get; set; }
     public CustomerData Customer { get; set; } = default!;
 
+    public List<OrderLineData> Lines { get; set; } = [];
+
     public Guid GetKey() => Id;
     public void SetKey(Guid key) => Id = key;
+}
+
+public class OrderLineData
+{
+    public Guid Id { get; set; }
+    public Guid OrderId { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public DateTime AddedAt { get; set; }
 }
 ```
 
@@ -179,6 +191,46 @@ public record OrderSummary(Guid Id, decimal Total, string Customer);
 ```
 
 Every method has a synchronous twin on the queryable repository (`GetPaged`, `Get`, `Count`, `Sum`, …).
+
+### Read shapes: a page without its total, nulls placed, related rows chosen
+
+`QueryOptions` (eQuantic.Core.Data.Abstractions 7.0) also says which rows a read returns, and these
+repositories honour it as the eQuantic.Core.Data engines do:
+
+```csharp
+// rows 11 to 20 of an order, with no count run (pair Skip/Take with an order):
+IEnumerable<OrderData> second = await orders.GetAllAsync(
+    new QueryOptions<OrderData>().OrderByDescending(o => o.CreatedAt).Skip(10).Take(10));
+
+// nulls first or last whatever the store's default (PostgreSQL puts them last ascending, the others first):
+IEnumerable<OrderData> byShipping = await orders.GetAllAsync(
+    new QueryOptions<OrderData>().OrderBy(o => o.ShippedAt, NullsOrder.Last));
+
+// each order with only its three newest lines that are not cancelled, newest first:
+IEnumerable<OrderData> recent = await orders.GetAllAsync(new QueryOptions<OrderData>()
+    .Include(o => o.Lines, lines => lines
+        .Where(l => l.Status != "cancelled")
+        .OrderByDescending(l => l.AddedAt)
+        .Take(3)));
+```
+
+- `Skip`/`Take` shape the rows a read returns. `CountAsync`, `AnyAsync`, `AllAsync`, `SumAsync` and
+  `GetPagedAsync` do not return rows that way, so they refuse them with a `NotSupportedException` rather than
+  count a page or page twice. With `GetFirstAsync` and `GetSingleAsync` the window applies before the read's own
+  limit.
+- A placement of nulls on a relational store becomes a leading "is null" key. MongoDB and Cosmos DB sort nulls as
+  the smallest value, so first ascending and last descending are a plain sort there. Cosmos DB orders by
+  document paths only, so it refuses the other two placements before sending anything.
+- A shaped include is Entity Framework's filtered include (`Include(o => o.Lines.Where(…).OrderBy(…).Take(3))`).
+  As Entity Framework documents for filtered includes, a tracking read in a context that already tracks some
+  of those lines fixes them up into the collection too. Read with `NoTracking()`, or in a fresh context, when the
+  collection must hold exactly the shape.
+
+The other additions of 7.0 are capabilities a repository opts into (`IUpsertRepository`,
+`IReturningUpdateRepository`, `IPartialModifyRepository`, `IDistinctReadRepository`, `ILockingUnitOfWork`) and
+the native engine's modeling attributes (`[EnumType]`, `[StoreGenerated]`, JSON members). These repositories do
+not implement them: test for the interface before you use one, and map columns through Entity Framework's own
+model configuration.
 
 ## 6. Specifications
 
