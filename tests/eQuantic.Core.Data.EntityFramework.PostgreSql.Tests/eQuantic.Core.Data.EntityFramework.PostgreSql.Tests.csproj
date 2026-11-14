@@ -20,6 +20,7 @@
 
     <ItemGroup>
         <ProjectReference Include="../../src/eQuantic.Core.Data.EntityFramework.Relational/eQuantic.Core.Data.EntityFramework.Relational.csproj" />
+        <ProjectReference Include="../../src/eQuantic.Core.Data.EntityFramework.PostgreSql/eQuantic.Core.Data.EntityFramework.PostgreSql.Net10.csproj" />
     </ItemGroup>
 
     <ItemGroup>
