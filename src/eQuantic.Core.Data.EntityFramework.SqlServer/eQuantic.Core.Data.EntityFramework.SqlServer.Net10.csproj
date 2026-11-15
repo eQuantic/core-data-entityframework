@@ -4,7 +4,7 @@
     <PropertyGroup>
         <Description>Core Data library for Entity Framework and SQL Server</Description>
         <AssemblyTitle>eQuantic.Core.Data.EntityFramework.SqlServer</AssemblyTitle>
-        <Version>10.6.0.0</Version>
+        <Version>10.6.1.0</Version>
         <TargetFramework>net10.0</TargetFramework>
         <AssemblyName>eQuantic.Core.Data.EntityFramework.SqlServer</AssemblyName>
         <PackageId>eQuantic.Core.Data.EntityFramework.SqlServer</PackageId>
@@ -12,8 +12,8 @@
         <PackageReleaseNotes>Entity ignorant persistance with Repository Pattern for Entity
             Framework</PackageReleaseNotes>
 
-        <AssemblyVersion>10.6.0.0</AssemblyVersion>
-        <FileVersion>10.6.0.0</FileVersion>
+        <AssemblyVersion>10.6.1.0</AssemblyVersion>
+        <FileVersion>10.6.1.0</FileVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -25,6 +25,8 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
+        <!-- Microsoft.Data.SqlClient, through the EF Core 10 provider, brings System.Security.Cryptography.Pkcs 9.0.4 (GHSA-846f-f764-76mx, high). -->
+        <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.15" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite"
             Version="10.0.10" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.10">

@@ -4,7 +4,7 @@
     <PropertyGroup>
         <Description>Core Data library for Entity Framework and Azure Cosmos DB</Description>
         <AssemblyTitle>eQuantic.Core.Data.EntityFramework.CosmosDb</AssemblyTitle>
-        <Version>8.8.0.0</Version>
+        <Version>8.8.1.0</Version>
         <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>eQuantic.Core.Data.EntityFramework.CosmosDb</AssemblyName>
         <PackageId>eQuantic.Core.Data.EntityFramework.CosmosDb</PackageId>
@@ -12,8 +12,8 @@
         <PackageReleaseNotes>Entity ignorant persistance with Repository Pattern for Entity
             Framework</PackageReleaseNotes>
 
-        <AssemblyVersion>8.8.0.0</AssemblyVersion>
-        <FileVersion>8.8.0.0</FileVersion>
+        <AssemblyVersion>8.8.1.0</AssemblyVersion>
+        <FileVersion>8.8.1.0</FileVersion>
 
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -24,6 +24,8 @@
         <PackageReference Include="eQuantic.Core.Data.Abstractions" Version="7.1.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.29" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Cosmos" Version="8.0.29" />
+        <!-- The Cosmos DB provider of EF Core 8 brings Newtonsoft.Json 10.0.2 (GHSA-5crp-9r3c-p9vr, high). -->
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     </ItemGroup>
 
     <ItemGroup>

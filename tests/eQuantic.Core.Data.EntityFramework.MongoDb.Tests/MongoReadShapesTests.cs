@@ -47,7 +47,7 @@ public sealed class MongoReadShapesTests
     public async Task StartAsync()
     {
         // A replica set: the MongoDB provider writes SaveChanges in a transaction, which a standalone server refuses.
-        _mongo = new MongoDbBuilder().WithImage("mongo:7").WithReplicaSet().Build();
+        _mongo = new MongoDbBuilder("mongo:7").WithReplicaSet().Build();
         try
         {
             await _mongo.StartAsync();
