@@ -76,7 +76,7 @@ public sealed class ReadShapesTests
     [OneTimeSetUp]
     public async Task StartAsync()
     {
-        _postgres = new PostgreSqlBuilder().WithImage("postgres:16-alpine").Build();
+        _postgres = new PostgreSqlBuilder("postgres:16-alpine").Build();
         try
         {
             await _postgres.StartAsync();
