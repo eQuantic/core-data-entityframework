@@ -4,7 +4,7 @@
     <PropertyGroup>
         <Description>Core Data library for Entity Framework and MySQL</Description>
         <AssemblyTitle>eQuantic.Core.Data.EntityFramework.MySql</AssemblyTitle>
-        <Version>10.6.1.0</Version>
+        <Version>10.6.2.0</Version>
         <TargetFramework>net10.0</TargetFramework>
         <AssemblyName>eQuantic.Core.Data.EntityFramework.MySql</AssemblyName>
         <PackageId>eQuantic.Core.Data.EntityFramework.MySql</PackageId>
@@ -12,13 +12,13 @@
         <PackageReleaseNotes>Entity ignorant persistance with Repository Pattern for Entity
             Framework</PackageReleaseNotes>
 
-        <AssemblyVersion>10.6.1.0</AssemblyVersion>
-        <FileVersion>10.6.1.0</FileVersion>
+        <AssemblyVersion>10.6.2.0</AssemblyVersion>
+        <FileVersion>10.6.2.0</FileVersion>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="eQuantic.Core" Version="1.8.4" />
-        <PackageReference Include="eQuantic.Core.Data.Abstractions" Version="7.1.0" />
+        <PackageReference Include="eQuantic.Core.Data.Abstractions" Version="7.1.1" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
             <PrivateAssets>all</PrivateAssets>
